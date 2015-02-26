@@ -16,15 +16,23 @@ import javafx.beans.property.StringProperty;
  *
  */
 
-public class Task {
+public class Task implements Comparable {
 	private final StringProperty taskName;
 	private final StringProperty comment;
 	
 	private final ObjectProperty<LocalDate> startDate;
 	private final ObjectProperty<LocalTime> startTime;
 	
-	private final ObjectProperty<LocalDate> dueDate;
-	private final ObjectProperty<LocalTime> dueTime;
+	private final ObjectProperty<LocalDate> endDate;
+	private final ObjectProperty<LocalTime> endTime;
+
+	private final int EARLIER = -1;
+	private final int SAME = 0;
+	private final int LATER = 1;
+
+	private enum TaskType {
+		FLOAT, EVENT, DATELINE
+	}
 	
 	/**
 	 *  Default constructor.
@@ -45,8 +53,8 @@ public class Task {
 		this.comment = new SimpleStringProperty("-");
 		this.startDate = new SimpleObjectProperty<LocalDate>(LocalDate.of(1992, 9, 12));
 		this.startTime = new SimpleObjectProperty<LocalTime>(LocalTime.of(12,0));
-		this.dueDate = new SimpleObjectProperty<LocalDate>(LocalDate.of(1992, 9, 12));
-		this.dueTime = new SimpleObjectProperty<LocalTime>(LocalTime.of(12,0));
+		this.endDate = new SimpleObjectProperty<LocalDate>(LocalDate.of(1992, 9, 12));
+		this.endTime = new SimpleObjectProperty<LocalTime>(LocalTime.of(12,0));
 	}
 	
 	public String getTaskName() {
@@ -97,27 +105,86 @@ public class Task {
 		return startTime;
 	}
 	
-	public LocalDate getDueDate() {
-		return dueDate.get();
+	public LocalDate getendDate() {
+		return endDate.get();
 	}
 	
-	public void setDueDate(LocalDate dueDate) {
-		this.dueDate.set(dueDate);
+	public void setendDate(LocalDate endDate) {
+		this.endDate.set(endDate);
 	}
 	
-	public ObjectProperty<LocalDate> dueDateProperty() {
-		return dueDate;
+	public ObjectProperty<LocalDate> endDateProperty() {
+		return endDate;
 	}
 	
-	public LocalTime getDueTime() {
-		return dueTime.get();
+	public LocalTime getendTime() {
+		return endTime.get();
 	}
 	
-	public void setDueTime(LocalTime dueTime) {
-		this.dueTime.set(dueTime);
+	public void setendTime(LocalTime endTime) {
+		this.endTime.set(endTime);
 	}
 	
-	public ObjectProperty<LocalTime> dueTimeProperty() {
-		return dueTime;
+	public ObjectProperty<LocalTime> endTimeProperty() {
+		return endTime;
+	}
+
+	/**
+	 * Overrides compareTo method and returns the chronology
+	 * of the compared dates with -1 for being earlier, 0 for
+	 * being the same and 1 for being later.
+	 * It currently does not take into account of period overlaps.
+	 * Thus endTime is not be accounted for and the method is 
+	 * seemingly a lot shorter.
+	 * 
+	 * @param obj    Task.
+	 * @return       Chronology CONSTANT.
+	 */
+	public int compareTo(Object obj) {
+		Task task = (Task) obj;
+		if (this.getType() == FLOAT && task.getType == FLOAT) {
+			return SAME;
+		}
+		else if (this.getType() == FLOAT) {
+			return LATER;
+		}
+		else if (task.getType() == FLOAT) {
+			return EARLIER;
+		}
+		else if (this.getLocalDateTime().isBefore(task.getLocalDateTime)) {
+			return EARLIER;
+		}
+		else if (this.getLocalDateTime().isEqual(task.getLocalDateTime())) {
+			return SAME;
+		}
+		else {
+			return LATER;
+		}
+	}
+
+	/**
+	 * Gets the type of the task
+	 *
+	 * @return    Type of task.
+	 */
+	private TaskType getType() {
+		if (this.startTime != null) {
+			return TaskType.EVENT;
+		}
+		else if (this.endTime != null) {
+			return TaskType.DATELINE;
+		}
+		else {
+			return TaskType.FLOAT;
+		}
+	}
+
+	/**
+	 * Gets the LocalDateTime from LocalDate and LocalTime of task
+	 *
+	 * @return    LocalDateTime of task
+	 */
+	private LocalDateTime getLocalDateTime() {
+		return LocalDateTime.of(startDate, startTime);
 	}
 }
