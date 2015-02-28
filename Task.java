@@ -30,9 +30,9 @@ public class Task implements Comparable {
 	private final int SAME = 0;
 	private final int LATER = 1;
 
-	private enum TaskType {
-		FLOAT, EVENT, DATELINE
-	}
+	private final String EVENT = "event";
+	private final String DATELINE = "dateline";
+	private final String FLOAT = "float";
 	
 	/**
 	 *  Default constructor.
@@ -55,6 +55,26 @@ public class Task implements Comparable {
 		this.startTime = new SimpleObjectProperty<LocalTime>(LocalTime.of(12,0));
 		this.endDate = new SimpleObjectProperty<LocalDate>(LocalDate.of(1992, 9, 12));
 		this.endTime = new SimpleObjectProperty<LocalTime>(LocalTime.of(12,0));
+	}
+
+	/**
+	 * Constructor for setting all values of a task and instantiating it.
+	 *
+	 * @param taskName           Name of the task object.
+	 * @param taskDescription    Descriptiont of the task object.
+	 * @param startDate          Starting date of the task.
+	 * @param startTime          Starting time of the task.
+	 * @param endDate            Ending date of the task.
+	 * @param endTime            Ending time of the task.
+	 */
+	public Task(String taskName, String taskDescription, LocalDate startDate, 
+		        LocalTime startTime, LocalDate endDate, LocalDate endTime) {
+		this.taskName = new SimpleStringProperty(taskName);
+		this.comment = new SimpleStringProperty(taskDescription);
+		this.startDate = startDate;
+		this.startTime = startTime;
+		this.endDate = endDate;
+		this.endTime = endTime;
 	}
 	
 	public String getTaskName() {
@@ -105,11 +125,11 @@ public class Task implements Comparable {
 		return startTime;
 	}
 	
-	public LocalDate getendDate() {
+	public LocalDate getEndDate() {
 		return endDate.get();
 	}
 	
-	public void setendDate(LocalDate endDate) {
+	public void setEndDate(LocalDate endDate) {
 		this.endDate.set(endDate);
 	}
 	
@@ -117,11 +137,11 @@ public class Task implements Comparable {
 		return endDate;
 	}
 	
-	public LocalTime getendTime() {
+	public LocalTime getEndTime() {
 		return endTime.get();
 	}
 	
-	public void setendTime(LocalTime endTime) {
+	public void setEndTime(LocalTime endTime) {
 		this.endTime.set(endTime);
 	}
 	
@@ -167,15 +187,15 @@ public class Task implements Comparable {
 	 *
 	 * @return    Type of task.
 	 */
-	private TaskType getType() {
+	private String getType() {
 		if (this.startTime != null) {
-			return TaskType.EVENT;
+			return EVENT;
 		}
 		else if (this.endTime != null) {
-			return TaskType.DATELINE;
+			return DATELINE;
 		}
 		else {
-			return TaskType.FLOAT;
+			return FLOAT;
 		}
 	}
 
