@@ -2,9 +2,8 @@ package com.commando.model;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import javafx.beans.property.IntegerProperty;
+import java.time.LocalDateTime;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -68,13 +67,13 @@ public class Task implements Comparable {
 	 * @param endTime            Ending time of the task.
 	 */
 	public Task(String taskName, String taskDescription, LocalDate startDate, 
-		        LocalTime startTime, LocalDate endDate, LocalDate endTime) {
+		        LocalTime startTime, LocalDate endDate, LocalTime endTime) {
 		this.taskName = new SimpleStringProperty(taskName);
 		this.comment = new SimpleStringProperty(taskDescription);
-		this.startDate = startDate;
-		this.startTime = startTime;
-		this.endDate = endDate;
-		this.endTime = endTime;
+		this.startDate = new SimpleObjectProperty<LocalDate>(startDate);
+		this.startTime = new SimpleObjectProperty<LocalTime>(startTime);
+		this.endDate = new SimpleObjectProperty<LocalDate>(endDate);
+		this.endTime = new SimpleObjectProperty<LocalTime>(endTime);
 	}
 	
 	public String getTaskName() {
@@ -162,7 +161,7 @@ public class Task implements Comparable {
 	 */
 	public int compareTo(Object obj) {
 		Task task = (Task) obj;
-		if (this.getType() == FLOAT && task.getType == FLOAT) {
+		if (this.getType() == FLOAT && task.getType() == FLOAT) {
 			return SAME;
 		}
 		else if (this.getType() == FLOAT) {
@@ -171,7 +170,7 @@ public class Task implements Comparable {
 		else if (task.getType() == FLOAT) {
 			return EARLIER;
 		}
-		else if (this.getLocalDateTime().isBefore(task.getLocalDateTime)) {
+		else if (this.getLocalDateTime().isBefore(task.getLocalDateTime())) {
 			return EARLIER;
 		}
 		else if (this.getLocalDateTime().isEqual(task.getLocalDateTime())) {
@@ -205,6 +204,6 @@ public class Task implements Comparable {
 	 * @return    LocalDateTime of task
 	 */
 	private LocalDateTime getLocalDateTime() {
-		return LocalDateTime.of(startDate, startTime);
+		return LocalDateTime.of(startDate.get(), startTime.get());
 	}
 }
