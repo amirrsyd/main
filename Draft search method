@@ -1,0 +1,10 @@
+private String search(String userCommand){
+	    String [] listArguments = parseList(userCommand) ;
+	    toDisplay.clear() ;
+	    
+	    for(int i=0; i<userCommand.length(); i++){
+	    	if (tasks.get(i).getTaskName.equals(userCommand)){
+	    		toDisplay.add(i) ;
+	    	}
+	    }
+	}
