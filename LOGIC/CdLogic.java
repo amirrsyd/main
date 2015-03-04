@@ -51,7 +51,7 @@ public class CdLogic{
     	historyStorage = new HistoryStorage(storagePath);
     	completedTaskStorage = new CompletedTaskStorage(storagePath);
     	tasks = taskStorage.getTasks();
-    	toDisplay = FXCollections.observableList(taskStorage.getTasks());
+    	toDisplay = copyList(tasks);
     }
     
     public ObservableList<Task> getTaskList(){
@@ -101,6 +101,14 @@ public class CdLogic{
     private String edit(String userCommand) {
 		return null;
 	}
+
+    private ObservableList<Task> copyList(ObservableList<Task> toCopy){
+        ObservableList<Task> newList = ObservableList<Task> FXCollections.observableArrayList();
+        for(int i = 0; i<toCopy.size(); i++){
+            newList.add(i, toCopy.get(i));
+        }
+        return newList;
+    }
 
 	private String complete(String userCommand) {
 		if(taskStorage.completeTask(userCommand, completedTaskStorage)){
