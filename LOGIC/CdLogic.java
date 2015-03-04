@@ -51,6 +51,7 @@ public class CdLogic{
     	historyStorage = new HistoryStorage(storagePath);
     	completedTaskStorage = new CompletedTaskStorage(storagePath);
     	tasks = taskStorage.getTasks();
+        toDisplay = FXCollections.observableArrayList();
     	toDisplay = copyList(tasks);
     }
     
@@ -103,12 +104,20 @@ public class CdLogic{
 	}
 
     private ObservableList<Task> copyList(ObservableList<Task> toCopy){
+
         ObservableList<Task> newList = ObservableList<Task> FXCollections.observableArrayList();
         for(int i = 0; i<toCopy.size(); i++){
             newList.add(i, toCopy.get(i));
         }
         return newList;
     }
+
+
+    private void updateDisplay() {
+        toDisplay.clear();
+        toDisplay = copyList(taskStorage.getTasks());
+    }
+    
 
 	private String complete(String userCommand) {
 		if(taskStorage.completeTask(userCommand, completedTaskStorage)){
@@ -221,9 +230,7 @@ public class CdLogic{
 		return "delete not successful";
 	}
 
-	private void updateDisplay() {
-		toDisplay = FXCollections.observableList(taskStorage.getTasks());
-	}
+
 
 	private String add(String userCommand) {
 		String[] addArguments = parseAdd(userCommand);
