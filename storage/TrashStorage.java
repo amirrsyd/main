@@ -1,19 +1,12 @@
-package com.commando.storage;
+package STORAGE;
 
-import com.commando.model;
-
-import javafx.collections.FXCollections;
+import MODEL.Task;
 import javafx.collections.ObservableList;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 
-import java.nio.charset.Charset;
 
 /**
  * TrashStorage class
@@ -22,17 +15,19 @@ import java.nio.charset.Charset;
  */
 public class TrashStorage extends Storage {
 
-	public TrashStorage(String filePath) {
-		storePath = Paths.get(filePath + "/trash").toAbsolutePath();
-		openFile(storePath);
+	public TrashStorage(String filePath) throws IOException {
+		Path storePath = Paths.get(filePath + "/trash.txt").toAbsolutePath();
+		setStorePath(storePath);
+		checkAndCreateFile(storePath);
+		openFile(getStorePath());
 	}
 
 	public boolean emptyTrash() {
-		trash.clear();
+		getTrash().clear();
 		return true;
 	}
 
 	public ObservableList<Task> getTrash() {
-		return list;
+		return getList();
 	}
 }

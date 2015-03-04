@@ -1,19 +1,13 @@
-package com.commando.storage;
+package STORAGE;
 
-import com.commando.model;
-
-import javafx.collections.FXCollections;
+import MODEL.Task;
 import javafx.collections.ObservableList;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
-
-import java.nio.charset.Charset;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
  * FileStorage class
@@ -22,9 +16,13 @@ import java.nio.charset.Charset;
  */
 public class TaskStorage extends Storage {
 	
-	public TaskStorage(String filePath) {
-		storePath = Paths.get(filePath + "/taskList").toAbsolutePath();
-		openFile(storePath);
+	private static final int ZERO = 0;
+	
+	public TaskStorage(String filePath) throws IOException {
+		Path storePath = Paths.get(filePath + "taskList.txt").toAbsolutePath();
+		setStorePath(storePath);
+		checkAndCreateFile(storePath);
+		openFile(getStorePath());
 	}
 
 	public boolean createTask(String taskName, String taskDescription, 
@@ -37,17 +35,17 @@ public class TaskStorage extends Storage {
 	}
 
 	public Task getNextTask() {
-		return list.get(ZERO);
+		return getList().get(ZERO);
 	}
 
 	public boolean completeTask(String taskName, CompletedTaskStorage completedTasks) {
 		Task task = search(taskName);
-		list.remove(task);
+		getList().remove(task);
 		completedTasks.storeTask(task);
 		return true;
 	}
 
 	public ObservableList<Task> getTasks() {
-		return list;
+		return getList();
 	}
 }
