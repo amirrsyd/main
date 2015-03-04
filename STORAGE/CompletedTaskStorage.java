@@ -8,9 +8,6 @@ import java.nio.file.Paths;
 
 import javafx.collections.ObservableList;
 
-
-
-
 /**
  * CompletedTaskStorage class
  *
