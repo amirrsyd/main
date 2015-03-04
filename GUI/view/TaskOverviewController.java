@@ -339,7 +339,7 @@ public class TaskOverviewController{
 			
 			outputToTextArea(response);
 			
-			mainApp.setTaskData(logic.getTaskList());
+			mainApp.setTaskData(logic.getDisplayList());
 			taskTable.setItems(mainApp.getTaskData());
 			
 			userInput = "";

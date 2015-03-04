@@ -51,7 +51,7 @@ public class CdLogic{
     	historyStorage = new HistoryStorage(storagePath);
     	completedTaskStorage = new CompletedTaskStorage(storagePath);
     	tasks = taskStorage.getTasks();
-    	toDisplay = taskStorage.getTasks();
+    	toDisplay = FXCollections.observableList(taskStorage.getTasks());
     }
     
     public ObservableList<Task> getTaskList(){
@@ -125,9 +125,11 @@ public class CdLogic{
 	private String list(String userCommand) {
 		String[] listArguments = parseList(userCommand);
 		toDisplay.clear();
+		System.out.println(tasks.size());
 
 		
 		if(listArguments[0] == null){
+			System.out.println("Updating display");
 			updateDisplay();
 			return null;
 		}else if(listArguments[1]==null){
@@ -223,17 +225,12 @@ public class CdLogic{
 		LocalTime startTime = toLocalTime(addArguments[3]);
 		LocalDate endDate = toLocalDate(addArguments[4]);
 		LocalTime endTime = toLocalTime(addArguments[5]);
-		
-		Task newTask = new Task(addArguments[0], addArguments[1], startDate, 
-				startTime, endDate, endTime);
 
-		if(taskStorage.storeTask(newTask)) {
+		if(taskStorage.createTask(addArguments[0], addArguments[1], startDate, 
+				startTime, endDate, endTime)){
+			updateDisplay();
 			return "\"" + addArguments[0] + "\"" + " successfully added";
 		}
-		/*if(storage.createTask(addArguments[0], addArguments[1], startDate, 
-				startTime, endDate, endTime)){
-			return "\"" + addArguments[0] + "\"" + " successfully added";
-		}*/
 		
 		return null;
 	}
