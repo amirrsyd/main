@@ -1,8 +1,9 @@
-package com.commando.model;
+package MODEL;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,7 +16,7 @@ import javafx.beans.property.StringProperty;
  *
  */
 
-public class Task implements Comparable {
+public class Task implements Comparable<Object> {
 	private final StringProperty taskName;
 	private final StringProperty comment;
 	
