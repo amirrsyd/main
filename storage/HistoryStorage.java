@@ -1,19 +1,11 @@
-package com.commando.storage;
+package STORAGE;
 
-import com.commando.model;
-
-import javafx.collections.FXCollections;
+import MODEL.Task;
 import javafx.collections.ObservableList;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
-
-import java.nio.charset.Charset;
 
 /**
  * HistoryStorage class
@@ -21,18 +13,22 @@ import java.nio.charset.Charset;
  * @author Qiyuan
  */
 public class HistoryStorage extends Storage {
-	public HistoryStorage(String filePath) {
-		storePath = Paths.get(filePath + "/history").toAbsolutePath();
-		openFile(storePath);
+	
+	public HistoryStorage(String filePath) throws IOException {
+		Path storePath = Paths.get(filePath + "/history.txt").toAbsolutePath();
+		setStorePath(storePath);
+		checkAndCreateFile(storePath);
+		
+		openFile(getStorePath());
 	}
 
-	public ObservableList<Task> getHistory() {
-		return list;
+	public ObservableList<Task> getHistory(){
+		return getList();
 	}
 
 	// Overriding method to remove sorting
-	protected boolean storeTask(Task newTask) {
-		list.add(newTask);
+	public boolean storeTask(Task newTask) {
+		getList().add(newTask);
 		return true;
 	}
 }

@@ -1,3 +1,5 @@
+package LOGIC;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -8,6 +10,14 @@ import java.io.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+
+import STORAGE.CompletedTaskStorage;
+import STORAGE.HistoryStorage;
+import STORAGE.Storage;
+import STORAGE.TaskStorage;
+import STORAGE.TrashStorage;
+import MODEL.Task;
+
 public class CdLogic{
     private static final String DATE_REGEX = "([1-9]|[012][0-9]|3[01])[-/]\\s*(0[1-9]|1[012])[-/]\\s*((19|20)?[0-9]{2})";
     private static final String TIME_REGEX = "([01]?[0-9]|2[0-3]):[0-5][0-9]";
@@ -17,7 +27,7 @@ public class CdLogic{
     
     private static Storage storage;
     private static TaskStorage taskStorage;
-    private static TrashStorage trashStorge;
+    private static TrashStorage trashStorage;
     private static HistoryStorage historyStorage;
     private static CompletedTaskStorage completedTaskStorage;
     
@@ -26,21 +36,22 @@ public class CdLogic{
     
     enum COMMAND_TYPE {
         ADD, DELETE, LIST, EMPTY, SEARCH, COMPLETE, EDIT, INVALID, EXIT, CHANGEDIR, UNDO
-    };
-    
-    enum TaskType{
+    }
+
+	enum TaskType{
     	FLOAT, EVENT, DATELINE
     }
     
     
-    public static void main(String[] args){
-    	storage = new Storage("");
-    	taskStorage  = new TaskStorage("");
-    	trashStorage = new TrashStorage("");
-    	historyStorage = new HistoryStorage("");
-    	completedTaskStorage = new CompletedTaskStorage("");
+    public CdLogic() throws IOException{
+    	String storagePath = "";
+    	storage = new Storage(storagePath);
+    	taskStorage  = new TaskStorage(storagePath);
+    	trashStorage = new TrashStorage(storagePath);
+    	historyStorage = new HistoryStorage(storagePath);
+    	completedTaskStorage = new CompletedTaskStorage(storagePath);
     	tasks = taskStorage.getTasks();
-    	toDisplay = FXCollections.observableList(taskStorage.getTasks());
+    	toDisplay = taskStorage.getTasks();
     }
     
     public ObservableList<Task> getTaskList(){
@@ -97,11 +108,9 @@ public class CdLogic{
 		}else{
 			return "\"" + userCommand + "\"" + "couldn't be completed";
 		}
-		return null;
 	}
 
 	private String search(String userCommand) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -114,7 +123,6 @@ public class CdLogic{
 	}
 
 	private String list(String userCommand) {
-		// TODO Auto-generated method stub 
 		String[] listArguments = parseList(userCommand);
 		toDisplay.clear();
 
@@ -194,9 +202,8 @@ public class CdLogic{
 	 * @return
 	 */
 	private String delete(String userCommand) {
-		// TODO Auto-generated method stub
-		String taskName = removeFirstWord(userCommand);
-		if(storage.deleteTask(taskName)){
+		String taskName = userCommand;
+		if(taskStorage.deleteTask(taskName, trashStorage)){
 			updateDisplay();
 			return "\"" +taskName + "\"" + " deleted successfully";
 		}
@@ -209,7 +216,6 @@ public class CdLogic{
 	}
 
 	private String add(String userCommand) {
-		// TODO Auto-generated method stub
 		String[] addArguments = parseAdd(userCommand);
 	
 		
@@ -218,10 +224,16 @@ public class CdLogic{
 		LocalDate endDate = toLocalDate(addArguments[4]);
 		LocalTime endTime = toLocalTime(addArguments[5]);
 		
-		if(storage.createTask(addArguments[0], addArguments[1], startDate, 
-				startTime, endDate, endTime)){
+		Task newTask = new Task(addArguments[0], addArguments[1], startDate, 
+				startTime, endDate, endTime);
+
+		if(taskStorage.storeTask(newTask)) {
 			return "\"" + addArguments[0] + "\"" + " successfully added";
 		}
+		/*if(storage.createTask(addArguments[0], addArguments[1], startDate, 
+				startTime, endDate, endTime)){
+			return "\"" + addArguments[0] + "\"" + " successfully added";
+		}*/
 		
 		return null;
 	}
@@ -262,7 +274,9 @@ public class CdLogic{
 	// PARSE METHODS
 	
     public String[] parseAdd(String command){
-        String[] arguments = new String[5];
+    	System.out.println(command);
+
+        String[] arguments = new String[6];
         arguments[0] = getTaskName(command); 
         arguments[1] = getDescription(command);
         String[] dates = extractDates(command);
@@ -297,7 +311,7 @@ public class CdLogic{
     
     public String getTaskName(String data){
         String task = data.split(DATE_REGEX, 2)[0];
-        task.trim();
+        task = task.trim();
         
         return task;
     }
