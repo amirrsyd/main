@@ -1,19 +1,15 @@
-package com.commando.storage;
+package STORAGE;
 
-import com.commando.model;
+import MODEL.Task;
 
-import javafx.collections.FXCollections;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import javafx.collections.ObservableList;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
 
-import java.nio.file.Paths;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 
-import java.nio.charset.Charset;
 
 /**
  * CompletedTaskStorage class
@@ -22,12 +18,13 @@ import java.nio.charset.Charset;
  */
 public class CompletedTaskStorage extends Storage {
 
-	public CompletedTaskStorage(String filePath) {
-		storePath = Paths.get(filePath + "/completed").toAbsolutePath();
-		openFile(storePath);
+	public CompletedTaskStorage(String filePath) throws IOException {
+		Path storePath = Paths.get(filePath + "/completed.txt").toAbsolutePath();
+		setStorePath(storePath);
+		checkAndCreateFile(storePath);
 	}
 
 	public ObservableList<Task> getCompletedTasks() {
-		return list;
+		return getList();
 	}
 }
