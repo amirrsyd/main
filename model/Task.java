@@ -192,9 +192,9 @@ public class Task implements Comparable<Object> {
 	 * @return Type of task.
 	 */
 	private String getType() {
-		if (this.startTime != null) {
+		if (this.endTime.get() != null) {
 			return EVENT;
-		} else if (this.endTime != null) {
+		} else if (this.startTime.get() != null) {
 			return DATELINE;
 		} else {
 			return FLOAT;
