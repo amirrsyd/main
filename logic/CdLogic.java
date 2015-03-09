@@ -43,7 +43,6 @@ public class CdLogic {
 
 	public CdLogic() throws IOException {
 		String vaultPath = "";
-		vault = new Vault(vaultPath);
 		taskVault = new TaskVault(vaultPath);
 		trashVault = new TrashVault(vaultPath);
 		historyVault = new HistoryVault(vaultPath);
@@ -114,7 +113,26 @@ public class CdLogic {
 	}
 
 	private String search(String userCommand) {
-		return null;
+		String[] searchArgs = parseSearch(userCommand);
+		toDisplay.clear();
+		int found = 0;
+		
+		for(int i= 0; i<tasks.size(); i++){
+			if(tasks.get(i).getTaskName().equals(userCommand)){
+				toDisplay.add(tasks.get(i));
+				found++;
+			}
+		}
+		
+		for(int j = 0; j<searchArgs.length; j++){
+			for(int k = 0; k<tasks.size(); k++){
+				if(tasks.get(k).getTaskName().contains(searchArgs[j]) && !(toDisplay.contains(tasks.get(k)))){
+					toDisplay.add(tasks.get(k));
+					found++;
+				}
+			}
+		}
+		return found + " tasks found";
 	}
 
 	private String empty() {
@@ -217,8 +235,9 @@ public class CdLogic {
 	}
 
 	private void updateDisplay() {
-		toDisplay = FXCollections.observableList(taskVault.getList());
-	}
+        toDisplay.clear();
+        toDisplay = copyList(taskVault.getList());
+    }
 
 	private String add(String userCommand) {
 		String[] addArguments = parseAdd(userCommand);
@@ -353,6 +372,9 @@ public class CdLogic {
 	}
 
 	private LocalDate toLocalDate(String dateString) {
+		if(dateString==null){
+    		return null;
+    	}
 		DateTimeFormatter dateFormatter = DateTimeFormatter
 				.ofPattern("dd/MM/yyyy");
 		LocalDate date = LocalDate.parse(dateString, dateFormatter);
@@ -361,6 +383,9 @@ public class CdLogic {
 	}
 
 	private LocalTime toLocalTime(String timeString) {
+    	if(timeString==null){
+    		return null;
+    	}
 		DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 		LocalTime time = LocalTime.parse(timeString, timeFormatter);
 
