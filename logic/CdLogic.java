@@ -51,6 +51,8 @@ public class CdLogic {
 	}
 
 	public ObservableList<Task> getTaskList() {
+		tasks = taskVault.getList();
+
 		return tasks;
 	}
 
@@ -59,6 +61,9 @@ public class CdLogic {
 	}
 
 	public String executeCommand(String userCommand) throws IOException {
+		tasks = taskVault.getList();
+
+		
 		if (userCommand.trim().equals(""))
 			return String.format(MESSAGE_INVALID_FORMAT, userCommand);
 
@@ -123,12 +128,32 @@ public class CdLogic {
         file.close();
         os.close();
         */
+		String oldTaskName;
+		String oldTaskDescription;
+		LocalDate oldStartDate;
+		LocalTime oldStartTime;
+		LocalDate oldEndDate;
+		LocalTime oldEndTime;
+		
     	if(userCommand.contains("taskname")){
     		String[] editArguments = parseEdit(userCommand, "taskname");
     		String taskName = editArguments[0].trim();
     		String newTaskName = editArguments[1].trim();
-    		if(taskVault.getTask(taskName)!=null){
-    			taskVault.getTask(taskName).setTaskName(newTaskName);
+    		
+    		
+    		if(taskVault.getTask(taskName)!=null){	
+    			
+    			Task oldTask = taskVault.getTask(taskName);
+    			oldTaskName = oldTask.getTaskName();
+    			oldTaskDescription = oldTask.getComment();
+    			oldStartDate = oldTask.getStartDate();
+    			oldStartTime = oldTask.getStartTime();
+    			oldEndDate = oldTask.getEndDate();
+    			oldEndTime = oldTask.getEndTime();
+    			
+    			taskVault.deleteTask(taskName, trashVault);
+    			taskVault.createTask(newTaskName, oldTaskDescription, oldStartDate, oldStartTime, oldEndDate, oldEndTime);
+    			updateDisplay()
     			return "edit done";
     		}else{ 
     			return "task " + taskName + " not found";
@@ -143,8 +168,18 @@ public class CdLogic {
     		LocalTime newStartTime = toLocalTime(startTimes[0]);
     		
     		if(taskVault.getTask(editArguments[0].trim())!=null){
-    			taskVault.getTask(editArguments[0].trim()).setStartDate(newStartDate);
-    			taskVault.getTask(editArguments[0].trim()).setStartTime(newStartTime);
+    			
+    			Task oldTask = taskVault.getTask(editArguments[0].trim());
+    			oldTaskName = oldTask.getTaskName();
+    			oldTaskDescription = oldTask.getComment();
+    			oldStartDate = oldTask.getStartDate();
+    			oldStartTime = oldTask.getStartTime();
+    			oldEndDate = oldTask.getEndDate();
+    			oldEndTime = oldTask.getEndTime();
+    			
+    			taskVault.deleteTask(oldTaskName, trashVault);
+    			taskVault.createTask(oldTaskName, oldTaskDescription, newStartDate, newStartTime, oldEndDate, oldEndTime);
+    			updateDisplay();
     			return "edit done";
     		}else{ 
     			return "task " + editArguments[0].trim() + " not found";
@@ -159,8 +194,18 @@ public class CdLogic {
     		LocalTime newEndTime = toLocalTime(startTimes[0]);
     		
     		if(taskVault.getTask(editArguments[0].trim())!=null){
-    			taskVault.getTask(editArguments[0].trim()).setEndDate(newEndDate);
-    			taskVault.getTask(editArguments[0].trim()).setEndTime(newEndTime);
+    			Task oldTask = taskVault.getTask(editArguments[0].trim());
+    			oldTaskName = oldTask.getTaskName();
+    			oldTaskDescription = oldTask.getComment();
+    			oldStartDate = oldTask.getStartDate();
+    			oldStartTime = oldTask.getStartTime();
+    			oldEndDate = oldTask.getEndDate();
+    			oldEndTime = oldTask.getEndTime();
+    			
+    			taskVault.deleteTask(oldTaskName, trashVault);
+    			taskVault.createTask(oldTaskName, oldTaskDescription, oldStartDate, oldStartTime, newEndDate, newEndTime);
+    			updateDisplay();
+    			
     			return "edit done";
     		}else{ 
     			return "task " + editArguments[0] + " not found";
