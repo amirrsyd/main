@@ -33,7 +33,7 @@ public class CdLogic {
 	private static ObservableList<Task> tasks;
 
 	enum COMMAND_TYPE {
-		ADD, DELETE, LIST, EMPTY, SEARCH, COMPLETE, EDIT, INVALID, EXIT, CHANGEDIR, UNDO
+		ADD, DELETE, LIST, EMPTY, SEARCH, COMPLETE, EDIT, INVALID, EXIT, CHANGEDIR, UNDO, NEXT
 	}
 
 	enum TaskType {
@@ -85,13 +85,28 @@ public class CdLogic {
 			return String.format(MESSAGE_INVALID_FORMAT, userCommand);
 		case EXIT:
 			System.exit(0);
+		case NEXT:
+			return next();
 		default:
 			// throw an error if the command is not recognized
 			throw new Error("Unrecognized command type");
 		}
 	}
 
-    private String edit(String userCommand) throws IOException {
+    private String next() {
+		// TODO Auto-generated method stub
+    	if(tasks.isEmpty()){
+    		return "no next tasks";
+    	}
+    	
+		toDisplay.clear();
+		toDisplay.add(taskVault.getNextTask());
+		
+		return "next task shown";
+
+	}
+
+	private String edit(String userCommand) throws IOException {
     	/*
     	BufferedReader file = new BufferedReader(new FileReader(data));
         String line;
@@ -212,12 +227,11 @@ public class CdLogic {
 	private String list(String userCommand) {
 		String[] listArguments = parseList(userCommand);
 		toDisplay.clear();
-		System.out.println(tasks.size());
 
 		if (listArguments[0] == null) {
 			System.out.println("Updating display");
 			updateDisplay();
-			return null;
+			return "";
 		} else if (listArguments[1] == null) {
 			LocalDate date1 = toLocalDate(listArguments[0]);
 			for (int i = 0; i < tasks.size(); i++) {
@@ -280,8 +294,7 @@ public class CdLogic {
 				}
 			}
 		}
-
-		return null;
+		return "";
 	}
 
 	/**
@@ -351,7 +364,9 @@ public class CdLogic {
 		if (commandTypeString.equalsIgnoreCase("exit")) {
 			return COMMAND_TYPE.EXIT;
 		}
-
+		if (commandTypeString.equalsIgnoreCase("next")) {
+			return COMMAND_TYPE.NEXT;
+		}
 		return COMMAND_TYPE.INVALID;
 	}
 
