@@ -274,7 +274,7 @@ public class TaskOverviewController{
 		prepareLabelsForCalendar(currentMonth, currentYear);
 		fillCells();
 		fillCalendar();
-		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL, Locale.ENGLISH)+ " " +String.valueOf(currentYear));
+		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL, Locale.ENGLISH) + " " + String.valueOf(currentYear));
 		outputToTextArea("MONTH UP BY 1");
 	}
 	
@@ -289,7 +289,7 @@ public class TaskOverviewController{
 		prepareLabelsForCalendar(currentMonth, currentYear);
 		fillCells();
 		fillCalendar();
-		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL, Locale.ENGLISH)+String.valueOf(currentYear));
+		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL, Locale.ENGLISH) + " " + String.valueOf(currentYear));
 		outputToTextArea("MONTH DROP BY 1");
 	}
 	
