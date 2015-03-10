@@ -25,8 +25,8 @@ import java.util.Locale;
 
 import javafx.geometry.HPos;
 
-public class TaskOverviewController {
-
+public class TaskOverviewController{
+	
 	private static final int NUMBER_OF_COLUMNS_IN_CELL = 3;
 	private static final int NUMBER_OF_ROWS_IN_CALENDAR = 7;
 	private static final int NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER = 6;
@@ -39,6 +39,7 @@ public class TaskOverviewController {
 	private static final int PREVIEW_COLUMN = 2;
 	private static CdLogic logic;
 
+	
 	@FXML
 	private TableView<Task> taskTable;
 	@FXML
@@ -59,32 +60,32 @@ public class TaskOverviewController {
 	private TextArea output;
 	@FXML
 	private TextField input;
-
+	
 	private String userInput;
-
+	
 	private Month currentMonth = LocalDate.now().getMonth();
-
+	
 	private int currentYear = LocalDate.now().getYear();
-
+	
 	private Label[] headerDays = new Label[7];
-
+	
 	private Label[][] dateNumbers = new Label[NUMBER_OF_ROWS_IN_CALENDAR][NUMBER_OF_COLS_IN_CALENDAR];
-
+	
 	private GridPane[][] cellFormat = new GridPane[NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER][NUMBER_OF_COLS_IN_CALENDAR];
-
+	
 	private ColumnConstraints[] basicCellColumnConstraints = new ColumnConstraints[NUMBER_OF_COLUMNS_IN_CELL];
-
+	
 	private RowConstraints basicCellRowConstraints = new RowConstraints();
-
+	
 	// Reference to the main application
 	private MainApp mainApp;
-
+	
 	/**
 	 * The constructor is called before the initialize() method.
 	 */
 	public TaskOverviewController() {
 	}
-
+	
 	@FXML
 	private void initialize() {
 		//Initialize the task table with the five columns.
@@ -104,7 +105,8 @@ public class TaskOverviewController {
 		fillCalendar();
 		output.setEditable(false);
 	}
-
+	
+	
 	private static void initializeLogic() {
 		try {
 			logic = new CdLogic();
@@ -112,7 +114,9 @@ public class TaskOverviewController {
 			e.printStackTrace();
 		}
 	}
-
+	
+	
+	
 	/**
 	 * This is a constructor for the labels require to act as header
 	 *
@@ -133,45 +137,39 @@ public class TaskOverviewController {
 		GridPane.setHalignment(headerDays[5], HPos.CENTER);
 		headerDays[6] = new Label("Sat");
 		GridPane.setHalignment(headerDays[6], HPos.CENTER);
-
-		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL,
-				Locale.ENGLISH) + " " + String.valueOf(currentYear));
+		
+		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL, Locale.ENGLISH)+ " " + String.valueOf(currentYear));
 	}
 
 	/**
 	 * Prepare the label array with values of current month.
 	 * 
-	 * @param inputMonth
-	 *            inputYear
+	 * @param inputMonth inputYear
 	 */
 	private void prepareLabelsForCalendar(Month inputMonth, int inputYear) {
 		LocalDate monthToShow = LocalDate.of(inputYear, inputMonth, 1);
 		int offset = 0;
-
-		// If monday we offset by 1 day to fill the calendar and same for
-		// tuesday, wednesday, thursday and so on...
-		if (monthToShow.getDayOfWeek().getValue() > 1) {
+		
+		//If monday we offset by 1 day to fill the calendar and same for tuesday, wednesday, thursday and so on...
+		if(monthToShow.getDayOfWeek().getValue() > 1) {
 			offset = monthToShow.getDayOfWeek().getValue();
 		}
-		// However, on sunday the offset is 7 so that we show 1 row of the
-		// previous month on top
+		//However, on sunday the offset is 7 so that we show 1 row of the previous month on top
 		else {
 			offset = 7;
 		}
 		monthToShow = monthToShow.minusDays(offset);
-
-		for (int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
-			for (int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
-				dateNumbers[i][j] = new Label(String.valueOf(monthToShow
-						.getDayOfMonth()));
+		
+		for(int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
+			for(int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
+				dateNumbers[i][j] = new Label(String.valueOf(monthToShow.getDayOfMonth()));
 				monthToShow = monthToShow.plusDays(1);
 			}
 		}
 	}
 
 	/**
-	 * Set the constraints of the gridpane such that each column and row is
-	 * properly spread out
+	 * Set the constraints of the gridpane such that each column and row is properly spread out
 	 */
 	private void initializeCalendar() {
 		ColumnConstraints columnWeight = new ColumnConstraints();
@@ -180,11 +178,11 @@ public class TaskOverviewController {
 		RowConstraints rowDayHeaderWeight = new RowConstraints();
 		rowWeight.setPercentHeight(50);
 		rowDayHeaderWeight.setPercentHeight(30);
-		for (int i = 0; i < NUMBER_OF_COLS_IN_CALENDAR; i++) {
+		for(int i = 0; i < NUMBER_OF_COLS_IN_CALENDAR; i++) {
 			calendar.getColumnConstraints().set(i, columnWeight);
 		}
 		calendar.getRowConstraints().set(0, rowDayHeaderWeight);
-		for (int i = 1; i < NUMBER_OF_ROWS_IN_CALENDAR; i++) {
+		for(int i = 1; i < NUMBER_OF_ROWS_IN_CALENDAR; i++) {
 			calendar.getRowConstraints().set(i, rowWeight);
 		}
 	}
@@ -193,56 +191,53 @@ public class TaskOverviewController {
 	 * Initialize the format of the cells within calendars
 	 */
 	private void initializeCellFormat() {
-
+	
 		basicCellColumnConstraints[MARGIN_COLUMN] = new ColumnConstraints();
 		basicCellColumnConstraints[MARGIN_COLUMN].setPercentWidth(2);
-
+		
 		basicCellColumnConstraints[INDEX_COLUMN] = new ColumnConstraints();
 		basicCellColumnConstraints[INDEX_COLUMN].setPercentWidth(25);
-
+		
 		basicCellColumnConstraints[PREVIEW_COLUMN] = new ColumnConstraints();
 		basicCellColumnConstraints[PREVIEW_COLUMN].setPercentWidth(70);
-
+		
 		basicCellRowConstraints = new RowConstraints();
 		basicCellRowConstraints.setPercentHeight(50);
-
+		
+		
 	}
 
 	/**
 	 * Clear cells of all labels
 	 */
 	private void setCellFormat() {
-
-		for (int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
-			for (int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
+	
+		for(int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
+			for(int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
 				cellFormat[i][j] = new GridPane();
-				cellFormat[i][j].getColumnConstraints().addAll(
-						basicCellColumnConstraints);
-				cellFormat[i][j].getRowConstraints().addAll(
-						basicCellRowConstraints, basicCellRowConstraints,
-						basicCellRowConstraints, basicCellRowConstraints);
+				cellFormat[i][j].getColumnConstraints().addAll(basicCellColumnConstraints);
+				cellFormat[i][j].getRowConstraints().addAll(basicCellRowConstraints,basicCellRowConstraints,basicCellRowConstraints,basicCellRowConstraints);
 			}
 		}
 	}
 
 	/**
-	 * Fills the first 7 grids with Sun, Mon, Tues, Wed, Thurs, Fri, Sat
-	 * respectively
+	 * Fills the first 7 grids with Sun, Mon, Tues, Wed, Thurs, Fri, Sat respectively
 	 * 
 	 */
 	private void fillHeader() {
-		// Fill in the headers in monthView
-		for (int i = 0; i < NUMBER_OF_DAYS_IN_A_WEEK; i++) {
+		//Fill in the headers in monthView
+		for(int i = 0; i < NUMBER_OF_DAYS_IN_A_WEEK; i++) {
 			calendar.add(headerDays[i], i, 0);
 		}
-
+		
 	}
 
 	private void fillCells() {
-
-		// Prepare the empty cell format for display
-		for (int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
-			for (int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
+		
+		//Prepare the empty cell format for display
+		for(int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
+			for(int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
 				cellFormat[i][j].add(dateNumbers[i][j], 1, 0);
 			}
 		}
@@ -253,19 +248,19 @@ public class TaskOverviewController {
 	 * 
 	 * @param dateNumbers
 	 */
-
+	
 	private void fillCalendar() {
-
-		// Fill in the rest of the days as prepared previously
-		for (int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
-			for (int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
-
-				// monthView.add(dateNumbers[i][j], j, i+1);
-				calendar.add(cellFormat[i][j], j, i + 1);
+		
+		//Fill in the rest of the days as prepared previously 
+		for(int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
+			for(int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
+	
+				//monthView.add(dateNumbers[i][j], j, i+1);
+				calendar.add(cellFormat[i][j], j, i+1);
 				GridPane.setHalignment(dateNumbers[i][j], HPos.CENTER);
 			}
 		}
-
+		
 	}
 
 	/**
@@ -279,11 +274,10 @@ public class TaskOverviewController {
 		prepareLabelsForCalendar(currentMonth, currentYear);
 		fillCells();
 		fillCalendar();
-		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL,
-				Locale.ENGLISH) + " " + String.valueOf(currentYear));
+		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL, Locale.ENGLISH)+ " " +String.valueOf(currentYear));
 		outputToTextArea("MONTH UP BY 1");
 	}
-
+	
 	/**
 	 * Update the calendar with the previous month.
 	 */
@@ -295,18 +289,17 @@ public class TaskOverviewController {
 		prepareLabelsForCalendar(currentMonth, currentYear);
 		fillCells();
 		fillCalendar();
-		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL,
-				Locale.ENGLISH) + String.valueOf(currentYear));
+		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL, Locale.ENGLISH)+String.valueOf(currentYear));
 		outputToTextArea("MONTH DROP BY 1");
 	}
-
+	
 	/**
-	 * Clear the current labels in monthView Must be called before updating the
-	 * dateNumbers array
+	 * Clear the current labels in monthView
+	 * Must be called before updating the dateNumbers array
 	 */
 	private void removeCellsFromCalendar() {
-		for (int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
-			for (int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
+		for(int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
+			for(int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
 				calendar.getChildren().remove(cellFormat[i][j]);
 			}
 		}
@@ -318,13 +311,14 @@ public class TaskOverviewController {
 	 * @param plusOrMinus
 	 */
 	private void updateMonth(int plusOrMinus) {
-		if (plusOrMinus == MINUS) {
-			if (currentMonth.getValue() == 1) {
+		if(plusOrMinus == MINUS) {
+			if(currentMonth.getValue() == 1) {
 				currentYear--;
 			}
 			currentMonth = currentMonth.minus(1);
-		} else if (plusOrMinus == PLUS) {
-			if (currentMonth.getValue() == 12) {
+		}
+		else if(plusOrMinus == PLUS) {
+			if(currentMonth.getValue() == 12) {
 				currentYear++;
 			}
 			currentMonth = currentMonth.plus(1);
@@ -333,22 +327,21 @@ public class TaskOverviewController {
 
 	/**
 	 * Takes in the user input from the textfield after he press 'enter'
-	 * 
-	 * @throws IOException
+	 * @throws IOException 
 	 */
 	@FXML
 	private void getUserInput(KeyEvent event) throws IOException {
 		if (event.getCode() == KeyCode.ENTER) {
-			if (input.getText() != null && !input.getText().isEmpty())
-				userInput = input.getText();
-
+			if(input.getText() != null && !input.getText().isEmpty())
+			userInput = input.getText();
+			
 			String response = logic.executeCommand(userInput);
-
+			
 			outputToTextArea(response);
-
+			
 			mainApp.setTaskData(logic.getDisplayList());
 			taskTable.setItems(mainApp.getTaskData());
-
+			
 			userInput = "";
 			input.setText("");
 		}
@@ -361,18 +354,17 @@ public class TaskOverviewController {
 	 */
 	@FXML
 	private void outputToTextArea(String text) {
-		output.appendText(text + "\n");
+		output.appendText(text+"\n");
 	}
-
+	
 	/**
 	 * Is called by the main application to give a reference back to itself.
-	 * 
 	 * @param mainApp
 	 */
 	public void setMainApp(MainApp mainApp) {
 		this.mainApp = mainApp;
 
-		// Add observable list data to the table
-		taskTable.setItems(mainApp.getTaskData());
+		//Add observable list data to the table 
+		taskTable.setItems(mainApp.getTaskData());	
 	}
 }
