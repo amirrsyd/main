@@ -153,7 +153,7 @@ public class CdLogic {
     			
     			taskVault.deleteTask(taskName, trashVault);
     			taskVault.createTask(newTaskName, oldTaskDescription, oldStartDate, oldStartTime, oldEndDate, oldEndTime);
-    			updateDisplay()
+    			updateDisplay();
     			return "edit done";
     		}else{ 
     			return "task " + taskName + " not found";
