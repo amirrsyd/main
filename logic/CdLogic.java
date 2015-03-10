@@ -9,7 +9,6 @@ import java.io.*;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-
 import vault.CompletedTaskVault;
 import vault.HistoryVault;
 import vault.Vault;
@@ -92,8 +91,74 @@ public class CdLogic {
 		}
 	}
 
-	private String edit(String userCommand) {
-		return null;
+    private String edit(String userCommand) throws IOException {
+    	/*
+    	BufferedReader file = new BufferedReader(new FileReader(data));
+        String line;
+        String input = "";
+        
+        while ((line = file.readLine()) != null)
+            input += line + System.lineSeparator();
+
+        input = input.replace(toUpdate, updated);
+
+        FileOutputStream os = new FileOutputStream(data);
+        os.write(input.getBytes());
+        System.out.println("lala");
+        file.close();
+        os.close();
+        */
+    	if(userCommand.contains("taskname")){
+    		String[] editArguments = parseEdit(userCommand, "taskname");
+    		String taskName = editArguments[0].trim();
+    		String newTaskName = editArguments[1].trim();
+    		if(taskVault.getTask(taskName)!=null){
+    			taskVault.getTask(taskName).setTaskName(newTaskName);
+    			return "edit done";
+    		}else{ 
+    			return "task " + taskName + " not found";
+    		}
+    		
+    	}else if(userCommand.contains("startdate")){
+    		String[] editArguments = parseEdit(userCommand, "startdate");
+    		String[] startDates = extractDates(editArguments[1]);
+    		String[] startTimes = extractTimes(editArguments[1]);
+    		
+    		LocalDate newStartDate = toLocalDate(startDates[0]);
+    		LocalTime newStartTime = toLocalTime(startTimes[0]);
+    		
+    		if(taskVault.getTask(editArguments[0].trim())!=null){
+    			taskVault.getTask(editArguments[0].trim()).setStartDate(newStartDate);
+    			taskVault.getTask(editArguments[0].trim()).setStartTime(newStartTime);
+    			return "edit done";
+    		}else{ 
+    			return "task " + editArguments[0].trim() + " not found";
+    		}
+    	}else if(userCommand.contains("enddate")){
+    		String[] editArguments = parseEdit(userCommand, "enddate");
+    		
+    		String[] startDates = extractDates(editArguments[1]);
+    		String[] startTimes = extractTimes(editArguments[1]);
+    		
+    		LocalDate newEndDate = toLocalDate(startDates[0]);
+    		LocalTime newEndTime = toLocalTime(startTimes[0]);
+    		
+    		if(taskVault.getTask(editArguments[0].trim())!=null){
+    			taskVault.getTask(editArguments[0].trim()).setEndDate(newEndDate);
+    			taskVault.getTask(editArguments[0].trim()).setEndTime(newEndTime);
+    			return "edit done";
+    		}else{ 
+    			return "task " + editArguments[0] + " not found";
+    		}
+    	}else return "invalid edit command";
+
+    	
+	}
+
+	private String[] parseEdit(String userCommand, String string) {
+		// TODO Auto-generated method stub
+		
+		return userCommand.trim().split(string);
 	}
 
 	private ObservableList<Task> copyList(ObservableList<Task> toCopy) {
@@ -134,6 +199,7 @@ public class CdLogic {
 		}
 		return found + " tasks found";
 	}
+	
 
 	private String empty() {
 		if (trashVault.emptyTrash()) {
