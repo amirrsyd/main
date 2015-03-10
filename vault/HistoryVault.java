@@ -29,7 +29,7 @@ public class HistoryVault extends Vault {
 
 	// Overriding method to remove sorting
 	public boolean storeTask(Task newTask) {
-		getList().add(newTask);
+		list.add(newTask);
 		return true;
 	}
 }

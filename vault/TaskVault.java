@@ -39,13 +39,13 @@ public class TaskVault extends Vault {
 	}
 
 	public Task getNextTask() {
-		return getList().get(ZERO);
+		return list.get(ZERO);
 	}
 
 	public boolean completeTask(String taskName, 
 			                    CompletedTaskVault completedTasks) {
 		Task task = search(taskName);
-		getList().remove(task);
+		list.remove(task);
 		completedTasks.storeTask(task);
 		return true;
 	}

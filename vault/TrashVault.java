@@ -28,7 +28,7 @@ public class TrashVault extends Vault {
 	}
 
 	public boolean emptyTrash() {
-		getList().clear();
+		list.clear();
 		return true;
 	}
 }
