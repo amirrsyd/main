@@ -74,7 +74,11 @@ public class Vault {
 	}
 
 	public ObservableList<Task> getList() {
-		return list;
+		ObservableList<Task> listCopy = FXCollections.observableArrayList();;
+		for (int i = 0; i < list.size(); i++) {
+			listCopy.add(list.get(i));
+		}
+		return listCopy;
 	}
 	
 	
