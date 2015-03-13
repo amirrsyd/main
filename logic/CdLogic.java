@@ -421,7 +421,7 @@ public class CdLogic {
 		String[] listArguments = parseList(userCommand);
 		toDisplay.clear();
 
-		if (listArguments[0] == null) {
+		if (listArguments[0].trim().equals("")) {
 			System.out.println("Updating display");
 			updateDisplay();
 			return "All tasks displayed";
@@ -434,18 +434,27 @@ public class CdLogic {
 		if(listArguments[0].equalsIgnoreCase("week")){
 			return listWeek() + " tasks displayed";
 		}
+	
+	
+		try {
+			if (isValidListDate(listArguments)) {
+				return listDate(listArguments[0]) + "tasks displayed";
+			} else if (isValidListDateTime(listArguments)) {
+				return listDateTime(listArguments) + "tasks displayed";
+			} else if (isValidDayPeriod(listArguments)){
+				return listDayPeriod(listArguments) + " tasks displayed";
+			}
+			else if (isValidListPeriod(listArguments)) {
+				return listPeriod(listArguments) + "tasks displayed";
+			}
+		} catch (ArrayIndexOutOfBoundsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			updateDisplay();
+			return "Invalid list command";
+		}
 		
-		if (isValidListDate(listArguments)) {
-			return listDate(listArguments[0]) + "tasks displayed";
-		} else if (isValidListDateTime(listArguments)) {
-			return listDateTime(listArguments) + "tasks displayed";
-		} else if (isValidDayPeriod(listArguments)){
-			return listDayPeriod(listArguments) + " tasks displayed";
-		}
-		else if (isValidListPeriod(listArguments)) {
-			return listPeriod(listArguments) + "tasks displayed";
-		}
-
+		updateDisplay();
 		return "Invalid list command";
 
 	}
