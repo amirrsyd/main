@@ -182,8 +182,7 @@ public class CdLogic {
 			e.printStackTrace();
 			return "New time not valid";
 		}
-		
-<<<<<<< HEAD
+
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
 			if(!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(),
@@ -347,86 +346,6 @@ public class CdLogic {
 
 	private boolean taskExists(String taskName) {
 		return taskVault.getTask(taskName) != null;
-=======
-    	if(userCommand.contains("taskname")){
-    		String[] editArguments = parseEdit(userCommand, "taskname");
-    		String taskName = editArguments[0].trim();
-    		String newTaskName = editArguments[1].trim();
-    		
-    		
-    		if(taskVault.getTask(taskName)!=null){	
-    			
-    			Task oldTask = taskVault.getTask(taskName);
-    			oldTaskName = oldTask.getTaskName();
-    			oldTaskDescription = oldTask.getComment();
-    			oldStartDate = oldTask.getStartDate();
-    			oldStartTime = oldTask.getStartTime();
-    			oldEndDate = oldTask.getEndDate();
-    			oldEndTime = oldTask.getEndTime();
-    			
-    			taskVault.deleteTask(taskName, trashVault);
-    			taskVault.createTask(newTaskName, oldTaskDescription, oldStartDate, oldStartTime, oldEndDate, oldEndTime);
-    			updateDisplay();
-    			return "edit done";
-    		}else{ 
-    			return "task " + taskName + " not found";
-    		}
-    		
-    	}else if(userCommand.contains("startdate")){
-    		String[] editArguments = parseEdit(userCommand, "startdate");
-    		String[] startDates = extractDates(editArguments[1]);
-    		String[] startTimes = extractTimes(editArguments[1]);
-    		
-    		LocalDate newStartDate = toLocalDate(startDates[0]);
-    		LocalTime newStartTime = toLocalTime(startTimes[0]);
-    		
-    		if(taskVault.getTask(editArguments[0].trim())!=null){
-    			
-    			Task oldTask = taskVault.getTask(editArguments[0].trim());
-    			oldTaskName = oldTask.getTaskName();
-    			oldTaskDescription = oldTask.getComment();
-    			oldStartDate = oldTask.getStartDate();
-    			oldStartTime = oldTask.getStartTime();
-    			oldEndDate = oldTask.getEndDate();
-    			oldEndTime = oldTask.getEndTime();
-    			
-    			taskVault.deleteTask(oldTaskName, trashVault);
-    			taskVault.createTask(oldTaskName, oldTaskDescription, newStartDate, newStartTime, oldEndDate, oldEndTime);
-    			updateDisplay();
-    			return "edit done";
-    		}else{ 
-    			return "task " + editArguments[0].trim() + " not found";
-    		}
-    	}else if(userCommand.contains("enddate")){
-    		String[] editArguments = parseEdit(userCommand, "enddate");
-    		
-    		String[] startDates = extractDates(editArguments[1]);
-    		String[] startTimes = extractTimes(editArguments[1]);
-    		
-    		LocalDate newEndDate = toLocalDate(startDates[0]);
-    		LocalTime newEndTime = toLocalTime(startTimes[0]);
-    		
-    		if(taskVault.getTask(editArguments[0].trim())!=null){
-    			Task oldTask = taskVault.getTask(editArguments[0].trim());
-    			oldTaskName = oldTask.getTaskName();
-    			oldTaskDescription = oldTask.getComment();
-    			oldStartDate = oldTask.getStartDate();
-    			oldStartTime = oldTask.getStartTime();
-    			oldEndDate = oldTask.getEndDate();
-    			oldEndTime = oldTask.getEndTime();
-    			
-    			taskVault.deleteTask(oldTaskName, trashVault);
-    			taskVault.createTask(oldTaskName, oldTaskDescription, oldStartDate, oldStartTime, newEndDate, newEndTime);
-    			updateDisplay();
-    			
-    			return "edit done";
-    		}else{ 
-    			return "task " + editArguments[0] + " not found";
-    		}
-    	}else return "invalid edit command";
-
-    	
->>>>>>> origin/master
 	}
 
 	private String[] parseEdit(String userCommand, String string) {
