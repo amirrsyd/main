@@ -18,7 +18,7 @@ import model.Task;
 public class TaskVault extends Vault {
 
 	public TaskVault(String filePath) throws IOException {
-		storePath = Paths.get(filePath + "taskList.txt").toAbsolutePath();
+		storePath = Paths.get(filePath + "/taskList.txt").toAbsolutePath();
 		// setStorePath(storePath);
 		if (canFindFile(storePath)) {
 			openFile(storePath);

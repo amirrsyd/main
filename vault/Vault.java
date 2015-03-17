@@ -16,7 +16,6 @@ import java.nio.file.StandardOpenOption;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Vector;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -28,7 +27,6 @@ public class Vault {
 
 	protected static final Charset CHAR_SET = Charset.forName("US-ASCII");
 	protected static final int ZERO = 0;
-	protected static final int FIELD_NUMBER = 6;
 	protected static DateTimeFormatter timeFormat = DateTimeFormatter.ISO_LOCAL_TIME;
 	protected static DateTimeFormatter dateFormat = DateTimeFormatter.ISO_LOCAL_DATE;
 	
@@ -86,21 +84,47 @@ public class Vault {
 		try (BufferedWriter writer = Files.newBufferedWriter(storePath, 
 				                         CHAR_SET, StandardOpenOption.CREATE, 
 				                         StandardOpenOption.WRITE, 
-				                         StandardOpenOption.SYNC)) {
-			while (!list.isEmpty()) {
-				Task task = list.remove(ZERO);
+				                         StandardOpenOption.SYNC,
+				                         StandardOpenOption.TRUNCATE_EXISTING)) {
+			int i = 0;
+			while (i < list.size()) {
+				Task task = list.get(i);
 				writer.write(task.getTaskName());
+				writer.newLine();
 				if (task.getComment() != null) {
-					writer.write(task.getComment());
+					writer.write("comment " + task.getComment());
+					writer.newLine();
+				}
+				else {
+					writer.write("comment  ");
+					writer.newLine();
 				}
 				if (task.getStartDate() != null) {
-					writer.write(task.getStartDate().toString());
-					writer.write(task.getStartTime().toString());
+					writer.write("startdate " + task.getStartDate().toString());
+					writer.newLine();
+					writer.write("starttime " + task.getStartTime().toString());
+					writer.newLine();
+				}
+				else {
+					writer.write("startdate  ");
+					writer.newLine();
+					writer.write("starttime  ");
+					writer.newLine();
 				}
 				if (task.getEndDate() != null) {
-					writer.write(task.getEndDate().toString());
-					writer.write(task.getEndTime().toString());
+					writer.write("enddate " + task.getEndDate().toString());
+					writer.newLine();
+					writer.write("endtime " + task.getEndTime().toString());
+					writer.newLine();
 				}
+				else {
+					writer.write("enddate  ");
+					writer.newLine();
+					writer.write("endtime  ");
+					writer.newLine();
+				}
+				i++;
+				writer.write("null");
 				writer.newLine();
 			}
 		} catch (IOException error) {
@@ -147,20 +171,28 @@ public class Vault {
 			String line = reader.readLine();
 		    while (line != null) {
 		    	Task task = new Task(line);
-		    	Vector<String> taskLines = new Vector<String>();
-		    	while (line != "") {
+	    		line = reader.readLine();
+		    	while (line != null) {
+		    		if (line.startsWith("comment")) {
+		    			task.setComment(line.substring(8));
+		    		}
+		    		if (line.startsWith("startdate")) {
+		    			task.setStartDate(changeStringToDate(line.substring(10)));
+		    		}
+		    		if (line.startsWith("starttime")) {
+		    			task.setStartTime(changeStringToTime(line.substring(10)));
+		    		}
+		    		if (line.startsWith("enddate")) {
+		    			task.setEndDate(changeStringToDate(line.substring(8)));
+		    		}
+		    		if (line.startsWith("endtime")) {
+		    			task.setEndTime(changeStringToTime(line.substring(8)));
+		    		}
 		    		line = reader.readLine();
-		    		taskLines.add(line);
+		    		if (line.startsWith("null")) {
+		    			break;
+		    		}
 		    	}
-		    	if (taskLines.size() < FIELD_NUMBER) {
-		    		taskLines.add(null);
-		    	}
-		    	task.setComment(taskLines.remove(ZERO));
-		    	
-		    	task.setStartDate(changeStringToDate(taskLines.remove(ZERO)));
-		    	task.setStartTime(changeStringToTime(taskLines.remove(ZERO)));
-		    	task.setEndDate(changeStringToDate(taskLines.remove(ZERO)));
-		    	task.setEndTime(changeStringToTime(taskLines.remove(ZERO)));
 		    	storeTask(task);
 		    	line = reader.readLine();
 		    }
@@ -177,6 +209,9 @@ public class Vault {
 	 * @return
 	 */
 	private LocalTime changeStringToTime(String timeString) {
+		if (timeString.length() < 3) {
+			return null;
+		}
 		return LocalTime.parse(timeString, timeFormat);
 	}
 
@@ -186,6 +221,9 @@ public class Vault {
 	 * @return
 	 */
 	private LocalDate changeStringToDate(String dateString) {
+		if (dateString.length() < 3) {
+			return null;
+		}
 		return LocalDate.parse(dateString, dateFormat);
 	}
 }
