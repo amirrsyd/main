@@ -42,7 +42,7 @@ public class CdLogic {
 	}
 
 	public CdLogic() throws IOException {
-		String vaultPath = "";
+		String vaultPath = "workspace/main";
 		taskVault = new TaskVault(vaultPath);
 		trashVault = new TrashVault(vaultPath);
 		historyVault = new HistoryVault(vaultPath);
@@ -52,9 +52,9 @@ public class CdLogic {
 	}
 
 	public ObservableList<Task> getTaskList() {
-		tasks = taskVault.getList();
+		tasks = FXCollections.observableArrayList(taskVault.getList());
 
-		return tasks;
+		return FXCollections.observableArrayList(toDisplay);
 	}
 
 	public ObservableList<Task> getDisplayList() {
@@ -69,7 +69,6 @@ public class CdLogic {
 
 		String commandTypeString = getFirstWord(userCommand);
 		COMMAND_TYPE commandType = determineCommandType(commandTypeString);
-		userCommand = removeFirstWord(userCommand);
 
 		switch (commandType) {
 		case ADD:
@@ -100,6 +99,7 @@ public class CdLogic {
 
 	private String next() {
 		// TODO Auto-generated method stub
+		
 		if (tasks.isEmpty()) {
 			return "no next tasks";
 		}
@@ -107,7 +107,7 @@ public class CdLogic {
 		toDisplay.clear();
 		toDisplay.add(taskVault.getNextTask());
 		
-		//saveVaults();
+		saveVaults();
 
 		return "next task shown";
 
@@ -124,6 +124,7 @@ public class CdLogic {
 	}
 
 	private String edit(String userCommand) throws IOException {
+		userCommand = removeFirstWord(userCommand);
 
 		if (userCommand.contains("taskname")) {
 			return editTaskName(userCommand);
@@ -162,7 +163,7 @@ public class CdLogic {
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), oldTask.getEndTime());
 			updateDisplay();
-			//saveVaults();
+			saveVaults();
 			return "comment added";
 		} else {
 			return "task " + taskName + " not found";
@@ -194,7 +195,7 @@ public class CdLogic {
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), newEndTime);
 			updateDisplay();
-			//saveVaults();
+			saveVaults();
 			return "edit done";
 		} else {
 			return "task " + taskName + " not found";
@@ -233,7 +234,7 @@ public class CdLogic {
 					oldTask.getStartDate(), newStartTime, oldTask.getEndDate(),
 					oldTask.getEndTime());
 			updateDisplay();
-			//saveVaults();
+			saveVaults();
 			return "edit done";
 		} else {
 			return "task " + taskName + " not found";
@@ -268,7 +269,7 @@ public class CdLogic {
 					oldTask.getStartDate(), oldTask.getStartTime(), newEndDate,
 					oldTask.getEndTime());
 			updateDisplay();
-			//saveVaults();
+			saveVaults();
 			return "edit done";
 		} else {
 			return "task " + taskName + " not found";
@@ -307,7 +308,7 @@ public class CdLogic {
 					newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
 					oldTask.getEndTime());
 			updateDisplay();
-			//saveVaults();
+			saveVaults();
 			return "edit done";
 		} else {
 			return "task " + taskName + " not found";
@@ -337,7 +338,7 @@ public class CdLogic {
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), oldTask.getEndTime());
 			updateDisplay();
-			//saveVaults();
+			saveVaults();
 			return "edit done";
 		} else {
 			return "task " + taskName + " not found";
@@ -363,9 +364,11 @@ public class CdLogic {
 	}
 
 	private String complete(String userCommand) {
+		userCommand = removeFirstWord(userCommand);
+
 		if (taskVault.completeTask(userCommand, completedTaskVault)) {
 			updateDisplay();
-			//saveVaults();
+			saveVaults();
 			return "\"" + userCommand + "\"" + " completed successfully";
 		} else {
 			return "\"" + userCommand + "\"" + "couldn't be completed";
@@ -373,6 +376,8 @@ public class CdLogic {
 	}
 
 	private String search(String userCommand) {
+		userCommand = removeFirstWord(userCommand);
+		
 		String[] searchWords = parseSearch(userCommand);
 		toDisplay.clear();
 		int found = 0;
@@ -410,7 +415,7 @@ public class CdLogic {
 
 	private String empty() {
 		if (trashVault.emptyTrash()) {
-			//saveVaults();
+			saveVaults();
 			return "trash emptied successfully";
 		} else {
 			return "trash can't be emptied";
@@ -418,6 +423,8 @@ public class CdLogic {
 	}
 
 	private String list(String userCommand) {
+		userCommand = removeFirstWord(userCommand);
+
 		String[] listArguments = parseList(userCommand);
 		toDisplay.clear();
 
@@ -649,10 +656,12 @@ public class CdLogic {
 	 * @return
 	 */
 	private String delete(String userCommand) {
+		userCommand = removeFirstWord(userCommand);
+
 		String taskName = userCommand;
 		if (taskVault.deleteTask(taskName, trashVault)) {
 			updateDisplay();
-			//saveVaults();
+			saveVaults();
 			return "\"" + taskName + "\"" + " deleted successfully";
 		}
 
@@ -665,6 +674,8 @@ public class CdLogic {
 	}
 
 	private String add(String userCommand) {
+		userCommand = removeFirstWord(userCommand);
+
 		String[] addArguments = parseAdd(userCommand);
 		
 		LocalDate startDate;
@@ -728,7 +739,7 @@ public class CdLogic {
 		if (taskVault.createTask(addArguments[0], addArguments[1], startDate,
 				startTime, endDate, endTime)) {
 			updateDisplay();
-			//saveVaults();
+			saveVaults();
 			return " Task \"" + addArguments[0] + "\" successfully added";
 		}
 
