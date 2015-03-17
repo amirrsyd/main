@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
 
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
@@ -21,11 +22,40 @@ import model.Task;
 import logic.CdLogic;
 
 import java.time.format.TextStyle;
+import java.util.Collections;
 import java.util.Locale;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import javafx.geometry.HPos;
 
+import java.time.temporal.ChronoUnit;
+
 public class TaskOverviewController{
+	
+	public static class TaskOverviewControllerLogger {
+		static FileHandler fileHandler;
+		
+		//Use the classname for the logger
+		private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+		
+		private final static void initializeLogger() {
+		    try {  
+		        // This block configure the logger with handler and formatter 
+		    	System.out.println("Creating logger at: " + System.getProperty("user.dir") + "\\logFile.txt");
+		        fileHandler = new FileHandler(System.getProperty("user.dir") + "logFile.txt");
+		        logger.addHandler(fileHandler);
+		        SimpleFormatter formatter = new SimpleFormatter();  
+		        fileHandler.setFormatter(formatter);
+		    } catch (SecurityException securityException) {  
+		    	securityException.printStackTrace();  
+		    } catch (IOException iOException) {  
+		        iOException.printStackTrace();  
+		    }
+		}
+	}
 	
 	private static final int NUMBER_OF_COLUMNS_IN_CELL = 3;
 	private static final int NUMBER_OF_ROWS_IN_CALENDAR = 7;
@@ -37,8 +67,12 @@ public class TaskOverviewController{
 	private static final int MARGIN_COLUMN = 0;
 	private static final int INDEX_COLUMN = 1;
 	private static final int PREVIEW_COLUMN = 2;
+	private static final String MESSAGE_LOG_ERROR = "An error has occured, please try again.";
+	private static final String MESSAGE_EMPTY_USER_INPUT_ERROR = "Please key in a command first.";
+	private static final String MESSAGE_WELCOME = "Hello! Welcome to Comman.Do, your to-do manager.\n"
+												+ "Please note that the directories to save your tasks are by default in the same directory as the application.\n" 
+												+ "Start by entering a command into the box below.\n";
 	private static CdLogic logic;
-
 	
 	@FXML
 	private TableView<Task> taskTable;
@@ -77,6 +111,12 @@ public class TaskOverviewController{
 	
 	private RowConstraints basicCellRowConstraints = new RowConstraints();
 	
+	private ObservableList<Task> taskList; 
+	
+	private Label[][][] calendarTasks = new Label[6][7][3];
+	
+	private LocalDate startingDate;
+	
 	// Reference to the main application
 	private MainApp mainApp;
 	
@@ -94,16 +134,22 @@ public class TaskOverviewController{
 		startTimeColumn.setCellValueFactory(cellData -> cellData.getValue().startTimeProperty());
 		endDateColumn.setCellValueFactory(cellData -> cellData.getValue().endDateProperty());
 		endTimeColumn.setCellValueFactory(cellData -> cellData.getValue().endTimeProperty());
-		prepareLabelsForHeader(headerDays);
-		prepareLabelsForCalendar(currentMonth, currentYear);
+		
+		TaskOverviewControllerLogger.initializeLogger();
+		output.setEditable(false);
 		initializeLogic();
+		outputToTextArea(MESSAGE_WELCOME);
+		
+		prepareLabelsForHeader(headerDays);
+		prepareLabelsForCalendar(getCurrentMonth(), getCurrentYear());
+		setStartingDate(computeStartDate(getCurrentMonth(), getCurrentYear()));
+		prepareTaskLabelsForCalendar(getStartingDate().getDayOfMonth(), getStartingDate().getMonth(), getStartingDate().getYear());
 		initializeCalendar();
 		initializeCellFormat();
 		setCellFormat();
 		fillHeader();
 		fillCells();
 		fillCalendar();
-		output.setEditable(false);
 	}
 	
 	
@@ -122,7 +168,7 @@ public class TaskOverviewController{
 	 *
 	 * @param headerDays
 	 */
-	private void prepareLabelsForHeader(Label[] headerDays) {
+	public void prepareLabelsForHeader(Label[] headerDays) {
 		headerDays[0] = new Label("Sun");
 		GridPane.setHalignment(headerDays[0], HPos.CENTER);
 		headerDays[1] = new Label("Mon");
@@ -138,7 +184,7 @@ public class TaskOverviewController{
 		headerDays[6] = new Label("Sat");
 		GridPane.setHalignment(headerDays[6], HPos.CENTER);
 		
-		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL, Locale.ENGLISH)+ " " + String.valueOf(currentYear));
+		getMonthHeader().setText(getCurrentMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH)+ " " + String.valueOf(getCurrentYear()));
 	}
 
 	/**
@@ -146,7 +192,24 @@ public class TaskOverviewController{
 	 * 
 	 * @param inputMonth inputYear
 	 */
-	private void prepareLabelsForCalendar(Month inputMonth, int inputYear) {
+	public void prepareLabelsForCalendar(Month inputMonth, int inputYear) {
+		LocalDate monthToShow = computeStartDate(inputMonth, inputYear);
+		
+		for(int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
+			for(int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
+				getDateNumbers()[i][j] = new Label(String.valueOf(monthToShow.getDayOfMonth()));
+				monthToShow = monthToShow.plusDays(1);
+			}
+		}
+	}
+	
+	/**
+	 * Computes the starting date of the calendar
+	 * @param inputMonth
+	 * @param inputYear
+	 * @return
+	 */
+	private LocalDate computeStartDate(Month inputMonth, int inputYear) {
 		LocalDate monthToShow = LocalDate.of(inputYear, inputMonth, 1);
 		int offset = 0;
 		
@@ -159,15 +222,82 @@ public class TaskOverviewController{
 			offset = 7;
 		}
 		monthToShow = monthToShow.minusDays(offset);
+		return monthToShow;
+	}
+	
+	/**
+	 * Prepare the labels from tasks to be inserted into the calendar.
+	 * 
+	 */
+	public void prepareTaskLabelsForCalendar(int inputDay, Month inputMonth, int inputYear) {
 		
-		for(int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
-			for(int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
-				dateNumbers[i][j] = new Label(String.valueOf(monthToShow.getDayOfMonth()));
-				monthToShow = monthToShow.plusDays(1);
+		/*
+		 * Pseudo-code
+		 * sort taskList <should be in chronological order>
+		 * determine the start calendar and end calendar
+		 * find the point where we can show a task
+		 * make labels for up to 3 per day, the rest are ignored
+		 * stop when we reach the end of calendar 
+		 * 
+		 */
+		updateTaskList();
+		calendarTasks = new Label[6][7][3];
+		Collections.sort(taskList);
+		LocalDate calendarStartDate = LocalDate.of(inputYear, inputMonth, inputDay);
+		LocalDate calendarEndDate = calendarStartDate.plusDays(41);
+		for(int i = 0; i < taskList.size(); i++) {
+			//If startDate of task is earlier than calendarEndDate
+			if(taskList.get(i).getStartDate() != null &&
+				taskList.get(i).getStartDate().compareTo(calendarEndDate) <= 0) {
+				//Get which row and which col is the event on
+				long difference = calendarStartDate.until(taskList.get(i).getStartDate(), ChronoUnit.DAYS);
+				LocalDate startDateToAdd;
+				
+				if(difference < 0) {
+					difference = 0;
+					startDateToAdd = calendarStartDate;
+				}
+				else {
+					startDateToAdd = taskList.get(i).getStartDate();
+				}
+				
+				int row = (int) (difference / 7);
+				int col = (int) (difference % 7);
+				System.out.println(difference + " " + row + " and " + col);
+				//Check if for that particular day, we already have 3 labels to show
+				if(calendarTasks[row][col][0] == null)
+					addLabelToCalendarTasks(startDateToAdd, calendarEndDate, taskList.get(i), row, col, 0);
+				else if(calendarTasks[row][col][1] == null) {
+					addLabelToCalendarTasks(startDateToAdd, calendarEndDate, taskList.get(i), row, col, 1);
+				}
+				else if(calendarTasks[row][col][2] == null) {
+					addLabelToCalendarTasks(startDateToAdd, calendarEndDate, taskList.get(i), row, col, 2);
+				}
 			}
 		}
+		
+		
+		
 	}
 
+	private void addLabelToCalendarTasks(LocalDate startDateToAdd, LocalDate calendarEndDate, Task toAdd, int row, int col, int taskNumber) {
+		LocalDate endDateToStopAdding = toAdd.getEndDate();
+		if(endDateToStopAdding != null) {
+			while(startDateToAdd.until(endDateToStopAdding, ChronoUnit.DAYS) >= 0 && startDateToAdd.compareTo(calendarEndDate) <= 0) {
+				calendarTasks[row][col][taskNumber] = new Label(toAdd.getTaskName());
+				col++;
+				if(col > 6) {
+					col = 0;
+					row++;
+				}
+				startDateToAdd = startDateToAdd.plusDays(1);
+			}
+		}
+		else {
+			calendarTasks[row][col][taskNumber] = new Label(toAdd.getTaskName());
+		}
+	}
+	
 	/**
 	 * Set the constraints of the gridpane such that each column and row is properly spread out
 	 */
@@ -199,7 +329,7 @@ public class TaskOverviewController{
 		basicCellColumnConstraints[INDEX_COLUMN].setPercentWidth(25);
 		
 		basicCellColumnConstraints[PREVIEW_COLUMN] = new ColumnConstraints();
-		basicCellColumnConstraints[PREVIEW_COLUMN].setPercentWidth(70);
+		basicCellColumnConstraints[PREVIEW_COLUMN].setPercentWidth(100);
 		
 		basicCellRowConstraints = new RowConstraints();
 		basicCellRowConstraints.setPercentHeight(50);
@@ -233,12 +363,28 @@ public class TaskOverviewController{
 		
 	}
 
+	/**
+	 * This method fills in the labels created for each tasks into the calendar
+	 */
+	private void fillTasksIntoCells() {
+		for(int i = 0; i < 6; i++) {
+			for(int j = 0; j < 7; j++) {
+				for(int k = 0; k < 3; k++) {
+					if(calendarTasks[i][j][k] != null) {
+						cellFormat[i][j].add(new Label(Integer.toString(k+1) + ": "), 1, k+1);
+						cellFormat[i][j].add(calendarTasks[i][j][k], 2, k+1);
+					}
+				}
+			}
+		}
+	}
+
 	private void fillCells() {
 		
 		//Prepare the empty cell format for display
 		for(int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
 			for(int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
-				cellFormat[i][j].add(dateNumbers[i][j], 1, 0);
+				cellFormat[i][j].add(getDateNumbers()[i][j], 1, 0);
 			}
 		}
 	}
@@ -257,7 +403,7 @@ public class TaskOverviewController{
 	
 				//monthView.add(dateNumbers[i][j], j, i+1);
 				calendar.add(cellFormat[i][j], j, i+1);
-				GridPane.setHalignment(dateNumbers[i][j], HPos.CENTER);
+				GridPane.setHalignment(getDateNumbers()[i][j], HPos.CENTER);
 			}
 		}
 		
@@ -271,10 +417,13 @@ public class TaskOverviewController{
 		removeCellsFromCalendar();
 		setCellFormat();
 		updateMonth(PLUS);
-		prepareLabelsForCalendar(currentMonth, currentYear);
+		prepareLabelsForCalendar(getCurrentMonth(), getCurrentYear());
+		setStartingDate(computeStartDate(currentMonth, currentYear));
+		prepareTaskLabelsForCalendar(getStartingDate().getDayOfMonth(), getStartingDate().getMonth(), getStartingDate().getYear());
 		fillCells();
+		fillTasksIntoCells();
 		fillCalendar();
-		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL, Locale.ENGLISH) + " " + String.valueOf(currentYear));
+		getMonthHeader().setText(getCurrentMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + " " + String.valueOf(getCurrentYear()));
 		//outputToTextArea("MONTH UP BY 1");
 	}
 	
@@ -286,10 +435,13 @@ public class TaskOverviewController{
 		removeCellsFromCalendar();
 		setCellFormat();
 		updateMonth(MINUS);
-		prepareLabelsForCalendar(currentMonth, currentYear);
+		prepareLabelsForCalendar(getCurrentMonth(), getCurrentYear());
+		setStartingDate(computeStartDate(currentMonth, currentYear));
+		prepareTaskLabelsForCalendar(startingDate.getDayOfMonth(), startingDate.getMonth(), startingDate.getYear());
 		fillCells();
+		fillTasksIntoCells();
 		fillCalendar();
-		monthHeader.setText(currentMonth.getDisplayName(TextStyle.FULL, Locale.ENGLISH) + " " + String.valueOf(currentYear));
+		getMonthHeader().setText(getCurrentMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + " " + String.valueOf(getCurrentYear()));
 		//outputToTextArea("MONTH DROP BY 1");
 	}
 	
@@ -312,16 +464,16 @@ public class TaskOverviewController{
 	 */
 	private void updateMonth(int plusOrMinus) {
 		if(plusOrMinus == MINUS) {
-			if(currentMonth.getValue() == 1) {
-				currentYear--;
+			if(getCurrentMonth().getValue() == 1) {
+				setCurrentYear(getCurrentYear() - 1);
 			}
-			currentMonth = currentMonth.minus(1);
+			setCurrentMonth(getCurrentMonth().minus(1));
 		}
 		else if(plusOrMinus == PLUS) {
-			if(currentMonth.getValue() == 12) {
-				currentYear++;
+			if(getCurrentMonth().getValue() == 12) {
+				setCurrentYear(getCurrentYear() + 1);
 			}
-			currentMonth = currentMonth.plus(1);
+			setCurrentMonth(getCurrentMonth().plus(1));
 		}
 	}
 
@@ -330,23 +482,64 @@ public class TaskOverviewController{
 	 * @throws IOException 
 	 */
 	@FXML
-	private void getUserInput(KeyEvent event) throws IOException {
+	private void executeUserInput(KeyEvent event) throws IOException, EmptyUserInputException {
+		
 		if (event.getCode() == KeyCode.ENTER) {
-			if(input.getText() != null && !input.getText().isEmpty())
-			userInput = input.getText();
-			
-			String response = logic.executeCommand(userInput);
-			
-			outputToTextArea(response);
-			
-			mainApp.setTaskData(logic.getDisplayList());
-			taskTable.setItems(mainApp.getTaskData());
-			
-			userInput = "";
-			input.setText("");
+			if(input.getText() != null && !input.getText().isEmpty()) {
+				userInput = input.getText();
+				input.setText("");
+				String response = "";
+				try {
+					response = logic.executeCommand(userInput);
+				}
+				catch(Exception e) {
+					TaskOverviewControllerLogger.logger.log(Level.SEVERE, "Executed: {0}, Error in logic has occured", userInput);
+				}
+				assert !response.equals("") : MESSAGE_LOG_ERROR;
+				
+				//Logging what the user is executing and the response received
+				TaskOverviewControllerLogger.logger.log(Level.INFO, "Executed: {0}, Response {1}",  new Object[] {userInput, response});
+				userInput = "";
+				outputToTextArea(response);
+				
+				updateTaskTable();
+				removeCellsFromCalendar();
+				setCellFormat();
+				setStartingDate(computeStartDate(currentMonth, currentYear));
+				prepareTaskLabelsForCalendar(startingDate.getDayOfMonth(), startingDate.getMonth(), startingDate.getYear());
+				fillCells();
+				fillTasksIntoCells();
+				fillCalendar();
+			}
+			else {
+				throw new EmptyUserInputException();
+			}
 		}
 	}
-
+	
+	@SuppressWarnings("serial")
+	private class EmptyUserInputException extends Exception{
+		private EmptyUserInputException() {
+			super(MESSAGE_EMPTY_USER_INPUT_ERROR);
+		}
+	}
+	
+	/**
+	 * Takes the display list from logic and update the GUI
+	 */
+	public void updateTaskTable() {
+		mainApp.setTaskData(logic.getDisplayList());
+		taskTable.setItems(mainApp.getTaskData());
+	}
+	
+	/**
+	 * Takes the full taskList from logic
+	 */
+	private void updateTaskList() {
+		taskList = logic.getTaskList();
+	}
+	
+	
 	/**
 	 * Takes in a string and displays it to the user.
 	 * 
@@ -366,5 +559,45 @@ public class TaskOverviewController{
 
 		//Add observable list data to the table 
 		taskTable.setItems(mainApp.getTaskData());	
+	}
+
+	public Month getCurrentMonth() {
+		return currentMonth;
+	}
+
+	public void setCurrentMonth(Month currentMonth) {
+		this.currentMonth = currentMonth;
+	}
+
+	public int getCurrentYear() {
+		return currentYear;
+	}
+
+	public void setCurrentYear(int currentYear) {
+		this.currentYear = currentYear;
+	}
+
+	public Label getMonthHeader() {
+		return monthHeader;
+	}
+
+	public void setMonthHeader(Label monthHeader) {
+		this.monthHeader = monthHeader;
+	}
+
+	public Label[][] getDateNumbers() {
+		return dateNumbers;
+	}
+
+	public void setDateNumbers(Label[][] dateNumbers) {
+		this.dateNumbers = dateNumbers;
+	}
+
+	private LocalDate getStartingDate() {
+		return startingDate;
+	}
+
+	private void setStartingDate(LocalDate startingDate) {
+		this.startingDate = startingDate;
 	}
 }

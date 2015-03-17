@@ -97,6 +97,7 @@ public class MainApp extends Application {
 			// Give the controller access to the main app.
 			TaskOverviewController controller = loader.getController();
 			controller.setMainApp(this);
+			controller.updateTaskTable();
 			
 		} catch (IOException e) {
 			e.printStackTrace();
