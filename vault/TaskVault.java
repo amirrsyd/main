@@ -4,7 +4,6 @@ import javafx.collections.FXCollections;
 //import javafx.collections.ObservableList;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -19,7 +18,7 @@ import model.Task;
 public class TaskVault extends Vault {
 
 	public TaskVault(String filePath) throws IOException {
-		Path storePath = Paths.get(filePath + "taskList.txt").toAbsolutePath();
+		storePath = Paths.get(filePath + "taskList.txt").toAbsolutePath();
 		// setStorePath(storePath);
 		if (canFindFile(storePath)) {
 			openFile(storePath);

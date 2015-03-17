@@ -42,7 +42,7 @@ public class CdLogic {
 	}
 
 	public CdLogic() throws IOException {
-		String vaultPath = "workspace/main";
+		String vaultPath = "src/";
 		taskVault = new TaskVault(vaultPath);
 		trashVault = new TrashVault(vaultPath);
 		historyVault = new HistoryVault(vaultPath);
