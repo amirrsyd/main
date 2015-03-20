@@ -139,17 +139,7 @@ public class TaskOverviewController{
 		output.setEditable(false);
 		initializeLogic();
 		outputToTextArea(MESSAGE_WELCOME);
-		
-		prepareLabelsForHeader(headerDays);
-		prepareLabelsForCalendar(getCurrentMonth(), getCurrentYear());
 		setStartingDate(computeStartDate(getCurrentMonth(), getCurrentYear()));
-		prepareTaskLabelsForCalendar(getStartingDate().getDayOfMonth(), getStartingDate().getMonth(), getStartingDate().getYear());
-		initializeCalendar();
-		initializeCellFormat();
-		setCellFormat();
-		fillHeader();
-		fillCells();
-		fillCalendar();
 	}
 	
 	
@@ -495,6 +485,7 @@ public class TaskOverviewController{
 				catch(Exception e) {
 					TaskOverviewControllerLogger.logger.log(Level.SEVERE, "Executed: {0}, Error in logic has occured", userInput);
 				}
+
 				assert !response.equals("") : MESSAGE_LOG_ERROR;
 				
 				//Logging what the user is executing and the response received
@@ -528,6 +519,7 @@ public class TaskOverviewController{
 	 * Takes the display list from logic and update the GUI
 	 */
 	public void updateTaskTable() {
+		System.out.println(logic.getDisplayList().size());
 		mainApp.setTaskData(logic.getDisplayList());
 		taskTable.setItems(mainApp.getTaskData());
 	}
@@ -599,5 +591,21 @@ public class TaskOverviewController{
 
 	private void setStartingDate(LocalDate startingDate) {
 		this.startingDate = startingDate;
+	}
+
+	/**
+	 * The setup() method initializes the data only after the reference to mainApp is obtained
+	 */
+	public void setup() {
+		updateTaskTable();
+		prepareLabelsForHeader(headerDays);
+		prepareLabelsForCalendar(getCurrentMonth(), getCurrentYear());
+		prepareTaskLabelsForCalendar(getStartingDate().getDayOfMonth(), getStartingDate().getMonth(), getStartingDate().getYear());
+		initializeCalendar();
+		initializeCellFormat();
+		setCellFormat();
+		fillHeader();
+		fillCells();
+		fillCalendar();
 	}
 }
