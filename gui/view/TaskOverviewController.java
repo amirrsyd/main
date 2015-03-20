@@ -135,7 +135,7 @@ public class TaskOverviewController{
 		endDateColumn.setCellValueFactory(cellData -> cellData.getValue().endDateProperty());
 		endTimeColumn.setCellValueFactory(cellData -> cellData.getValue().endTimeProperty());
 		
-		TaskOverviewControllerLogger.initializeLogger();
+		//TaskOverviewControllerLogger.initializeLogger();
 		output.setEditable(false);
 		initializeLogic();
 		outputToTextArea(MESSAGE_WELCOME);
@@ -519,7 +519,6 @@ public class TaskOverviewController{
 	 * Takes the display list from logic and update the GUI
 	 */
 	public void updateTaskTable() {
-		System.out.println(logic.getDisplayList().size());
 		mainApp.setTaskData(logic.getDisplayList());
 		taskTable.setItems(mainApp.getTaskData());
 	}
@@ -606,6 +605,7 @@ public class TaskOverviewController{
 		setCellFormat();
 		fillHeader();
 		fillCells();
+		fillTasksIntoCells();
 		fillCalendar();
 	}
 }
