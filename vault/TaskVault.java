@@ -38,6 +38,9 @@ public class TaskVault extends Vault {
 	}
 
 	public Task getNextTask() {
+		if (list.size() == ZERO) {
+			return null;
+		}
 		return list.get(ZERO);
 	}
 
