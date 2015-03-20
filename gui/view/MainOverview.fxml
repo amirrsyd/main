@@ -115,7 +115,7 @@
                     </rowConstraints>
                      <children>
                         <TextArea fx:id="output" />
-                        <TextField fx:id="input" onKeyPressed="#getUserInput" GridPane.rowIndex="1" />
+                        <TextField fx:id="input" onKeyPressed="#executeUserInput" GridPane.rowIndex="1" />
                      </children>
                   </GridPane>
                </children>
