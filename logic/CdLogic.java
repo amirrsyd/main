@@ -18,6 +18,7 @@ import vault.TrashVault;
 import model.Task;
 
 public class CdLogic {
+	private static final String USER_DIR = "user.dir";
 	private static final String DATE_REGEX = "([1-9]|[012][0-9]|3[01])[-/]\\s*(0[1-9]|1[012])[-/]\\s*((19|20)?[0-9]{2})";
 	private static final String TIME_REGEX = "([01]?[0-9]|2[0-3]):[0-5][0-9]";
 
@@ -42,7 +43,7 @@ public class CdLogic {
 	}
 
 	public CdLogic() throws IOException {
-		String vaultPath = "src";
+		String vaultPath = System.getProperty(USER_DIR);
 		taskVault = new TaskVault(vaultPath);
 		trashVault = new TrashVault(vaultPath);
 		historyVault = new HistoryVault(vaultPath);

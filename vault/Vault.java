@@ -8,7 +8,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
@@ -25,8 +24,27 @@ import java.time.format.DateTimeFormatter;
  */
 public class Vault {
 
-	protected static final Charset CHAR_SET = Charset.forName("US-ASCII");
+	protected static final int DATE_TIME_LENGTH = 3;
+	protected static final int OFFSET_10 = 10;
+	protected static final int OFFSET_8 = 8;
 	protected static final int ZERO = 0;
+	protected static final String END_TIME_DOUBLE_SPACE = "endtime  ";
+	protected static final String END_DATE_DOUBLE_SPACE = "enddate  ";
+	protected static final String END_TIME_SPACE = "endtime ";
+	protected static final String END_DATE_SPACE = "enddate ";
+	protected static final String START_TIME_SPACE = "starttime ";
+	protected static final String START_DATE_SPACE = "startdate ";
+	protected static final String COMMENT_SPACE = "comment ";
+	protected static final String COMMENT_DOUBLE_SPACE = "comment  ";
+	protected static final String START_TIME_DOUBLE_SPACE = "starttime  ";
+	protected static final String START_DATE_DOUBLE_SPACE = "startdate  ";
+	protected static final String NULL = "null";
+	protected static final String END_TIME = "endtime";
+	protected static final String END_DATE = "enddate";
+	protected static final String START_TIME = "starttime";
+	protected static final String START_DATE = "startdate";
+	protected static final String COMMENT = "comment";
+	protected static final Charset CHAR_SET = Charset.forName("US-ASCII");
 	protected static DateTimeFormatter timeFormat = DateTimeFormatter.ISO_LOCAL_TIME;
 	protected static DateTimeFormatter dateFormat = DateTimeFormatter.ISO_LOCAL_DATE;
 	
@@ -92,39 +110,39 @@ public class Vault {
 				writer.write(task.getTaskName());
 				writer.newLine();
 				if (task.getComment() != null) {
-					writer.write("comment " + task.getComment());
+					writer.write(COMMENT_SPACE + task.getComment());
 					writer.newLine();
 				}
 				else {
-					writer.write("comment  ");
+					writer.write(COMMENT_DOUBLE_SPACE);
 					writer.newLine();
 				}
 				if (task.getStartDate() != null) {
-					writer.write("startdate " + task.getStartDate().toString());
+					writer.write(START_DATE_SPACE + task.getStartDate().toString());
 					writer.newLine();
-					writer.write("starttime " + task.getStartTime().toString());
+					writer.write(START_TIME_SPACE + task.getStartTime().toString());
 					writer.newLine();
 				}
 				else {
-					writer.write("startdate  ");
+					writer.write(START_DATE_DOUBLE_SPACE);
 					writer.newLine();
-					writer.write("starttime  ");
+					writer.write(START_TIME_DOUBLE_SPACE);
 					writer.newLine();
 				}
 				if (task.getEndDate() != null) {
-					writer.write("enddate " + task.getEndDate().toString());
+					writer.write(END_DATE_SPACE + task.getEndDate().toString());
 					writer.newLine();
-					writer.write("endtime " + task.getEndTime().toString());
+					writer.write(END_TIME_SPACE + task.getEndTime().toString());
 					writer.newLine();
 				}
 				else {
-					writer.write("enddate  ");
+					writer.write(END_DATE_DOUBLE_SPACE);
 					writer.newLine();
-					writer.write("endtime  ");
+					writer.write(END_TIME_DOUBLE_SPACE);
 					writer.newLine();
 				}
 				i++;
-				writer.write("null");
+				writer.write(NULL);
 				writer.newLine();
 			}
 		} catch (IOException error) {
@@ -173,23 +191,23 @@ public class Vault {
 		    	Task task = new Task(line);
 	    		line = reader.readLine();
 		    	while (line != null) {
-		    		if (line.startsWith("comment")) {
-		    			task.setComment(line.substring(8));
+		    		if (line.startsWith(COMMENT)) {
+		    			task.setComment(line.substring(OFFSET_8));
 		    		}
-		    		if (line.startsWith("startdate")) {
-		    			task.setStartDate(changeStringToDate(line.substring(10)));
+		    		if (line.startsWith(START_DATE)) {
+		    			task.setStartDate(changeStringToDate(line.substring(OFFSET_10)));
 		    		}
-		    		if (line.startsWith("starttime")) {
-		    			task.setStartTime(changeStringToTime(line.substring(10)));
+		    		if (line.startsWith(START_TIME)) {
+		    			task.setStartTime(changeStringToTime(line.substring(OFFSET_10)));
 		    		}
-		    		if (line.startsWith("enddate")) {
-		    			task.setEndDate(changeStringToDate(line.substring(8)));
+		    		if (line.startsWith(END_DATE)) {
+		    			task.setEndDate(changeStringToDate(line.substring(OFFSET_8)));
 		    		}
-		    		if (line.startsWith("endtime")) {
-		    			task.setEndTime(changeStringToTime(line.substring(8)));
+		    		if (line.startsWith(END_TIME)) {
+		    			task.setEndTime(changeStringToTime(line.substring(OFFSET_8)));
 		    		}
 		    		line = reader.readLine();
-		    		if (line.startsWith("null")) {
+		    		if (line.startsWith(NULL)) {
 		    			break;
 		    		}
 		    	}
@@ -209,7 +227,7 @@ public class Vault {
 	 * @return
 	 */
 	private LocalTime changeStringToTime(String timeString) {
-		if (timeString.length() < 3) {
+		if (timeString.length() < DATE_TIME_LENGTH) {
 			return null;
 		}
 		return LocalTime.parse(timeString, timeFormat);
@@ -221,7 +239,7 @@ public class Vault {
 	 * @return
 	 */
 	private LocalDate changeStringToDate(String dateString) {
-		if (dateString.length() < 3) {
+		if (dateString.length() < DATE_TIME_LENGTH) {
 			return null;
 		}
 		return LocalDate.parse(dateString, dateFormat);
