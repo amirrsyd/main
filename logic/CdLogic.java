@@ -17,7 +17,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import vault.CompletedTaskVault;
 import vault.HistoryVault;
-import vault.Vault;
 import vault.TaskVault;
 import vault.TrashVault;
 import model.Task;
@@ -29,7 +28,8 @@ public class CdLogic {
 
 	private static final String MESSAGE_INVALID_FORMAT = "invalid command "
 			+ "format :%1$s";
-
+	private static final String ERROR_MESSAGE = "Unrecognized command type" ;
+	private static final String DIR_RETURNMESSAGE = "Directory doesnt exist" ;
 	private static TaskVault taskVault;
 	private static TrashVault trashVault;
 	private static HistoryVault historyVault;
@@ -121,7 +121,7 @@ public class CdLogic {
 			return changeDirectory(userCommand);
 		default:
 			// throw an error if the command is not recognized
-			throw new Error("Unrecognized command type");
+			throw new Error(ERROR_MESSAGE);
 		}
 	}
 
@@ -146,13 +146,14 @@ public class CdLogic {
 			return "files moved to \""+ newPathString+ "\"";
 		}
 		
-		return "directory doesnt exist";
+		return DIR_RETURNMESSAGE ;
 	}
 
 	/**
 	 * @throws IOException
 	 */
 	private void initializeVaults() throws IOException {
+		String vaultPath = System.getProperty(USER_DIR);
 		taskVault = new TaskVault(vaultPath);
 		trashVault = new TrashVault(vaultPath);
 		historyVault = new HistoryVault(vaultPath);
@@ -848,9 +849,10 @@ public class CdLogic {
 		userCommand = removeFirstWord(userCommand);
 
 		String taskName = userCommand;
-		if (taskVault.deleteTask(taskName, trashVault)) {
+		if (taskVault.getTask(taskName)!=null) {
 			commandStack.push(UNDOABLE.DELETE);
 			historyVault.storeTask(taskVault.getTask(taskName));
+			taskVault.deleteTask(taskName, trashVault);
 			updateDisplay();
 			saveVaults();
 			return "\"" + taskName + "\"" + " deleted successfully";
