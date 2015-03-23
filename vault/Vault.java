@@ -122,6 +122,16 @@ public class Vault {
 		return list.remove(task);
 	}
 	
+	public boolean remove(String taskName) {
+		Task task = search(taskName);
+		if (task != null) {
+			return list.remove(task);
+		}
+		else {
+			return false;
+		}
+	}
+	
 	/**
 	 * Returns a copy of the list.
 	 * 
