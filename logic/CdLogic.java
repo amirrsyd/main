@@ -5,13 +5,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Stack;
 import java.util.regex.*;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -30,20 +25,14 @@ public class CdLogic {
 	private static final String MESSAGE_INVALID_FORMAT = "invalid command "
 			+ "format :%1$s";
 
+	private static Vault vault;
 	private static TaskVault taskVault;
 	private static TrashVault trashVault;
 	private static HistoryVault historyVault;
 	private static CompletedTaskVault completedTaskVault;
-	private static Stack<UNDOABLE> commandStack;
-	private static String vaultPath;
 
 	private static ObservableList<Task> toDisplay;
 	private static ObservableList<Task> tasks;
-	
-	enum UNDOABLE {
-		ADD, DELETE, COMPLETE, EDIT
-	}
-
 
 	enum COMMAND_TYPE {
 		ADD, DELETE, LIST, EMPTY, SEARCH, COMPLETE, EDIT, INVALID, EXIT, CHANGEDIR, UNDO, NEXT
@@ -54,25 +43,13 @@ public class CdLogic {
 	}
 
 	public CdLogic() throws IOException {
-		initializeFromConfig();
-		initializeVaults();
-		commandStack = new Stack<UNDOABLE>();
+		String vaultPath = System.getProperty(USER_DIR);
+		taskVault = new TaskVault(vaultPath);
+		trashVault = new TrashVault(vaultPath);
+		historyVault = new HistoryVault(vaultPath);
+		completedTaskVault = new CompletedTaskVault(vaultPath);
 		tasks = taskVault.getList();
 		toDisplay = copyList(tasks);
-	}
-
-	/**
-	 * @throws IOException
-	 */
-	private void initializeFromConfig() throws IOException {
-		File config = new File("config.txt");
-		if (!config.exists()){
-			config.createNewFile();
-			writeToFile(System.getProperty(USER_DIR));
-			vaultPath = System.getProperty(USER_DIR);
-		}else{
-			vaultPath = getVaultPath("config.txt").trim();
-		}
 	}
 
 	public ObservableList<Task> getTaskList() {
@@ -97,7 +74,7 @@ public class CdLogic {
 		switch (commandType) {
 		case ADD:
 			return add(userCommand);
-		case DELETE: 
+		case DELETE:
 			return delete(userCommand);
 		case LIST:
 			return list(userCommand);
@@ -115,147 +92,10 @@ public class CdLogic {
 			System.exit(0);
 		case NEXT:
 			return next();
-//		case UNDO:
-//			return undo();
-		case CHANGEDIR:
-			return changeDirectory(userCommand);
 		default:
 			// throw an error if the command is not recognized
 			throw new Error("Unrecognized command type");
 		}
-	}
-
-	private String changeDirectory(String userCommand) throws IOException {
-		// TODO Auto-generated method stub
-		String newPathString = removeFirstWord(userCommand).trim();
-		if (newPathString.equals("")){
-			newPathString = System.getProperty(USER_DIR);
-		}
-		File newPath = new File(newPathString);
-		if(newPath.isDirectory()){
-			copyToNewPath(newPathString);
-			
-			clearFromFile();
-			writeToFile(newPathString);
-			vaultPath = newPathString;
-			initializeVaults();
-			
-			updateDisplay();
-			saveVaults();
-			
-			return "files moved to \""+ newPathString+ "\"";
-		}
-		
-		return "directory doesnt exist";
-	}
-
-	/**
-	 * @throws IOException
-	 */
-	private void initializeVaults() throws IOException {
-		taskVault = new TaskVault(vaultPath);
-		trashVault = new TrashVault(vaultPath);
-		historyVault = new HistoryVault(vaultPath);
-		completedTaskVault = new CompletedTaskVault(vaultPath);
-	}
-
-	/**
-	 * @param newPathString
-	 * @throws IOException
-	 */
-	private void copyToNewPath(String newPathString) throws IOException {
-		String oldPathString = vaultPath;
-		Path taskVaultPath = Paths.get(oldPathString + "/taskList.txt").toAbsolutePath();
-		Path completedVaultPath = Paths.get(oldPathString + "/completed.txt").toAbsolutePath();
-		Path trashVaultPath = Paths.get(oldPathString + "/trash.txt").toAbsolutePath();
-		Path historyVaultPath = Paths.get(oldPathString + "/history.txt").toAbsolutePath();
-		
-		Path newTaskVaultPath = Paths.get(newPathString + "/taskList.txt").toAbsolutePath();
-		Path newCompletedVaultPath = Paths.get(newPathString + "/completed.txt").toAbsolutePath();
-		Path newTrashVaultPath = Paths.get(newPathString+ "/trash.txt").toAbsolutePath();
-		Path newHistoryVaultPath = Paths.get(newPathString + "/history.txt").toAbsolutePath();
-		
-		Files.copy(taskVaultPath, newTaskVaultPath, StandardCopyOption.REPLACE_EXISTING);
-		Files.copy(completedVaultPath, newCompletedVaultPath, StandardCopyOption.REPLACE_EXISTING);
-		Files.copy(trashVaultPath, newTrashVaultPath, StandardCopyOption.REPLACE_EXISTING);
-		Files.copy(historyVaultPath, newHistoryVaultPath, StandardCopyOption.REPLACE_EXISTING);
-		
-		File oldTaskFile = new File(taskVaultPath.toString());
-		File oldTrashFile = new File(completedVaultPath.toString());
-		File oldCompletedFile = new File(trashVaultPath.toString());
-		File oldHistoryFile = new File(historyVaultPath.toString());
-		
-		oldTaskFile.delete();
-		oldTrashFile.delete();
-		oldCompletedFile.delete();
-		oldHistoryFile.delete();
-	}
-
-	private String undo() {
-		// TODO Auto-generated method stub
-		switch (commandStack.peek()){
-		case ADD:
-			commandStack.pop();
-			return undoAdd();
-		case COMPLETE:
-			commandStack.pop();
-			return undoComplete();
-		case DELETE:
-			commandStack.pop();
-			return undoDelete();
-		case EDIT:
-			commandStack.pop();
-			return undoEdit();
-		default:
-			break;
-		
-		}
-		return null;
-	}
-
-	private String undoEdit() {
-		ObservableList<Task> historyList = historyVault.getList();
-		Task newTask = historyList.get(historyList.size() - 1);
-		Task oldTask = historyList.get(historyList.size() - 2);
-		trashVault.remove(oldTask.getTaskName());
-		taskVault.remove(newTask.getTaskName());
-		taskVault.storeTask(oldTask);
-		historyVault.remove(oldTask.getTaskName());
-		historyVault.remove(newTask.getTaskName());
-			
-		return "Undo: \"" + oldTask.getTaskName() + "\" has been restored to its original";
-	}
-
-	private String undoDelete() {
-		// TODO Auto-generated method stub
-		ObservableList<Task> historyList = historyVault.getList();
-		Task historyTask = historyList.get(historyList.size() - 1);
-		taskVault.storeTask(historyTask);
-		trashVault.remove(historyTask.getTaskName());
-		historyVault.remove(historyTask.getTaskName());
-		
-		return null;
-	}
-
-	private String undoComplete() {
-		// TODO Auto-generated method stub
-		ObservableList<Task> historyList = historyVault.getList();
-		Task historyTask = historyList.get(historyList.size() - 1);
-		taskVault.storeTask(historyTask);
-		completedTaskVault.remove(historyTask.getTaskName());
-		historyVault.remove(historyTask.getTaskName());
-		
-		return "Undo: \"" + historyTask.getTaskName() + "\" moved back from completed to tasks";
-	}
-
-	private String undoAdd() {
-		// TODO Auto-generated method stub
-		ObservableList<Task> historyList = historyVault.getList();
-		Task historyTask = historyList.get(historyList.size()-1);
-		taskVault.remove(historyTask.getTaskName());
-		historyVault.remove(historyTask.getTaskName());
-		
-		return "Undo: \"" + historyTask.getTaskName() + "\" removed from tasks";
 	}
 
 	private String next() {
@@ -267,8 +107,6 @@ public class CdLogic {
 
 		toDisplay.clear();
 		toDisplay.add(taskVault.getNextTask());
-		
-		assert(toDisplay.size() <= 1);
 		
 		saveVaults();
 
@@ -325,10 +163,6 @@ public class CdLogic {
 			taskVault.createTask(oldTask.getTaskName(), newComment,
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), oldTask.getEndTime());
-			
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));			
-			commandStack.push(UNDOABLE.EDIT);			
 			updateDisplay();
 			saveVaults();
 			return "comment added";
@@ -361,10 +195,6 @@ public class CdLogic {
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), newEndTime);
-			
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));		
-			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
 			return "edit done";
@@ -404,10 +234,6 @@ public class CdLogic {
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
 					oldTask.getStartDate(), newStartTime, oldTask.getEndDate(),
 					oldTask.getEndTime());
-			
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));		
-			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
 			return "edit done";
@@ -443,10 +269,6 @@ public class CdLogic {
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
 					oldTask.getStartDate(), oldTask.getStartTime(), newEndDate,
 					oldTask.getEndTime());
-			
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));		
-			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
 			return "edit done";
@@ -486,10 +308,6 @@ public class CdLogic {
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
 					newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
 					oldTask.getEndTime());
-			
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));		
-			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
 			return "edit done";
@@ -520,10 +338,6 @@ public class CdLogic {
 			taskVault.createTask(newTaskName, oldTask.getComment(),
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), oldTask.getEndTime());
-			
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(newTaskName));		
-			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
 			return "edit done";
@@ -554,8 +368,6 @@ public class CdLogic {
 		userCommand = removeFirstWord(userCommand);
 
 		if (taskVault.completeTask(userCommand, completedTaskVault)) {
-			commandStack.push(UNDOABLE.COMPLETE);
-			historyVault.storeTask(taskVault.getTask(userCommand));
 			updateDisplay();
 			saveVaults();
 			return "\"" + userCommand + "\"" + " completed successfully";
@@ -849,8 +661,6 @@ public class CdLogic {
 
 		String taskName = userCommand;
 		if (taskVault.deleteTask(taskName, trashVault)) {
-			commandStack.push(UNDOABLE.DELETE);
-			historyVault.storeTask(taskVault.getTask(taskName));
 			updateDisplay();
 			saveVaults();
 			return "\"" + taskName + "\"" + " deleted successfully";
@@ -929,14 +739,12 @@ public class CdLogic {
 		
 		if (taskVault.createTask(addArguments[0], addArguments[1], startDate,
 				startTime, endDate, endTime)) {
-			commandStack.push(UNDOABLE.ADD);
-			historyVault.storeTask(taskVault.getTask(addArguments[0]));
 			updateDisplay();
 			saveVaults();
-			return "Task \"" + addArguments[0] + "\" successfully added";
+			return " Task \"" + addArguments[0] + "\" successfully added";
 		}
 
-		return "Task \"" + addArguments[0] + "\"" + " cannot be added";
+		return " Task \"" + addArguments[0] + "\"" + " cannot be added";
 	}
 
 	private COMMAND_TYPE determineCommandType(String commandTypeString) {
@@ -970,12 +778,6 @@ public class CdLogic {
 		}
 		if (commandTypeString.equalsIgnoreCase("next")) {
 			return COMMAND_TYPE.NEXT;
-		}
-//		if (commandTypeString.equalsIgnoreCase("undo")){
-//			return COMMAND_TYPE.UNDO;
-//		}
-		if (commandTypeString.equalsIgnoreCase("changedir")){
-			return COMMAND_TYPE.CHANGEDIR;
 		}
 		return COMMAND_TYPE.INVALID;
 	}
@@ -1100,28 +902,5 @@ public class CdLogic {
 			LocalDate endDate, LocalTime endTime) {
 		return (LocalDateTime.of(startDate, startTime).isBefore(LocalDateTime
 				.of(endDate, endTime)));
-	}
-
-	private static void writeToFile(String newString) throws IOException {
-		FileWriter fw = new FileWriter("config.txt", true);
-		fw.write(newString);
-		fw.close();
-	}
-	
-	private static String getVaultPath(String fileName) throws IOException {
-		BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));
-		
-		try {
-			String line = bufferedReader.readLine();
-			return line;
-		} finally {
-			bufferedReader.close();
-		}
-	}
-	
-	private static void clearFromFile() throws FileNotFoundException {
-		PrintWriter writer = new PrintWriter(new File("config.txt"));
-		writer.print("");
-		writer.close();
 	}
 }
