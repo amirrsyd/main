@@ -1,0 +1,85 @@
+@CHARSET "ISO-8859-1";
+
+#base{
+    //-fx-font-size: 16pt;
+    //-fx-font-family: "segoe ui";
+
+    -fx-background-color: #2C3E50;
+}
+
+#monthHeader{
+	-fx-text-fill: #FFFFFF;
+}
+
+.evenRow{
+	-fx-background-color: #F9F9F9;
+}
+
+.oddRow{
+	-fx-background-color: #FFFFFF;
+}
+
+.column-header{
+	-fx-background-color: #7ECEFD;
+}
+
+
+
+.headerDays{
+	-fx-background-color: #7ECEFD;
+	-fx-font-weight: bold;
+
+}
+
+.button {
+	-fx-background-color: #95A5A6;
+}
+
+.button:hover {
+	-fx-background-color: #798D8F;
+}
+
+.row1{
+	-fx-background-radius: 25px;	
+	-fx-background-color: #FFD372;
+	-fx-padding: 0px 10px 0px 10px;
+}
+
+.row1:hover{
+	-fx-background-radius: 25px;	
+	-fx-background-color: #EBC269;
+	-fx-padding: 0px 10px 0px 10px;
+}
+
+.row2{
+	-fx-background-radius: 25px;	
+	-fx-background-color: #7ECEFD;
+	-fx-padding: 0px 10px 0px 10px;
+}
+
+.row2:hover{
+	-fx-background-radius: 25px;	
+	-fx-background-color: #75BFEB;
+	-fx-padding: 0px 10px 0px 10px;
+}
+
+.row3{
+	-fx-background-radius: 25px;	
+	-fx-background-color: #BDF271;
+	-fx-padding: 0px 10px 0px 10px;
+}
+
+.row3:hover{
+	-fx-background-radius: 25px;	
+	-fx-background-color: #ABDB66;
+	-fx-padding: 0px 10px 0px 10px;
+}
+
+.fadeCell{
+	-fx-opacity: 0.8;
+}
+
+.todayClass{
+	-fx-font-weight: bold;
+	-fx-text-fill: #E74C3C;
+}

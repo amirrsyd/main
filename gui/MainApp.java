@@ -74,6 +74,7 @@ public class MainApp extends Application {
 			
 			// Show the scene containing the root layout.
 			Scene scene = new Scene(rootLayout);
+			scene.getStylesheets().add("gui/commandoskin.css");
 			primaryStage.setScene(scene);
 			primaryStage.show();
 		} catch (IOException e) {

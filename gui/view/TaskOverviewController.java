@@ -13,6 +13,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.StackPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -25,7 +26,6 @@ import java.time.format.TextStyle;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
@@ -41,6 +41,7 @@ public class TaskOverviewController{
 		//Use the classname for the logger
 		private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 		
+		@SuppressWarnings("unused")
 		private final static void initializeLogger() {
 		    try {  
 		        // This block configure the logger with handler and formatter 
@@ -57,7 +58,8 @@ public class TaskOverviewController{
 		}
 	}
 	
-	private static final int NUMBER_OF_COLUMNS_IN_CELL = 3;
+	private static final int NUMBER_OF_COLUMNS_IN_CELL = 2;
+	private static final int NUMBER_OF_ROWS_IN_CELL = 5;
 	private static final int NUMBER_OF_ROWS_IN_CALENDAR = 7;
 	private static final int NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER = 6;
 	private static final int NUMBER_OF_COLS_IN_CALENDAR = 7;
@@ -65,13 +67,29 @@ public class TaskOverviewController{
 	private static final int PLUS = 1;
 	private static final int MINUS = 0;
 	private static final int MARGIN_COLUMN = 0;
-	private static final int INDEX_COLUMN = 1;
-	private static final int PREVIEW_COLUMN = 2;
+	private static final int CONTENT_COLUMN = 1;
+	private static final int MARGIN_ROW = 0;
+	private static final int CONTENT_ROW = 1;
+	private static final int ROW_1 = 0;
+	private static final int ROW_2 = 1;
+	private static final int ROW_3 = 2;
+	
 	private static final String MESSAGE_LOG_ERROR = "An error has occured, please try again.";
 	private static final String MESSAGE_EMPTY_USER_INPUT_ERROR = "Please key in a command first.";
 	private static final String MESSAGE_WELCOME = "Hello! Welcome to Comman.Do, your to-do manager.\n"
 												+ "Please note that the directories to save your tasks are by default in the same directory as the application.\n" 
 												+ "Start by entering a command into the box below.\n";
+	private static final String ODD_ROW_CLASS = "oddRow";
+	private static final String EVEN_ROW_CLASS = "evenRow";
+	private static final String ROW_1_CLASS = "row1";
+	private static final String ROW_2_CLASS = "row2";
+	private static final String ROW_3_CLASS = "row3";
+	private static final String NOT_IN_MONTH_FADE_DATE_CLASS = "fadeDate";
+	private static final String NOT_IN_MONTH_FADE_CELL_CLASS = "fadeCell";
+	private static final String TODAY_CLASS = "todayClass";
+	private static final String EVENT = "event";
+	private static final String DATELINE = "dateline";
+	
 	private static CdLogic logic;
 	
 	@FXML
@@ -103,15 +121,17 @@ public class TaskOverviewController{
 	
 	private Label[] headerDays = new Label[7];
 	
+	private StackPane[] headerDaysContainers = new StackPane[7];
+	
 	private Label[][] dateNumbers = new Label[NUMBER_OF_ROWS_IN_CALENDAR][NUMBER_OF_COLS_IN_CALENDAR];
 	
 	private GridPane[][] cellFormat = new GridPane[NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER][NUMBER_OF_COLS_IN_CALENDAR];
 	
 	private ColumnConstraints[] basicCellColumnConstraints = new ColumnConstraints[NUMBER_OF_COLUMNS_IN_CELL];
+
+	private RowConstraints[] basicCellRowConstraints = new RowConstraints[NUMBER_OF_ROWS_IN_CELL];
 	
-	private RowConstraints basicCellRowConstraints = new RowConstraints();
-	
-	private ObservableList<Task> taskList; 
+	ObservableList<Task> taskList; 
 	
 	private Label[][][] calendarTasks = new Label[6][7][3];
 	
@@ -135,7 +155,7 @@ public class TaskOverviewController{
 		endDateColumn.setCellValueFactory(cellData -> cellData.getValue().endDateProperty());
 		endTimeColumn.setCellValueFactory(cellData -> cellData.getValue().endTimeProperty());
 		
-		TaskOverviewControllerLogger.initializeLogger();
+		//TaskOverviewControllerLogger.initializeLogger();
 		output.setEditable(false);
 		initializeLogic();
 		outputToTextArea(MESSAGE_WELCOME);
@@ -143,9 +163,9 @@ public class TaskOverviewController{
 	}
 	
 	
-	private static void initializeLogic() {
+	static void initializeLogic() {
 		try {
-			logic = new CdLogic();
+			setLogic(new CdLogic());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -175,6 +195,11 @@ public class TaskOverviewController{
 		GridPane.setHalignment(headerDays[6], HPos.CENTER);
 		
 		getMonthHeader().setText(getCurrentMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH)+ " " + String.valueOf(getCurrentYear()));
+		for(int i = 0; i < NUMBER_OF_DAYS_IN_A_WEEK; i++) {
+			headerDaysContainers[i] = new StackPane();
+			headerDaysContainers[i].getChildren().add(headerDays[i]);
+			headerDaysContainers[i].getStyleClass().add("headerDays");
+		}
 	}
 
 	/**
@@ -188,6 +213,14 @@ public class TaskOverviewController{
 		for(int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
 			for(int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
 				getDateNumbers()[i][j] = new Label(String.valueOf(monthToShow.getDayOfMonth()));
+				if(monthToShow.getMonthValue() != inputMonth.getValue()) {
+					getDateNumbers()[i][j].getStyleClass().add(NOT_IN_MONTH_FADE_DATE_CLASS);
+				}
+				
+				if(monthToShow.getYear() == LocalDate.now().getYear() && monthToShow.getDayOfYear() == LocalDate.now().getDayOfYear()) {
+					getDateNumbers()[i][j].getStyleClass().add(TODAY_CLASS);
+				}
+				
 				monthToShow = monthToShow.plusDays(1);
 			}
 		}
@@ -235,56 +268,111 @@ public class TaskOverviewController{
 		Collections.sort(taskList);
 		LocalDate calendarStartDate = LocalDate.of(inputYear, inputMonth, inputDay);
 		LocalDate calendarEndDate = calendarStartDate.plusDays(41);
+		LocalDate startDateToAdd = calendarStartDate;
+		LocalDate endDateToAdd = calendarEndDate;
+		Task toAdd;
 		for(int i = 0; i < taskList.size(); i++) {
-			//If startDate of task is earlier than calendarEndDate
-			if(taskList.get(i).getStartDate() != null &&
-				taskList.get(i).getStartDate().compareTo(calendarEndDate) <= 0) {
-				//Get which row and which col is the event on
-				long difference = calendarStartDate.until(taskList.get(i).getStartDate(), ChronoUnit.DAYS);
-				LocalDate startDateToAdd;
-				
-				if(difference < 0) {
-					difference = 0;
+			toAdd = taskList.get(i);
+			
+			if(toAdd.getType().equals(EVENT)) {
+				//O||O
+				if(toAdd.getStartDate().until(calendarStartDate, ChronoUnit.DAYS) >= 0 
+						&& calendarEndDate.until(toAdd.getEndDate(), ChronoUnit.DAYS) >= 0) {
 					startDateToAdd = calendarStartDate;
+					endDateToAdd = calendarEndDate;
+					computeAndAddLabel(calendarStartDate, startDateToAdd, endDateToAdd, toAdd);
 				}
-				else {
-					startDateToAdd = taskList.get(i).getStartDate();
+				//O|O|
+				else if(toAdd.getStartDate().until(calendarStartDate, ChronoUnit.DAYS) >= 0
+						&& calendarStartDate.until(toAdd.getEndDate(), ChronoUnit.DAYS) >= 0
+						&& calendarEndDate.until(toAdd.getEndDate(), ChronoUnit.DAYS) <= 0) {
+					startDateToAdd = calendarStartDate;
+					endDateToAdd = toAdd.getEndDate();
+					computeAndAddLabel(calendarStartDate, startDateToAdd, endDateToAdd, toAdd);
 				}
-				
-				int row = (int) (difference / 7);
-				int col = (int) (difference % 7);
-				System.out.println(difference + " " + row + " and " + col);
-				//Check if for that particular day, we already have 3 labels to show
-				if(calendarTasks[row][col][0] == null)
-					addLabelToCalendarTasks(startDateToAdd, calendarEndDate, taskList.get(i), row, col, 0);
-				else if(calendarTasks[row][col][1] == null) {
-					addLabelToCalendarTasks(startDateToAdd, calendarEndDate, taskList.get(i), row, col, 1);
+				//|O|O
+				else if(toAdd.getStartDate().until(calendarStartDate, ChronoUnit.DAYS) <= 0
+						&& toAdd.getStartDate().until(calendarEndDate, ChronoUnit.DAYS) >= 0
+						&& calendarEndDate.until(toAdd.getEndDate(), ChronoUnit.DAYS) >= 0) {
+					startDateToAdd = toAdd.getStartDate();
+					endDateToAdd = calendarEndDate;
+					computeAndAddLabel(calendarStartDate, startDateToAdd, endDateToAdd, toAdd);
 				}
-				else if(calendarTasks[row][col][2] == null) {
-					addLabelToCalendarTasks(startDateToAdd, calendarEndDate, taskList.get(i), row, col, 2);
+				//|OO|
+				else if(toAdd.getStartDate().until(calendarStartDate, ChronoUnit.DAYS) <= 0 
+						&& calendarEndDate.until(toAdd.getEndDate(), ChronoUnit.DAYS) <= 0) {
+					startDateToAdd = toAdd.getStartDate();
+					endDateToAdd = toAdd.getEndDate();
+					computeAndAddLabel(calendarStartDate, startDateToAdd, endDateToAdd, toAdd);
+				}
+
+			}
+			
+			
+			else if(toAdd.getType().equals(DATELINE)) {
+				if(toAdd.getStartDate().until(calendarStartDate, ChronoUnit.DAYS) <= 0 &&
+						toAdd.getStartDate().until(calendarEndDate, ChronoUnit.DAYS) >= 0) {		
+					startDateToAdd = toAdd.getStartDate();
+					endDateToAdd = toAdd.getStartDate();
+					computeAndAddLabel(calendarStartDate, startDateToAdd, endDateToAdd, toAdd);
 				}
 			}
 		}
-		
-		
-		
 	}
 
-	private void addLabelToCalendarTasks(LocalDate startDateToAdd, LocalDate calendarEndDate, Task toAdd, int row, int col, int taskNumber) {
-		LocalDate endDateToStopAdding = toAdd.getEndDate();
-		if(endDateToStopAdding != null) {
-			while(startDateToAdd.until(endDateToStopAdding, ChronoUnit.DAYS) >= 0 && startDateToAdd.compareTo(calendarEndDate) <= 0) {
-				calendarTasks[row][col][taskNumber] = new Label(toAdd.getTaskName());
-				col++;
-				if(col > 6) {
-					col = 0;
-					row++;
-				}
-				startDateToAdd = startDateToAdd.plusDays(1);
-			}
+	private void computeAndAddLabel(LocalDate calendarStartDate,
+			LocalDate startDateToAdd, LocalDate endDateToAdd, Task toAdd) {
+		//Compute the difference, row and col to start adding
+		long difference = calendarStartDate.until(startDateToAdd, ChronoUnit.DAYS);
+		
+		int row = (int) (difference / 7);
+		int col = (int) (difference % 7);
+		
+		
+		//Check if for that particular day, we already have 3 labels to show
+		
+		if(calendarTasks[row][col][0] == null) {
+			addLabelToCalendarTasks(startDateToAdd, endDateToAdd, toAdd, row, col, 0);
+		}	
+		else if(calendarTasks[row][col][1] == null) {
+			addLabelToCalendarTasks(startDateToAdd, endDateToAdd, toAdd, row, col, 1);
 		}
-		else {
+		else if(calendarTasks[row][col][2] == null) {
+			addLabelToCalendarTasks(startDateToAdd, endDateToAdd, toAdd, row, col, 2);
+		}
+	}
+
+	private void addLabelToCalendarTasks(LocalDate startDateToAdd, LocalDate endDateToAdd, Task toAdd, int row, int col, int taskNumber) {
+		
+		while(startDateToAdd.until(endDateToAdd, ChronoUnit.DAYS) >= 0) {
+			System.out.println("Adding: "+toAdd.getTaskName());
 			calendarTasks[row][col][taskNumber] = new Label(toAdd.getTaskName());
+			addClassToLabel(row, col, taskNumber);
+			
+			col++;
+			if(col > 6) {
+				col = 0;
+				row++;
+			}
+			
+			startDateToAdd = startDateToAdd.plusDays(1);
+		}
+	}
+
+	private void addClassToLabel(int row, int col, int taskNumber) {
+		switch(taskNumber) {
+		case ROW_1 :
+			calendarTasks[row][col][taskNumber].getStyleClass().add(ROW_1_CLASS);
+			System.out.println("Adding Class 1");
+			break;
+		case ROW_2 :
+			calendarTasks[row][col][taskNumber].getStyleClass().add(ROW_2_CLASS);
+			System.out.println("Adding Class 2");
+			break;
+		case ROW_3 :
+			calendarTasks[row][col][taskNumber].getStyleClass().add(ROW_3_CLASS);
+			System.out.println("Adding Class 3");
+			break;
 		}
 	}
 	
@@ -313,18 +401,16 @@ public class TaskOverviewController{
 	private void initializeCellFormat() {
 	
 		basicCellColumnConstraints[MARGIN_COLUMN] = new ColumnConstraints();
-		basicCellColumnConstraints[MARGIN_COLUMN].setPercentWidth(2);
+		basicCellColumnConstraints[MARGIN_COLUMN].setPercentWidth(5);
 		
-		basicCellColumnConstraints[INDEX_COLUMN] = new ColumnConstraints();
-		basicCellColumnConstraints[INDEX_COLUMN].setPercentWidth(25);
+		basicCellColumnConstraints[CONTENT_COLUMN] = new ColumnConstraints();
+		basicCellColumnConstraints[CONTENT_COLUMN].setPercentWidth(95);
 		
-		basicCellColumnConstraints[PREVIEW_COLUMN] = new ColumnConstraints();
-		basicCellColumnConstraints[PREVIEW_COLUMN].setPercentWidth(100);
+		basicCellRowConstraints[MARGIN_ROW] = new RowConstraints();
+		basicCellRowConstraints[MARGIN_ROW].setPercentHeight(5);
 		
-		basicCellRowConstraints = new RowConstraints();
-		basicCellRowConstraints.setPercentHeight(50);
-		
-		
+		basicCellRowConstraints[CONTENT_ROW] = new RowConstraints();
+		basicCellRowConstraints[CONTENT_ROW].setPercentHeight(25);
 	}
 
 	/**
@@ -336,7 +422,14 @@ public class TaskOverviewController{
 			for(int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
 				cellFormat[i][j] = new GridPane();
 				cellFormat[i][j].getColumnConstraints().addAll(basicCellColumnConstraints);
-				cellFormat[i][j].getRowConstraints().addAll(basicCellRowConstraints,basicCellRowConstraints,basicCellRowConstraints,basicCellRowConstraints);
+				cellFormat[i][j].getRowConstraints().addAll(basicCellRowConstraints[MARGIN_ROW],basicCellRowConstraints[CONTENT_ROW],basicCellRowConstraints[CONTENT_ROW],basicCellRowConstraints[CONTENT_ROW],basicCellRowConstraints[CONTENT_ROW]);
+				//Even week add class
+				if(i % 2 == 0) {
+					cellFormat[i][j].getStyleClass().add(EVEN_ROW_CLASS);
+				}
+				else {
+					cellFormat[i][j].getStyleClass().add(ODD_ROW_CLASS);
+				}
 			}
 		}
 	}
@@ -348,7 +441,7 @@ public class TaskOverviewController{
 	private void fillHeader() {
 		//Fill in the headers in monthView
 		for(int i = 0; i < NUMBER_OF_DAYS_IN_A_WEEK; i++) {
-			calendar.add(headerDays[i], i, 0);
+			calendar.add(headerDaysContainers[i], i, 0);
 		}
 		
 	}
@@ -361,8 +454,7 @@ public class TaskOverviewController{
 			for(int j = 0; j < 7; j++) {
 				for(int k = 0; k < 3; k++) {
 					if(calendarTasks[i][j][k] != null) {
-						cellFormat[i][j].add(new Label(Integer.toString(k+1) + ": "), 1, k+1);
-						cellFormat[i][j].add(calendarTasks[i][j][k], 2, k+1);
+						cellFormat[i][j].add(calendarTasks[i][j][k], 1, k+2);
 					}
 				}
 			}
@@ -374,7 +466,13 @@ public class TaskOverviewController{
 		//Prepare the empty cell format for display
 		for(int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
 			for(int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
-				cellFormat[i][j].add(getDateNumbers()[i][j], 1, 0);
+				cellFormat[i][j].add(getDateNumbers()[i][j], 1, 1);
+				if(getDateNumbers()[i][j].getStyleClass().contains(NOT_IN_MONTH_FADE_DATE_CLASS)) {
+					cellFormat[i][j].getStyleClass().add(NOT_IN_MONTH_FADE_CELL_CLASS);
+				}
+				if(getDateNumbers()[i][j].getStyleClass().contains(TODAY_CLASS)) {
+					cellFormat[i][j].getStyleClass().add(TODAY_CLASS);
+				}
 			}
 		}
 	}
@@ -390,11 +488,16 @@ public class TaskOverviewController{
 		//Fill in the rest of the days as prepared previously 
 		for(int i = 0; i < NUMBER_OF_ROWS_IN_CALENDAR_WITHOUT_HEADER; i++) {
 			for(int j = 0; j < NUMBER_OF_COLS_IN_CALENDAR; j++) {
-	
+
 				//monthView.add(dateNumbers[i][j], j, i+1);
-				calendar.add(cellFormat[i][j], j, i+1);
-				GridPane.setHalignment(getDateNumbers()[i][j], HPos.CENTER);
+				if(cellFormat[i][j] == null) {
+					System.out.println(i + ", " + j);
+				}
+				else {
+					calendar.add(cellFormat[i][j], j, i+1);
+				}
 			}
+			
 		}
 		
 	}
@@ -475,21 +578,21 @@ public class TaskOverviewController{
 	private void executeUserInput(KeyEvent event) throws IOException, EmptyUserInputException {
 		
 		if (event.getCode() == KeyCode.ENTER) {
-			if(input.getText() != null && !input.getText().isEmpty()) {
-				userInput = input.getText();
-				input.setText("");
+			if(getInput().getText() != null && !getInput().getText().isEmpty()) {
+				userInput = getInput().getText();
+				getInput().setText("");
 				String response = "";
 				try {
-					response = logic.executeCommand(userInput);
+					response = getLogic().executeCommand(userInput);
 				}
 				catch(Exception e) {
-					TaskOverviewControllerLogger.logger.log(Level.SEVERE, "Executed: {0}, Error in logic has occured", userInput);
+					//TaskOverviewControllerLogger.logger.log(Level.SEVERE, "Executed: {0}, Error in logic has occured", userInput);
 				}
 
 				assert !response.equals("") : MESSAGE_LOG_ERROR;
 				
 				//Logging what the user is executing and the response received
-				TaskOverviewControllerLogger.logger.log(Level.INFO, "Executed: {0}, Response {1}",  new Object[] {userInput, response});
+				//TaskOverviewControllerLogger.logger.log(Level.INFO, "Executed: {0}, Response {1}",  new Object[] {userInput, response});
 				userInput = "";
 				outputToTextArea(response);
 				
@@ -519,15 +622,15 @@ public class TaskOverviewController{
 	 * Takes the display list from logic and update the GUI
 	 */
 	public void updateTaskTable() {
-		mainApp.setTaskData(logic.getDisplayList());
+		mainApp.setTaskData(getLogic().getDisplayList());
 		taskTable.setItems(mainApp.getTaskData());
 	}
 	
 	/**
 	 * Takes the full taskList from logic
 	 */
-	private void updateTaskList() {
-		taskList = logic.getTaskList();
+	void updateTaskList() {
+		taskList = getLogic().getTaskList();
 	}
 	
 	
@@ -607,5 +710,21 @@ public class TaskOverviewController{
 		fillCells();
 		fillTasksIntoCells();
 		fillCalendar();
+	}
+
+	public TextField getInput() {
+		return input;
+	}
+
+	public void setInput(TextField input) {
+		this.input = input;
+	}
+
+	public CdLogic getLogic() {
+		return logic;
+	}
+
+	public static void setLogic(CdLogic logic) {
+		TaskOverviewController.logic = logic;
 	}
 }

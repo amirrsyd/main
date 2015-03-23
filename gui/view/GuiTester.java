@@ -1,5 +1,6 @@
 package gui.view;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.TextStyle;
@@ -9,8 +10,11 @@ import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.geometry.HPos;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import logic.CdLogic;
 import gui.MainApp;
 import static org.junit.Assert.*;
 
@@ -25,7 +29,47 @@ public class GuiTester {
 	public void resetException() {
 		rethrownException = null;
 	}
-
+	
+	@Test
+public void testTextField() throws Throwable {
+		
+		Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                new JFXPanel(); // Initializes the JavaFx Platform
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+	                    try {
+	                    	
+	                    	//Actual test starts here, inside the javafx thread
+	                    	TaskOverviewController tester = new TaskOverviewController(); // Create an instance
+	                    	TaskOverviewController.initializeLogic();
+	                    	//First we load some data into the input area
+	                    	tester.setInput(new TextField());
+	                    	tester.getInput().setText("add dinner");
+	                    	tester.getLogic().executeCommand(tester.getInput().getText());
+	                    	//If tester's input field was set correctly, we should be able to find the task added
+	                    	tester.updateTaskList();
+	                    	assertEquals(tester.taskList.get(0).getTaskName(), "dinner");
+	                        //End of test
+	                        
+	                    } catch(AssertionError | IOException e) {
+	                    	//Exception is propagate to the top
+	                    	rethrownException = e;
+	                    }
+                    }
+                });
+            }
+        });
+        thread.start();// Initialize the thread
+        Thread.sleep(1000);
+        if(rethrownException != null) {
+        	throw rethrownException;
+        }
+	}
+	
+	
 	@Test
     public void testPrepareLabelsForHeader() throws Throwable {
 		
@@ -73,6 +117,7 @@ public class GuiTester {
 	
 	@Test
 	public void testPrepareLabelsForCalendar() throws Throwable {
+		
 		
 		Thread thread = new Thread(new Runnable() {
             @Override
