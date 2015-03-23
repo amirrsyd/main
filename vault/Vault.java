@@ -122,6 +122,13 @@ public class Vault {
 		return list.remove(task);
 	}
 	
+	/**
+	 * Removes the first occurrence of the Task object with the specified 
+	 * taskName from the list WITHOUT moving it to trash.
+	 * 
+	 * @param taskName    name of the task.
+	 * @return            true if simple removal is successful.
+	 */
 	public boolean remove(String taskName) {
 		Task task = search(taskName);
 		if (task != null) {
