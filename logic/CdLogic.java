@@ -12,7 +12,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import vault.CompletedTaskVault;
 import vault.HistoryVault;
-import vault.Vault;
 import vault.TaskVault;
 import vault.TrashVault;
 import model.Task;
@@ -25,7 +24,6 @@ public class CdLogic {
 	private static final String MESSAGE_INVALID_FORMAT = "invalid command "
 			+ "format :%1$s";
 
-	private static Vault vault;
 	private static TaskVault taskVault;
 	private static TrashVault trashVault;
 	private static HistoryVault historyVault;
