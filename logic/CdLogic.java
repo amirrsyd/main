@@ -115,8 +115,8 @@ public class CdLogic {
 			System.exit(0);
 		case NEXT:
 			return next();
-//		case UNDO:
-//			return undo();
+		case UNDO:
+			return undo();
 		case CHANGEDIR:
 			return changeDirectory(userCommand);
 		default:
@@ -223,7 +223,9 @@ public class CdLogic {
 		taskVault.storeTask(oldTask);
 		historyVault.remove(oldTask.getTaskName());
 		historyVault.remove(newTask.getTaskName());
-			
+		updateDisplay();
+		saveVaults();
+		
 		return "Undo: \"" + oldTask.getTaskName() + "\" has been restored to its original";
 	}
 
@@ -234,8 +236,10 @@ public class CdLogic {
 		taskVault.storeTask(historyTask);
 		trashVault.remove(historyTask.getTaskName());
 		historyVault.remove(historyTask.getTaskName());
+		updateDisplay();
+		saveVaults();
 		
-		return null;
+		return "Undo: \"" + historyTask.getTaskName() + "\" moved back from trash to tasks";
 	}
 
 	private String undoComplete() {
@@ -245,6 +249,8 @@ public class CdLogic {
 		taskVault.storeTask(historyTask);
 		completedTaskVault.remove(historyTask.getTaskName());
 		historyVault.remove(historyTask.getTaskName());
+		updateDisplay();
+		saveVaults();
 		
 		return "Undo: \"" + historyTask.getTaskName() + "\" moved back from completed to tasks";
 	}
@@ -255,6 +261,8 @@ public class CdLogic {
 		Task historyTask = historyList.get(historyList.size()-1);
 		taskVault.remove(historyTask.getTaskName());
 		historyVault.remove(historyTask.getTaskName());
+		updateDisplay();
+		saveVaults();
 		
 		return "Undo: \"" + historyTask.getTaskName() + "\" removed from tasks";
 	}
@@ -340,7 +348,7 @@ public class CdLogic {
 
 	private String editEndTime(String userCommand) {
 		// TODO Auto-generated method stub
-		String[] editArguments = parseEdit(userCommand, "enddate");
+		String[] editArguments = parseEdit(userCommand, "endtime");
 		String[] endTimes = extractTimes(editArguments[1]);
 		String taskName = editArguments[0].trim();
 		LocalTime newEndTime;
@@ -354,6 +362,10 @@ public class CdLogic {
 
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
+			
+			if (oldTask.getEndTime()==null){
+				return "Cannot edit end time of deadline";
+			}
 			if(!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), newEndTime)){
 				return "New date is not chronologically correct";
@@ -381,7 +393,7 @@ public class CdLogic {
 	 */
 	private String editStartTime(String userCommand) {
 		// TODO Auto-generated method stub
-		String[] editArguments = parseEdit(userCommand, "enddate");
+		String[] editArguments = parseEdit(userCommand, "starttime");
 		String[] startTimes = extractTimes(editArguments[1]);
 		String taskName = editArguments[0].trim();
 		LocalTime newStartTime;
@@ -395,6 +407,8 @@ public class CdLogic {
 
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
+			
+			
 			if(!isInOrder(oldTask.getStartDate(), newStartTime, oldTask.getEndDate(),
 					oldTask.getEndTime())){
 				return "New date is not chronologically correct";
@@ -436,6 +450,11 @@ public class CdLogic {
 
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
+			
+			if (oldTask.getEndDate()==null){
+				return "Cannot edit end date of deadline";
+			}
+			
 			if(!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(), newEndDate,
 					oldTask.getEndTime())){
 				return "New date is not chronologically correct";
@@ -556,7 +575,7 @@ public class CdLogic {
 
 		if (taskVault.completeTask(userCommand, completedTaskVault)) {
 			commandStack.push(UNDOABLE.COMPLETE);
-			historyVault.storeTask(taskVault.getTask(userCommand));
+			historyVault.storeTask(completedTaskVault.getTask(userCommand));
 			updateDisplay();
 			saveVaults();
 			return "\"" + userCommand + "\"" + " completed successfully";
@@ -973,9 +992,9 @@ public class CdLogic {
 		if (commandTypeString.equalsIgnoreCase("next")) {
 			return COMMAND_TYPE.NEXT;
 		}
-//		if (commandTypeString.equalsIgnoreCase("undo")){
-//			return COMMAND_TYPE.UNDO;
-//		}
+		if (commandTypeString.equalsIgnoreCase("undo")){
+			return COMMAND_TYPE.UNDO;
+		}
 		if (commandTypeString.equalsIgnoreCase("changedir")){
 			return COMMAND_TYPE.CHANGEDIR;
 		}
@@ -1036,6 +1055,10 @@ public class CdLogic {
 		String[] split = data.split(TIME_REGEX);
 		String description = split[split.length - 1].trim();
 
+		if (description.matches(DATE_REGEX) || (split.length == 1)){
+			return null;
+		}
+		
 		return description;
 	}
 
