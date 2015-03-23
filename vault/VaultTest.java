@@ -25,15 +25,6 @@ public class VaultTest {
 		trashVault = new TrashVault(vaultPath);
 		taskVault.createTask("", "", null, null, null, null);
 	}
-	
-	@Test
-	public void testAllVaultsExist() {
-		assertNotNull(taskVault);
-		assertNotNull(completedTaskVault);
-		assertNotNull(historyVault);
-		assertNotNull(trashVault);
-	}
-	
 	@Test
 	public void testCreateTask() {
 		assertTrue(taskVault.createTask("1", "", null, null, null, null));
@@ -62,6 +53,11 @@ public class VaultTest {
 	}
 	
 	@Test
+	public void testCompletedTaskVault() {
+		assertNotNull(completedTaskVault);
+	}
+	
+	@Test
 	public void testGetList() {
 		assertNotNull(taskVault.getList());
 		assertNotNull(completedTaskVault.getList());
@@ -77,15 +73,6 @@ public class VaultTest {
 	@Test
 	public void testDeleteTask() {
 		assertTrue(taskVault.deleteTask("", trashVault));
-		assertNull(taskVault.search(""));
-		assertNotNull(trashVault.search(""));
-	}
-	
-	@Test
-	public void testRemove() {
-		assertTrue(taskVault.remove(""));
-		assertNull(trashVault.search(""));
-		assertFalse(taskVault.remove(null));
 	}
 
 }

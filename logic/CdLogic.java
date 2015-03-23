@@ -17,6 +17,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import vault.CompletedTaskVault;
 import vault.HistoryVault;
+import vault.Vault;
 import vault.TaskVault;
 import vault.TrashVault;
 import model.Task;
@@ -28,8 +29,7 @@ public class CdLogic {
 
 	private static final String MESSAGE_INVALID_FORMAT = "invalid command "
 			+ "format :%1$s";
-	private static final String ERROR_MESSAGE = "Unrecognized command type" ;
-	private static final String DIR_RETURNMESSAGE = "Directory doesnt exist" ;
+
 	private static TaskVault taskVault;
 	private static TrashVault trashVault;
 	private static HistoryVault historyVault;
@@ -121,7 +121,7 @@ public class CdLogic {
 			return changeDirectory(userCommand);
 		default:
 			// throw an error if the command is not recognized
-			throw new Error(ERROR_MESSAGE);
+			throw new Error("Unrecognized command type");
 		}
 	}
 
@@ -146,7 +146,7 @@ public class CdLogic {
 			return "files moved to \""+ newPathString+ "\"";
 		}
 		
-		return DIR_RETURNMESSAGE ;
+		return "directory doesnt exist";
 	}
 
 	/**

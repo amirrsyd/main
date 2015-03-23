@@ -18,7 +18,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Vault class.
+ * Vault class
  *
  * @author Qiyuan
  */
@@ -49,70 +49,37 @@ public class Vault {
 	protected static DateTimeFormatter dateFormat = DateTimeFormatter.ISO_LOCAL_DATE;
 	
 	protected ObservableList<Task> list;
-	protected Path filePath;
+	protected Path storePath;
 
 
-	/**
-	 * Default constructor.
-	 */
+	//Default Constructor
 	public Vault() {
 	}
-	
-	/**
-	 * Constructs a Vault object and use the dirPath to open an existing file 
-	 * in the specified directory if possible. If the file does not exist, it 
-	 * creates an empty list. The path to the directory must be valid and the 
-	 * directory must exist. Otherwise it will throw an IOException.
-	 * 
-	 * @param dirPath         path to the directory for file access.
-	 * @throws IOException    if path is invalid or directory does not exist.
-	 */
-	public Vault(String dirPath) throws IOException {
-		filePath = Paths.get(dirPath + "vault.txt").toAbsolutePath();
-		//setFilePath(filePath);
+
+	public Vault(String filePath) throws IOException {
+		storePath = Paths.get(filePath + "vault.txt").toAbsolutePath();
+		//setStorePath(storePath);
 		// If file exists, open it. If it doesn't, create empty list.
-		if (canFindFile(filePath)) {
-			openFile(filePath);
+		if (canFindFile(storePath)) {
+			openFile(storePath);
 		}
 		else {
 			list = FXCollections.observableArrayList();
 		}
 	}
-	
-	/**
-	 * Obtains the first occurrence of the Task object with the specified 
-	 * taskName in the list and returns it.
-	 * 
-	 * @param taskName    name of the task.
-	 * @return            the Task object.
-	 */
+
 	public Task getTask(String taskName) {
 		Task task = search(taskName);
 		return task;
 	}
-	
-	/**
-	 * Inserts the specified Task object into the list, sort the list and 
-	 * return true.
-	 * 
-	 * @param newTask    Task object.
-	 * @return           true if this is successful.
-	 */
+
 	public boolean storeTask(Task newTask) {
 		list.add(newTask);
 		System.out.println("Sorted");
 		FXCollections.sort(list);	//Task implements comparable
 		return true;
 	}
-	
-	/**
-	 * Removes the first occurrence of the Task object with the specified 
-	 * taskName from the list and move it to trash.
-	 * 
-	 * @param taskName    name of the task.
-	 * @param trash       TrashVault object.
-	 * @return            true if deletion is successful.
-	 */
+
 	public boolean deleteTask(String taskName, TrashVault trash) {
 		Task task = search(taskName);
 		if(search(taskName)==null) {
@@ -121,29 +88,7 @@ public class Vault {
 		trash.storeTask(task);
 		return list.remove(task);
 	}
-	
-	/**
-	 * Removes the first occurrence of the Task object with the specified 
-	 * taskName from the list WITHOUT moving it to trash.
-	 * 
-	 * @param taskName    name of the task.
-	 * @return            true if simple removal is successful.
-	 */
-	public boolean remove(String taskName) {
-		Task task = search(taskName);
-		if (task != null) {
-			return list.remove(task);
-		}
-		else {
-			return false;
-		}
-	}
-	
-	/**
-	 * Returns a copy of the list.
-	 * 
-	 * @return    the copied list.
-	 */
+
 	public ObservableList<Task> getList() {
 		ObservableList<Task> listCopy = FXCollections.observableArrayList();;
 		for (int i = 0; i < list.size(); i++) {
@@ -152,12 +97,9 @@ public class Vault {
 		return listCopy;
 	}
 	
-	/**
-	 * Saves the list in a special string format into the relevant file.
-	 */
 	
 	public void save() {
-		try (BufferedWriter writer = Files.newBufferedWriter(filePath, 
+		try (BufferedWriter writer = Files.newBufferedWriter(storePath, 
 				                         CHAR_SET, StandardOpenOption.CREATE, 
 				                         StandardOpenOption.WRITE, 
 				                         StandardOpenOption.SYNC,
@@ -208,30 +150,14 @@ public class Vault {
 		}
 	}
 
-	/**
-	 * Returns the filePath.
-	 * 
-	 * @return    the path to the file.
-	 */
-	public Path getFilePath() {
-		return filePath;
-	}
+	/*protected Path getStorePath() {
+		return storePath;
+	}*/
 	
-	/**
-	 * Sets the filePath for file access in the directory path.
-	 * 
-	 * @param dirPath    the path to the directory.    
-	 */
-	public void setFilePath(Path dirPath) {
-		this.filePath = Paths.get(dirPath + "vault.txt").toAbsolutePath();
-	}
+	/*protected void setStorePath(Path storePath) {
+		this.storePath = storePath;
+	}*/
 	
-	/**
-	 * Search for a Task object in the list based on taskName.
-	 * 
-	 * @param taskName    name of the task.
-	 * @return            Task object if found else null.
-	 */
 	protected Task search(String taskName) {
 		//search task
 		for (int i = 0; i < list.size(); i++) {
@@ -242,33 +168,23 @@ public class Vault {
 		return null;
 	}
 
-	/**
-	 * Checks whether the file exists and return true if it does.
-	 * 
-	 * @param filePath        the path to the file.
-	 * @return                true if the file exists.
-	 * @throws IOException    if path is invalid.
+	/*
+	 * This method checks whether the file exists
 	 */
-	protected static boolean canFindFile(Path filePath) throws IOException {
-		File file = filePath.toFile();
+	protected static boolean canFindFile(Path storePath) throws IOException {
+		File file = storePath.toFile();
 		if(!file.exists()) {
 			return false;
 		}
 		return true;
 	}
 	
-	/**
-	 * Opens the file, located by filePath, to read it and store the data 
-	 * into list.
-	 *  
-	 * @param filePath    the path to the file.
-	 */
-	protected void openFile(Path filePath) {
+	protected void openFile(Path storePath) {
 		list = FXCollections.observableArrayList();
 		try {
 
-			//BufferedReader reader = new BufferedReader(new FileReader(filePath.toFile()));
-			BufferedReader reader = Files.newBufferedReader(filePath);
+			//BufferedReader reader = new BufferedReader(new FileReader(storePath.toFile()));
+			BufferedReader reader = Files.newBufferedReader(storePath);
 			
 			String line = reader.readLine();
 		    while (line != null) {
@@ -306,10 +222,9 @@ public class Vault {
 	}
 	
 	/**
-	 * Changes the string passed to a LocalTime object.
-	 * 
-	 * @param timeString    the time in String format.
-	 * @return              the time represented by a LocalTime instance.
+	 * Changes the string passed to a LocalTime object
+	 * @param timeString
+	 * @return
 	 */
 	private LocalTime changeStringToTime(String timeString) {
 		if (timeString.length() < DATE_TIME_LENGTH) {
@@ -319,10 +234,9 @@ public class Vault {
 	}
 
 	/**
-	 * Changes the string passed to a LocalDate object.
-	 * 
-	 * @param dateString    the date in String format.
-	 * @return              the date represented by a LocalDate instance.
+	 * Changes the string passed to a LocalDate object
+	 * @param dateString
+	 * @return
 	 */
 	private LocalDate changeStringToDate(String dateString) {
 		if (dateString.length() < DATE_TIME_LENGTH) {

@@ -135,7 +135,7 @@ public class TaskOverviewController{
 		endDateColumn.setCellValueFactory(cellData -> cellData.getValue().endDateProperty());
 		endTimeColumn.setCellValueFactory(cellData -> cellData.getValue().endTimeProperty());
 		
-		TaskOverviewControllerLogger.initializeLogger();
+		//TaskOverviewControllerLogger.initializeLogger();
 		output.setEditable(false);
 		initializeLogic();
 		outputToTextArea(MESSAGE_WELCOME);
