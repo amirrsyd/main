@@ -153,7 +153,6 @@ public class CdLogic {
 	 * @throws IOException
 	 */
 	private void initializeVaults() throws IOException {
-		String vaultPath = System.getProperty(USER_DIR);
 		taskVault = new TaskVault(vaultPath);
 		trashVault = new TrashVault(vaultPath);
 		historyVault = new HistoryVault(vaultPath);
@@ -849,10 +848,9 @@ public class CdLogic {
 		userCommand = removeFirstWord(userCommand);
 
 		String taskName = userCommand;
-		if (taskVault.getTask(taskName)!=null) {
+		if (taskVault.deleteTask(taskName, trashVault)) {
 			commandStack.push(UNDOABLE.DELETE);
 			historyVault.storeTask(taskVault.getTask(taskName));
-			taskVault.deleteTask(taskName, trashVault);
 			updateDisplay();
 			saveVaults();
 			return "\"" + taskName + "\"" + " deleted successfully";
