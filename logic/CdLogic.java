@@ -28,8 +28,20 @@ public class CdLogic {
 
 	private static final String MESSAGE_INVALID_FORMAT = "invalid command "
 			+ "format :%1$s";
-	private static final String ERROR_MESSAGE = "Unrecognized command type" ;
-	private static final String DIR_RETURNMESSAGE = "Directory doesnt exist" ;
+	private static final String MESSAGE_ERROR = "Unrecognized command type" ;
+	private static final String MESSAGE_NONEXIST = "Directory doesnt exist" ;
+	private static final String MESSAGE_NO_NEXT_TASK = "no next tasks" ;
+	private static final String MESSAGE_SHOW_NEXT_TASK = "next task shown" ;
+	private static final String MESSAGE_INVALID_EDIT = "invalid edit command" ;
+	private static final String MESSAGE_INVALID_TIME = "new time not valid" ;
+	private static final String MESSAGE_TRASH_CLEARED = "trash emptied successfully" ;
+	private static final String MESSAGE_TRASH_UNCLEARED = "trash can't be emptied" ;
+	private static final String MESSAGE_NOT_CHRON = "new date not chronologically correct" ;
+	private static final String MESSAGE_EDIT_SUCCESS = "edit complete" ;
+	private static final String MESSAGE_INVALID_DATE = "new date not valid" ;
+	private static final String MESSAGE_DELETE_UNSUCCESS = "Delete not successful" ;
+	private static final String MESSAGE_INVALID_COMMAND = "command type string cannot be null!" ;
+
 	private static TaskVault taskVault;
 	private static TrashVault trashVault;
 	private static HistoryVault historyVault;
@@ -39,7 +51,7 @@ public class CdLogic {
 
 	private static ObservableList<Task> toDisplay;
 	private static ObservableList<Task> tasks;
-	
+
 	enum UNDOABLE {
 		ADD, DELETE, COMPLETE, EDIT
 	}
@@ -115,13 +127,13 @@ public class CdLogic {
 			System.exit(0);
 		case NEXT:
 			return next();
-		case UNDO:
-			return undo();
+			//		case UNDO:
+			//			return undo();
 		case CHANGEDIR:
 			return changeDirectory(userCommand);
 		default:
 			// throw an error if the command is not recognized
-			throw new Error(ERROR_MESSAGE);
+			throw new Error(MESSAGE_ERROR);
 		}
 	}
 
@@ -134,19 +146,19 @@ public class CdLogic {
 		File newPath = new File(newPathString);
 		if(newPath.isDirectory()){
 			copyToNewPath(newPathString);
-			
+
 			clearFromFile();
 			writeToFile(newPathString);
 			vaultPath = newPathString;
 			initializeVaults();
-			
+
 			updateDisplay();
 			saveVaults();
-			
+
 			return "files moved to \""+ newPathString+ "\"";
 		}
-		
-		return DIR_RETURNMESSAGE ;
+
+		return MESSAGE_NONEXIST ;
 	}
 
 	/**
@@ -170,22 +182,22 @@ public class CdLogic {
 		Path completedVaultPath = Paths.get(oldPathString + "/completed.txt").toAbsolutePath();
 		Path trashVaultPath = Paths.get(oldPathString + "/trash.txt").toAbsolutePath();
 		Path historyVaultPath = Paths.get(oldPathString + "/history.txt").toAbsolutePath();
-		
+
 		Path newTaskVaultPath = Paths.get(newPathString + "/taskList.txt").toAbsolutePath();
 		Path newCompletedVaultPath = Paths.get(newPathString + "/completed.txt").toAbsolutePath();
 		Path newTrashVaultPath = Paths.get(newPathString+ "/trash.txt").toAbsolutePath();
 		Path newHistoryVaultPath = Paths.get(newPathString + "/history.txt").toAbsolutePath();
-		
+
 		Files.copy(taskVaultPath, newTaskVaultPath, StandardCopyOption.REPLACE_EXISTING);
 		Files.copy(completedVaultPath, newCompletedVaultPath, StandardCopyOption.REPLACE_EXISTING);
 		Files.copy(trashVaultPath, newTrashVaultPath, StandardCopyOption.REPLACE_EXISTING);
 		Files.copy(historyVaultPath, newHistoryVaultPath, StandardCopyOption.REPLACE_EXISTING);
-		
+
 		File oldTaskFile = new File(taskVaultPath.toString());
 		File oldTrashFile = new File(completedVaultPath.toString());
 		File oldCompletedFile = new File(trashVaultPath.toString());
 		File oldHistoryFile = new File(historyVaultPath.toString());
-		
+
 		oldTaskFile.delete();
 		oldTrashFile.delete();
 		oldCompletedFile.delete();
@@ -209,7 +221,7 @@ public class CdLogic {
 			return undoEdit();
 		default:
 			break;
-		
+
 		}
 		return null;
 	}
@@ -223,9 +235,7 @@ public class CdLogic {
 		taskVault.storeTask(oldTask);
 		historyVault.remove(oldTask.getTaskName());
 		historyVault.remove(newTask.getTaskName());
-		updateDisplay();
-		saveVaults();
-		
+
 		return "Undo: \"" + oldTask.getTaskName() + "\" has been restored to its original";
 	}
 
@@ -236,10 +246,8 @@ public class CdLogic {
 		taskVault.storeTask(historyTask);
 		trashVault.remove(historyTask.getTaskName());
 		historyVault.remove(historyTask.getTaskName());
-		updateDisplay();
-		saveVaults();
-		
-		return "Undo: \"" + historyTask.getTaskName() + "\" moved back from trash to tasks";
+
+		return null;
 	}
 
 	private String undoComplete() {
@@ -249,9 +257,7 @@ public class CdLogic {
 		taskVault.storeTask(historyTask);
 		completedTaskVault.remove(historyTask.getTaskName());
 		historyVault.remove(historyTask.getTaskName());
-		updateDisplay();
-		saveVaults();
-		
+
 		return "Undo: \"" + historyTask.getTaskName() + "\" moved back from completed to tasks";
 	}
 
@@ -261,27 +267,25 @@ public class CdLogic {
 		Task historyTask = historyList.get(historyList.size()-1);
 		taskVault.remove(historyTask.getTaskName());
 		historyVault.remove(historyTask.getTaskName());
-		updateDisplay();
-		saveVaults();
-		
+
 		return "Undo: \"" + historyTask.getTaskName() + "\" removed from tasks";
 	}
 
 	private String next() {
 		// TODO Auto-generated method stub
-		
+
 		if (tasks.isEmpty()) {
-			return "no next tasks";
+			return MESSAGE_NO_NEXT_TASK;
 		}
 
 		toDisplay.clear();
 		toDisplay.add(taskVault.getNextTask());
-		
+
 		assert(toDisplay.size() <= 1);
-		
+
 		saveVaults();
 
-		return "next task shown";
+		return MESSAGE_SHOW_NEXT_TASK;
 
 	}
 
@@ -317,7 +321,7 @@ public class CdLogic {
 		if (userCommand.contains("addcomment")) {
 			return addComment(userCommand);
 		}
-		return "invalid edit command";
+		return MESSAGE_INVALID_EDIT;
 
 	}
 
@@ -334,7 +338,7 @@ public class CdLogic {
 			taskVault.createTask(oldTask.getTaskName(), newComment,
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), oldTask.getEndTime());
-			
+
 			historyVault.storeTask(oldTask);
 			historyVault.storeTask(taskVault.getTask(taskName));			
 			commandStack.push(UNDOABLE.EDIT);			
@@ -348,7 +352,7 @@ public class CdLogic {
 
 	private String editEndTime(String userCommand) {
 		// TODO Auto-generated method stub
-		String[] editArguments = parseEdit(userCommand, "endtime");
+		String[] editArguments = parseEdit(userCommand, "enddate");
 		String[] endTimes = extractTimes(editArguments[1]);
 		String taskName = editArguments[0].trim();
 		LocalTime newEndTime;
@@ -357,30 +361,26 @@ public class CdLogic {
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return "New time not valid";
+			return MESSAGE_INVALID_TIME;
 		}
 
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
-			
-			if (oldTask.getEndTime()==null){
-				return "Cannot edit end time of deadline";
-			}
 			if(!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), newEndTime)){
-				return "New date is not chronologically correct";
+				return MESSAGE_NOT_CHRON;
 			}
 			taskVault.deleteTask(taskName, trashVault);
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), newEndTime);
-			
+
 			historyVault.storeTask(oldTask);
 			historyVault.storeTask(taskVault.getTask(taskName));		
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
-			return "edit done";
+			return MESSAGE_EDIT_SUCCESS;
 		} else {
 			return "task " + taskName + " not found";
 		}
@@ -393,7 +393,7 @@ public class CdLogic {
 	 */
 	private String editStartTime(String userCommand) {
 		// TODO Auto-generated method stub
-		String[] editArguments = parseEdit(userCommand, "starttime");
+		String[] editArguments = parseEdit(userCommand, "enddate");
 		String[] startTimes = extractTimes(editArguments[1]);
 		String taskName = editArguments[0].trim();
 		LocalTime newStartTime;
@@ -402,30 +402,28 @@ public class CdLogic {
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return "New time not valid";
+			return MESSAGE_INVALID_TIME;
 		}
 
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
-			
-			
 			if(!isInOrder(oldTask.getStartDate(), newStartTime, oldTask.getEndDate(),
 					oldTask.getEndTime())){
-				return "New date is not chronologically correct";
+				return MESSAGE_NOT_CHRON ;
 			}
-			
-			
+
+
 			taskVault.deleteTask(taskName, trashVault);
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
 					oldTask.getStartDate(), newStartTime, oldTask.getEndDate(),
 					oldTask.getEndTime());
-			
+
 			historyVault.storeTask(oldTask);
 			historyVault.storeTask(taskVault.getTask(taskName));		
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
-			return "edit done";
+			return MESSAGE_EDIT_SUCCESS;
 		} else {
 			return "task " + taskName + " not found";
 		}
@@ -445,31 +443,26 @@ public class CdLogic {
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return "New date not valid";
+			return MESSAGE_INVALID_DATE;
 		}
 
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
-			
-			if (oldTask.getEndDate()==null){
-				return "Cannot edit end date of deadline";
-			}
-			
 			if(!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(), newEndDate,
 					oldTask.getEndTime())){
-				return "New date is not chronologically correct";
+				return MESSAGE_NOT_CHRON;
 			}
 			taskVault.deleteTask(taskName, trashVault);
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
 					oldTask.getStartDate(), oldTask.getStartTime(), newEndDate,
 					oldTask.getEndTime());
-			
+
 			historyVault.storeTask(oldTask);
 			historyVault.storeTask(taskVault.getTask(taskName));		
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
-			return "edit done";
+			return MESSAGE_EDIT_SUCCESS;
 		} else {
 			return "task " + taskName + " not found";
 		}
@@ -489,30 +482,30 @@ public class CdLogic {
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return "New date not valid";
+			return MESSAGE_INVALID_DATE;
 		}
 
 		if (newStartDate == null) {
 			return "Enter a valid date";
 		} else if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
-			
-			
+
+
 			if(!isInOrder(newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
 					oldTask.getEndTime())){
-				return "New date is not chronologically correct";
+				return MESSAGE_NOT_CHRON ;
 			}
 			taskVault.deleteTask(taskName, trashVault);
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
 					newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
 					oldTask.getEndTime());
-			
+
 			historyVault.storeTask(oldTask);
 			historyVault.storeTask(taskVault.getTask(taskName));		
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
-			return "edit done";
+			return MESSAGE_EDIT_SUCCESS ;
 		} else {
 			return "task " + taskName + " not found";
 		}
@@ -529,24 +522,24 @@ public class CdLogic {
 
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
-			
+
 			for(int i = 0; i<tasks.size(); i++){
 				if(tasks.get(i).getTaskName().equals(newTaskName)){
 					return "\"" + newTaskName + "\" already exists";
 				}
 			}
-			
+
 			taskVault.deleteTask(taskName, trashVault);
 			taskVault.createTask(newTaskName, oldTask.getComment(),
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), oldTask.getEndTime());
-			
+
 			historyVault.storeTask(oldTask);
 			historyVault.storeTask(taskVault.getTask(newTaskName));		
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
-			return "edit done";
+			return MESSAGE_EDIT_SUCCESS;
 		} else {
 			return "task " + taskName + " not found";
 		}
@@ -575,7 +568,7 @@ public class CdLogic {
 
 		if (taskVault.completeTask(userCommand, completedTaskVault)) {
 			commandStack.push(UNDOABLE.COMPLETE);
-			historyVault.storeTask(completedTaskVault.getTask(userCommand));
+			historyVault.storeTask(taskVault.getTask(userCommand));
 			updateDisplay();
 			saveVaults();
 			return "\"" + userCommand + "\"" + " completed successfully";
@@ -586,7 +579,7 @@ public class CdLogic {
 
 	private String search(String userCommand) {
 		userCommand = removeFirstWord(userCommand);
-		
+
 		String[] searchWords = parseSearch(userCommand);
 		toDisplay.clear();
 		int found = 0;
@@ -625,9 +618,9 @@ public class CdLogic {
 	private String empty() {
 		if (trashVault.emptyTrash()) {
 			saveVaults();
-			return "trash emptied successfully";
+			return MESSAGE_TRASH_CLEARED;
 		} else {
-			return "trash can't be emptied";
+			return MESSAGE_TRASH_UNCLEARED;
 		}
 	}
 
@@ -642,7 +635,7 @@ public class CdLogic {
 			updateDisplay();
 			return "All tasks displayed";
 		}
-		
+
 		if(listArguments[0].equalsIgnoreCase("today")){
 			return listToday() + " tasks displayed";
 		}
@@ -650,8 +643,8 @@ public class CdLogic {
 		if(listArguments[0].equalsIgnoreCase("week")){
 			return listWeek() + " tasks displayed";
 		}
-	
-	
+
+
 		try {
 			if (isValidListDate(listArguments)) {
 				return listDate(listArguments[0]) + "tasks displayed";
@@ -669,12 +662,12 @@ public class CdLogic {
 			updateDisplay();
 			return "Invalid list command";
 		}
-		
+
 		updateDisplay();
 		return "Invalid list command";
 
 	}
-	
+
 	private int listDayPeriod(String[] listArguments){
 		int tasksFound = 0;
 		LocalDate date1 = toLocalDate(listArguments[0]);
@@ -716,10 +709,10 @@ public class CdLogic {
 				.ofPattern("dd/MM/yyyy");
 		LocalDate todayDate = LocalDate.now();
 		LocalDate laterDate = todayDate.plusWeeks(1);
-		
+
 		listWeekArguments[0] = todayDate.format(dateFormatter);
 		listWeekArguments[1] = laterDate.format(dateFormatter);
-		
+
 		return listDayPeriod(listWeekArguments);
 	}
 
@@ -730,7 +723,7 @@ public class CdLogic {
 		DateTimeFormatter dateFormatter = DateTimeFormatter
 				.ofPattern("dd/MM/yyyy");
 		LocalDate todayDate = LocalDate.now();
-		
+
 		return listDate(todayDate.format(dateFormatter));
 	}
 
@@ -877,7 +870,7 @@ public class CdLogic {
 			return "\"" + taskName + "\"" + " deleted successfully";
 		}
 
-		return "delete not successful";
+		return MESSAGE_DELETE_UNSUCCESS ;
 	}
 
 	private void updateDisplay() {
@@ -889,7 +882,7 @@ public class CdLogic {
 		userCommand = removeFirstWord(userCommand);
 
 		String[] addArguments = parseAdd(userCommand);
-		
+
 		LocalDate startDate;
 		try {
 			startDate = toLocalDate(addArguments[2]);
@@ -926,15 +919,15 @@ public class CdLogic {
 		if((taskVault.getTask(addArguments[0])!=null)){
 			return "\"" + addArguments[0] + "\" already exists";
 		}
-		
-		
+
+
 		if(endDate!=null){
 			LocalDateTime startDateTime = LocalDateTime.of(startDate, startTime);
 			LocalDateTime endDateTime = LocalDateTime.of(endDate, endTime);
 			if(endDateTime.isBefore(startDateTime)){
 				return "Task cannot end before it starts";
 			}
-			
+
 			for(int i = 0; i<tasks.size(); i++){
 				Task currTask = tasks.get(i);
 				if (currTask.getEndDate()!=null){
@@ -947,7 +940,7 @@ public class CdLogic {
 				}
 			}
 		}
-		
+
 		if (taskVault.createTask(addArguments[0], addArguments[1], startDate,
 				startTime, endDate, endTime)) {
 			commandStack.push(UNDOABLE.ADD);
@@ -962,7 +955,7 @@ public class CdLogic {
 
 	private COMMAND_TYPE determineCommandType(String commandTypeString) {
 		if (commandTypeString == null) {
-			throw new Error("command type string cannot be null!");
+			throw new Error(MESSAGE_INVALID_COMMAND);
 		}
 		if (commandTypeString.equalsIgnoreCase("add")) {
 			return COMMAND_TYPE.ADD;
@@ -992,9 +985,9 @@ public class CdLogic {
 		if (commandTypeString.equalsIgnoreCase("next")) {
 			return COMMAND_TYPE.NEXT;
 		}
-		if (commandTypeString.equalsIgnoreCase("undo")){
-			return COMMAND_TYPE.UNDO;
-		}
+		//		if (commandTypeString.equalsIgnoreCase("undo")){
+		//			return COMMAND_TYPE.UNDO;
+		//		}
 		if (commandTypeString.equalsIgnoreCase("changedir")){
 			return COMMAND_TYPE.CHANGEDIR;
 		}
@@ -1026,7 +1019,7 @@ public class CdLogic {
 		if(!(arguments[0].matches(DATE_REGEX)||arguments[0].matches(TIME_REGEX))){
 			return arguments;
 		}
-	
+
 		String[] dates = extractDates(data);
 		String[] times = extractTimes(data);
 		arguments = new String[4];
@@ -1055,10 +1048,6 @@ public class CdLogic {
 		String[] split = data.split(TIME_REGEX);
 		String description = split[split.length - 1].trim();
 
-		if (description.matches(DATE_REGEX) || (split.length == 1)){
-			return null;
-		}
-		
 		return description;
 	}
 
@@ -1132,10 +1121,10 @@ public class CdLogic {
 		fw.write(newString);
 		fw.close();
 	}
-	
+
 	private static String getVaultPath(String fileName) throws IOException {
 		BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));
-		
+
 		try {
 			String line = bufferedReader.readLine();
 			return line;
@@ -1143,7 +1132,7 @@ public class CdLogic {
 			bufferedReader.close();
 		}
 	}
-	
+
 	private static void clearFromFile() throws FileNotFoundException {
 		PrintWriter writer = new PrintWriter(new File("config.txt"));
 		writer.print("");
