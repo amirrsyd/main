@@ -274,7 +274,7 @@ public class Task implements Comparable<Object> {
 	 *
 	 * @return    Type of task.
 	 */
-	private String getType() {
+	public String getType() {
 		if (this.endTime.get() != null) {
 			return EVENT;
 		} else if (this.startTime.get() != null) {
