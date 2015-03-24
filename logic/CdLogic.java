@@ -51,7 +51,9 @@ public class CdLogic {
 
 	private static ObservableList<Task> toDisplay;
 	private static ObservableList<Task> tasks;
-
+	private static ObservableList<Task> history;
+	
+	
 	enum UNDOABLE {
 		ADD, DELETE, COMPLETE, EDIT
 	}
@@ -68,6 +70,7 @@ public class CdLogic {
 	public CdLogic() throws IOException {
 		initializeFromConfig();
 		initializeVaults();
+		history = FXCollections.observableArrayList();
 		commandStack = new Stack<UNDOABLE>();
 		tasks = taskVault.getList();
 		toDisplay = copyList(tasks);
@@ -224,6 +227,9 @@ public class CdLogic {
 
 	private String undo() {
 		// TODO Auto-generated method stub
+		if(history.isEmpty()){
+			return "No more undo left";
+		}
 		switch (commandStack.peek()){
 		case ADD:
 			commandStack.pop();
@@ -245,26 +251,28 @@ public class CdLogic {
 	}
 
 	private String undoEdit() {
-		ObservableList<Task> historyList = historyVault.getList();
-		Task newTask = historyList.get(historyList.size() - 1);
-		Task oldTask = historyList.get(historyList.size() - 2);
+//		ObservableList<Task> historyList = historyVault.getList();
+//		Task newTask = historyList.get(historyList.size() - 1);
+//		Task oldTask = historyList.get(historyList.size() - 2);
+		Task newTask = history.remove(history.size()-1);
+		Task oldTask = history.remove(history.size()-1);
 		trashVault.remove(oldTask.getTaskName());
 		taskVault.remove(newTask.getTaskName());
 		taskVault.storeTask(oldTask);
-		historyVault.remove(oldTask.getTaskName());
-		historyVault.remove(newTask.getTaskName());
+//		historyVault.remove(oldTask.getTaskName());
+//		historyVault.remove(newTask.getTaskName());
 		updateDisplay();
 		saveVaults();
 		return "Undo: \"" + oldTask.getTaskName() + "\" has been restored to its original";
 	}
 
 	private String undoDelete() {
-		// TODO Auto-generated method stub
-		ObservableList<Task> historyList = historyVault.getList();
-		Task historyTask = historyList.get(historyList.size() - 1);
+//		ObservableList<Task> historyList = historyVault.getList();
+//		Task historyTask = historyList.get(historyList.size() - 1);
+		Task historyTask = history.remove(history.size()-1);
 		taskVault.storeTask(historyTask);
 		trashVault.remove(historyTask.getTaskName());
-		historyVault.remove(historyTask.getTaskName());
+//		historyVault.remove(historyTask.getTaskName());
 		updateDisplay();
 		saveVaults();
 		return "Undo: \"" + historyTask.getTaskName()
@@ -272,23 +280,23 @@ public class CdLogic {
 	}
 
 	private String undoComplete() {
-		// TODO Auto-generated method stub
-		ObservableList<Task> historyList = historyVault.getList();
-		Task historyTask = historyList.get(historyList.size() - 1);
+//		ObservableList<Task> historyList = historyVault.getList();
+//		Task historyTask = historyList.get(historyList.size() - 1);
+		Task historyTask = history.remove(history.size()-1);
 		taskVault.storeTask(historyTask);
 		completedTaskVault.remove(historyTask.getTaskName());
-		historyVault.remove(historyTask.getTaskName());
+//		historyVault.remove(historyTask.getTaskName());
 		updateDisplay();
 		saveVaults();
 		return "Undo: \"" + historyTask.getTaskName() + "\" moved back from completed to tasks";
 	}
 
 	private String undoAdd() {
-		// TODO Auto-generated method stub
-		ObservableList<Task> historyList = historyVault.getList();
-		Task historyTask = historyList.get(historyList.size()-1);
+//		ObservableList<Task> historyList = historyVault.getList();
+//		Task historyTask = historyList.get(historyList.size()-1);
+		Task historyTask = history.remove(history.size()-1);
 		taskVault.remove(historyTask.getTaskName());
-		historyVault.remove(historyTask.getTaskName());
+//		historyVault.remove(historyTask.getTaskName());
 		updateDisplay();
 		saveVaults();
 		return "Undo: \"" + historyTask.getTaskName() + "\" removed from tasks";
@@ -316,7 +324,6 @@ public class CdLogic {
 	 * 
 	 */
 	private void saveVaults() {
-		historyVault.save();
 		taskVault.save();
 		trashVault.save();
 		completedTaskVault.save();
@@ -357,13 +364,15 @@ public class CdLogic {
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
 
-			taskVault.deleteTask(taskName, trashVault);
+			taskVault.remove(taskName);
 			taskVault.createTask(oldTask.getTaskName(), newComment,
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), oldTask.getEndTime());
 
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));			
+//			historyVault.storeTask(oldTask);
+//			historyVault.storeTask(taskVault.getTask(taskName));	
+			history.add(oldTask);
+			history.add(taskVault.getTask(oldTask.getTaskName()));
 			commandStack.push(UNDOABLE.EDIT);			
 			updateDisplay();
 			saveVaults();
@@ -401,13 +410,15 @@ public class CdLogic {
 					oldTask.getEndDate(), newEndTime)){
 				return MESSAGE_NOT_CHRON;
 			}
-			taskVault.deleteTask(taskName, trashVault);
+			taskVault.remove(taskName);
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), newEndTime);
 
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));		
+//			historyVault.storeTask(oldTask);
+//			historyVault.storeTask(taskVault.getTask(taskName));		
+			history.add(oldTask);
+			history.add(taskVault.getTask(oldTask.getTaskName()));
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
@@ -447,13 +458,15 @@ public class CdLogic {
 			}
 
 
-			taskVault.deleteTask(taskName, trashVault);
+			taskVault.remove(taskName);
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
 					oldTask.getStartDate(), newStartTime, oldTask.getEndDate(),
 					oldTask.getEndTime());
 
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));		
+//			historyVault.storeTask(oldTask);
+//			historyVault.storeTask(taskVault.getTask(taskName));	
+			history.add(oldTask);
+			history.add(taskVault.getTask(oldTask.getTaskName()));
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
@@ -493,13 +506,15 @@ public class CdLogic {
 					oldTask.getEndTime())){
 				return MESSAGE_NOT_CHRON;
 			}
-			taskVault.deleteTask(taskName, trashVault);
+			taskVault.remove(taskName);
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
 					oldTask.getStartDate(), oldTask.getStartTime(), newEndDate,
 					oldTask.getEndTime());
 
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));		
+//			historyVault.storeTask(oldTask);
+//			historyVault.storeTask(taskVault.getTask(taskName));		
+			history.add(oldTask);
+			history.add(taskVault.getTask(oldTask.getTaskName()));
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
@@ -534,17 +549,19 @@ public class CdLogic {
 				return "Cannot edit start date of floating task";
 			}
 
-			if(!isInOrder(newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
+			if((oldTask.getEndDate()!=null) && !isInOrder(newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
 					oldTask.getEndTime())){
 				return MESSAGE_NOT_CHRON ;
 			}
-			taskVault.deleteTask(taskName, trashVault);
+			taskVault.remove(taskName);
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
 					newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
 					oldTask.getEndTime());
 
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));		
+//			historyVault.storeTask(oldTask);
+//			historyVault.storeTask(taskVault.getTask(taskName));	
+			history.add(oldTask);
+			history.add(taskVault.getTask(oldTask.getTaskName()));
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
@@ -572,13 +589,15 @@ public class CdLogic {
 				}
 			}
 
-			taskVault.deleteTask(taskName, trashVault);
+			taskVault.remove(taskName);
 			taskVault.createTask(newTaskName, oldTask.getComment(),
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), oldTask.getEndTime());
 
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(newTaskName));		
+//			historyVault.storeTask(oldTask);
+//			historyVault.storeTask(taskVault.getTask(newTaskName));	
+			history.add(oldTask);
+			history.add(taskVault.getTask(newTaskName));
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
@@ -611,7 +630,8 @@ public class CdLogic {
 
 		if (taskVault.getTask(userCommand)!=null) {
 			commandStack.push(UNDOABLE.COMPLETE);
-			historyVault.storeTask(taskVault.getTask(userCommand));
+//			historyVault.storeTask(taskVault.getTask(userCommand));
+			history.add(taskVault.getTask(userCommand));
 			taskVault.completeTask(userCommand, completedTaskVault);
 			updateDisplay();
 			saveVaults();
@@ -919,7 +939,8 @@ public class CdLogic {
 		String taskName = userCommand;
 		if (taskVault.getTask(taskName)!=null) {
 			commandStack.push(UNDOABLE.DELETE);
-			historyVault.storeTask(taskVault.getTask(taskName));
+//			historyVault.storeTask(taskVault.getTask(taskName));
+			history.add(taskVault.getTask(taskName));
 			taskVault.deleteTask(taskName, trashVault);
 			updateDisplay();
 			saveVaults();
@@ -1007,7 +1028,8 @@ public class CdLogic {
 		if (taskVault.createTask(addArguments[0], addArguments[1], startDate,
 				startTime, endDate, endTime)) {
 			commandStack.push(UNDOABLE.ADD);
-			historyVault.storeTask(taskVault.getTask(addArguments[0]));
+//			historyVault.storeTask(taskVault.getTask(addArguments[0]));
+			history.add(taskVault.getTask(addArguments[0]));
 			updateDisplay();
 			saveVaults();
 			return "Task \"" + addArguments[0] + "\" successfully added";
