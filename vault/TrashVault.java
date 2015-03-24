@@ -26,6 +26,7 @@ public class TrashVault extends Vault {
 	 */
 	public TrashVault(String dirPath) throws IOException {
 		filePath = Paths.get(dirPath + "/trash.txt").toAbsolutePath();
+		fileName = "/trash.txt";
 		// setFilePath(filePath);
 		if (canFindFile(filePath)) {
 			openFile(filePath);

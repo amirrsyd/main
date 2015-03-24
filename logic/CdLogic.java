@@ -138,27 +138,39 @@ public class CdLogic {
 	}
 
 	private String changeDirectory(String userCommand) throws IOException {
-		// TODO Auto-generated method stub
+//		// TODO Auto-generated method stub
 		String newPathString = removeFirstWord(userCommand).trim();
-		if (newPathString.equals("")){
-			newPathString = System.getProperty(USER_DIR);
-		}
-		File newPath = new File(newPathString);
-		if(newPath.isDirectory()){
-			copyToNewPath(newPathString);
-
-			clearFromFile();
-			writeToFile(newPathString);
-			vaultPath = newPathString;
-			initializeVaults();
-
-			updateDisplay();
-			saveVaults();
-
-			return "files moved to \""+ newPathString+ "\"";
-		}
-
-		return MESSAGE_NONEXIST ;
+	
+//		if (newPathString.equals("")){
+//			newPathString = System.getProperty(USER_DIR);
+//		}
+//		File newPath = new File(newPathString);
+//		if(newPath.isDirectory()){
+//			copyToNewPath(newPathString);
+//
+//			clearFromFile();
+//			writeToFile(newPathString);
+//			vaultPath = newPathString;
+//			initializeVaults();
+//
+//			updateDisplay();
+//			saveVaults();
+//
+//			return "files moved to \""+ newPathString+ "\"";
+//		}
+//
+//		return MESSAGE_NONEXIST ;
+		taskVault.deleteFile();
+		trashVault.deleteFile();
+		completedTaskVault.deleteFile();
+		historyVault.deleteFile();
+		taskVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
+		trashVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
+		completedTaskVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
+		historyVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
+		saveVaults();
+		
+		return "directory changed";
 	}
 
 	/**

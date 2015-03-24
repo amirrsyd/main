@@ -29,6 +29,7 @@ public class CompletedTaskVault extends Vault {
 	public CompletedTaskVault(String dirPath) throws IOException {
 		filePath = Paths.get(dirPath + "/completed.txt").toAbsolutePath();
 		// setFilePath(filePath);
+		fileName = "/completed.txt";
 		if (canFindFile(filePath)) {
 			openFile(filePath);
 		}

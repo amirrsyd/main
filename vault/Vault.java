@@ -50,7 +50,7 @@ public class Vault {
 	
 	protected ObservableList<Task> list;
 	protected Path filePath;
-
+	protected String fileName;
 
 	/**
 	 * Default constructor.
@@ -68,7 +68,8 @@ public class Vault {
 	 * @throws IOException    if path is invalid or directory does not exist.
 	 */
 	public Vault(String dirPath) throws IOException {
-		filePath = Paths.get(dirPath + "vault.txt").toAbsolutePath();
+		filePath = Paths.get(dirPath + "/vault.txt").toAbsolutePath();
+		fileName = "/vault.txt";
 		//setFilePath(filePath);
 		// If file exists, open it. If it doesn't, create empty list.
 		if (canFindFile(filePath)) {
@@ -223,9 +224,12 @@ public class Vault {
 	 * @param dirPath    the path to the directory.    
 	 */
 	public void setFilePath(Path dirPath) {
-		this.filePath = Paths.get(dirPath + "vault.txt").toAbsolutePath();
+		this.filePath = Paths.get(dirPath + fileName).toAbsolutePath();
 	}
 	
+	public void deleteFile(){
+		filePath.toFile().delete();
+	}
 	/**
 	 * Search for a Task object in the list based on taskName.
 	 * 

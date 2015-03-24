@@ -27,6 +27,7 @@ public class HistoryVault extends Vault {
 	public HistoryVault(String dirPath) throws IOException {
 		filePath = Paths.get(dirPath + "/history.txt").toAbsolutePath();
 		// setFilePath(filePath);
+		fileName = "/history.txt";
 		if (canFindFile(filePath)) {
 			openFile(filePath);
 		}

@@ -29,6 +29,7 @@ public class TaskVault extends Vault {
 	public TaskVault(String dirPath) throws IOException {
 		filePath = Paths.get(dirPath + "/taskList.txt").toAbsolutePath();
 		// setFilePath(filePath);
+		fileName = "/taskList.txt";
 		if (canFindFile(filePath)) {
 			openFile(filePath);
 		}
