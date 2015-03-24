@@ -55,12 +55,12 @@ public class CdLogic {
 	
 	
 	enum UNDOABLE {
-		ADD, DELETE, COMPLETE, EDIT
+		ADD, DELETE, COMPLETE, EDIT, CHANGEDIR
 	}
 
 
 	enum COMMAND_TYPE {
-		ADD, DELETE, LIST, EMPTY, SEARCH, COMPLETE, EDIT, INVALID, EXIT, CHANGEDIR, UNDO, NEXT
+		ADD, DELETE, LIST, EMPTY, SEARCH, COMPLETE, EDIT, INVALID, EXIT, CHANGEDIR, UNDO, NEXT, GETDIR
 	}
 
 	enum TaskType {
@@ -89,7 +89,7 @@ public class CdLogic {
 		 */
 		if (!config.exists()){
 			config.createNewFile();
-			writeToFile(System.getProperty(USER_DIR));
+			writeToConfig(System.getProperty(USER_DIR));
 			vaultPath = System.getProperty(USER_DIR);
 		}else{
 			vaultPath = getVaultPath("config.txt").trim();
@@ -140,46 +140,48 @@ public class CdLogic {
 			return undo();
 		case CHANGEDIR:
 			return changeDirectory(userCommand);
+		case GETDIR:
+			return getDirectory();
 		default:
 			// throw an error if the command is not recognized
 			throw new Error(MESSAGE_ERROR);
 		}
 	}
 
+	private String getDirectory() {
+		// TODO Auto-generated method stub
+		
+		return "Working directory: " + vaultPath;
+	}
+
 	private String changeDirectory(String userCommand) throws IOException {
-//		// TODO Auto-generated method stub
 		String newPathString = removeFirstWord(userCommand).trim();
 	
-//		if (newPathString.equals("")){
-//			newPathString = System.getProperty(USER_DIR);
-//		}
-//		File newPath = new File(newPathString);
-//		if(newPath.isDirectory()){
-//			copyToNewPath(newPathString);
-//
-//			clearFromFile();
-//			writeToFile(newPathString);
-//			vaultPath = newPathString;
-//			initializeVaults();
-//
-//			updateDisplay();
-//			saveVaults();
-//
-//			return "files moved to \""+ newPathString+ "\"";
-//		}
-//
-//		return MESSAGE_NONEXIST ;
-		taskVault.deleteFile();
-		trashVault.deleteFile();
-		completedTaskVault.deleteFile();
-		historyVault.deleteFile();
-		taskVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
-		trashVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
-		completedTaskVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
-		historyVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
-		saveVaults();
+		File newPath = new File(newPathString);
+		newPath = newPath.getAbsoluteFile();
+		if (newPath.isDirectory()) {
+			Task oldDirTask = new Task(vaultPath);
+			history.add(oldDirTask);
+			commandStack.push(UNDOABLE.CHANGEDIR);
+			taskVault.deleteFile();
+			trashVault.deleteFile();
+			completedTaskVault.deleteFile();
+			historyVault.deleteFile();
+			taskVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
+			trashVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
+			completedTaskVault.setFilePath(Paths.get(newPathString)
+					.toAbsolutePath());
+			historyVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
+			clearConfigFile();
+			writeToConfig(Paths.get(newPathString).toAbsolutePath().toString());
+			vaultPath = Paths.get(newPathString).toAbsolutePath().toString();
+			saveVaults();
+			updateDisplay();
+			return "files moved to \"" + newPathString + "\"";
+		}
 		
-		return "directory changed";
+		return MESSAGE_NONEXIST ;
+		
 	}
 
 	/**
@@ -225,7 +227,7 @@ public class CdLogic {
 		oldHistoryFile.delete();
 	}
 
-	private String undo() {
+	private String undo() throws IOException {
 		// TODO Auto-generated method stub
 		if(history.isEmpty()){
 			return "No more undo left";
@@ -243,11 +245,40 @@ public class CdLogic {
 		case EDIT:
 			commandStack.pop();
 			return undoEdit();
+		case CHANGEDIR:
+			commandStack.pop();
+			return undoChangeDir();
 		default:
 			break;
 
 		}
 		return null;
+	}
+
+	private String undoChangeDir() throws IOException {
+		String newPathString = history.remove(history.size()-1).getTaskName();
+		
+		File newPath = new File(newPathString);
+		newPath = newPath.getAbsoluteFile();
+		if (newPath.isDirectory()) {
+			taskVault.deleteFile();
+			trashVault.deleteFile();
+			completedTaskVault.deleteFile();
+			historyVault.deleteFile();
+			taskVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
+			trashVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
+			completedTaskVault.setFilePath(Paths.get(newPathString)
+					.toAbsolutePath());
+			historyVault.setFilePath(Paths.get(newPathString).toAbsolutePath());
+			clearConfigFile();
+			writeToConfig(Paths.get(newPathString).toAbsolutePath().toString());
+			vaultPath = Paths.get(newPathString).toAbsolutePath().toString();
+			saveVaults();
+			updateDisplay();
+			return "files moved to \"" + newPathString + "\"";
+		}
+		
+		return MESSAGE_NONEXIST ;
 	}
 
 	private String undoEdit() {
@@ -1076,6 +1107,9 @@ public class CdLogic {
 		if (commandTypeString.equalsIgnoreCase("changedir")){
 			return COMMAND_TYPE.CHANGEDIR;
 		}
+		if (commandTypeString.equalsIgnoreCase("getdir")){
+			return COMMAND_TYPE.GETDIR;
+		}
 		return COMMAND_TYPE.INVALID;
 	}
 
@@ -1204,7 +1238,7 @@ public class CdLogic {
 				.of(endDate, endTime)));
 	}
 
-	private static void writeToFile(String newString) throws IOException {
+	private static void writeToConfig(String newString) throws IOException {
 		FileWriter fw = new FileWriter("config.txt", true);
 		fw.write(newString);
 		fw.close();
@@ -1221,7 +1255,7 @@ public class CdLogic {
 		}
 	}
 
-	private static void clearFromFile() throws FileNotFoundException {
+	private static void clearConfigFile() throws FileNotFoundException {
 		PrintWriter writer = new PrintWriter(new File("config.txt"));
 		writer.print("");
 		writer.close();
