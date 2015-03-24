@@ -1008,9 +1008,9 @@ public class CdLogic {
 		if (commandTypeString.equalsIgnoreCase("next")) {
 			return COMMAND_TYPE.NEXT;
 		}
-		//		if (commandTypeString.equalsIgnoreCase("undo")){
-		//			return COMMAND_TYPE.UNDO;
-		//		}
+		if (commandTypeString.equalsIgnoreCase("undo")){
+			return COMMAND_TYPE.UNDO;
+		}
 		if (commandTypeString.equalsIgnoreCase("changedir")){
 			return COMMAND_TYPE.CHANGEDIR;
 		}
