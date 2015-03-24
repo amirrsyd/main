@@ -78,6 +78,12 @@ public class CdLogic {
 	 */
 	private void initializeFromConfig() throws IOException {
 		File config = new File("config.txt");
+		/*
+		 * Warning: If config.txt exists but is empty,
+		 * a nullpointerexception will be thrown. If it exists but
+	 	 * the path inside is not a directory, tasks will not be
+	 	 * saved.
+		 */
 		if (!config.exists()){
 			config.createNewFile();
 			writeToFile(System.getProperty(USER_DIR));
@@ -382,8 +388,14 @@ public class CdLogic {
 		}
 		if (taskExists(taskName)) {			
 			Task oldTask = taskVault.getTask(taskName);
+			
+
 			if (oldTask.getEndTime() == null) {
-				return "Cannot edit end time of deadline";
+				if (oldTask.getStartTime() == null) {
+					return "Cannot edit end time of floating task";
+				} else {
+					return "Cannot edit end time of deadline";
+				}
 			}
 			if(!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), newEndTime)){
@@ -426,6 +438,9 @@ public class CdLogic {
 
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
+			if(oldTask.getStartTime()==null){
+				return "Cannot edit start time of floating task";
+			}
 			if(!isInOrder(oldTask.getStartDate(), newStartTime, oldTask.getEndDate(),
 					oldTask.getEndTime())){
 				return MESSAGE_NOT_CHRON ;
@@ -465,11 +480,15 @@ public class CdLogic {
 			return MESSAGE_INVALID_DATE;
 		}
 
-		if (taskExists(taskName)) {		
+		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
 			if (oldTask.getEndDate() == null) {
-				return "Cannot edit end date of deadline";
-			}	
+				if (oldTask.getStartTime() == null) {
+					return "Cannot edit end date of floating task";
+				} else {
+					return "Cannot edit end date of deadline";
+				}
+			}
 			if(!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(), newEndDate,
 					oldTask.getEndTime())){
 				return MESSAGE_NOT_CHRON;
@@ -511,7 +530,9 @@ public class CdLogic {
 			return "Enter a valid date";
 		} else if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
-
+			if(oldTask.getStartDate()==null){
+				return "Cannot edit start date of floating task";
+			}
 
 			if(!isInOrder(newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
 					oldTask.getEndTime())){
@@ -954,9 +975,16 @@ public class CdLogic {
 		if((taskVault.getTask(addArguments[0])!=null)){
 			return "\"" + addArguments[0] + "\" already exists";
 		}
-
-
+		
+		if((startDate!=null) && (startTime==null)){
+			return ("Start date must be accompanied with start time");
+		}
+		
 		if(endDate!=null){
+			if (endTime==null){
+				return "End date must be accompanied with an end time";
+			}
+		
 			LocalDateTime startDateTime = LocalDateTime.of(startDate, startTime);
 			LocalDateTime endDateTime = LocalDateTime.of(endDate, endTime);
 			if(endDateTime.isBefore(startDateTime)){
