@@ -576,9 +576,10 @@ public class CdLogic {
 	private String complete(String userCommand) {
 		userCommand = removeFirstWord(userCommand);
 
-		if (taskVault.completeTask(userCommand, completedTaskVault)) {
+		if (taskVault.getTask(userCommand)!=null) {
 			commandStack.push(UNDOABLE.COMPLETE);
 			historyVault.storeTask(taskVault.getTask(userCommand));
+			taskVault.completeTask(userCommand, completedTaskVault);
 			updateDisplay();
 			saveVaults();
 			return "\"" + userCommand + "\"" + " completed successfully";
