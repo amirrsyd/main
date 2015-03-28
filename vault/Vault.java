@@ -38,12 +38,12 @@ public class Vault {
 	protected static final String COMMENT_DOUBLE_SPACE = "comment  ";
 	protected static final String START_TIME_DOUBLE_SPACE = "starttime  ";
 	protected static final String START_DATE_DOUBLE_SPACE = "startdate  ";
-	protected static final String NULL = "null";
 	protected static final String END_TIME = "endtime";
 	protected static final String END_DATE = "enddate";
 	protected static final String START_TIME = "starttime";
 	protected static final String START_DATE = "startdate";
 	protected static final String COMMENT = "comment";
+	protected static final String NULL = "null";
 	protected static final Charset CHAR_SET = Charset.forName("US-ASCII");
 	protected static DateTimeFormatter timeFormat = DateTimeFormatter.ISO_LOCAL_TIME;
 	protected static DateTimeFormatter dateFormat = DateTimeFormatter.ISO_LOCAL_DATE;
@@ -94,14 +94,20 @@ public class Vault {
 	
 	/**
 	 * Inserts the specified Task object into the list, sort the list and 
-	 * return true.
+	 * return true if it is successful. Also, The list must not already 
+	 * contain the object and the task object must not have a null taskName.
 	 * 
 	 * @param newTask    Task object.
 	 * @return           true if this is successful.
 	 */
 	public boolean storeTask(Task newTask) {
+		if (newTask == null || list.contains(newTask)) {
+			return false;
+		}
+		if (newTask.getTaskName() == null) {
+			return false;
+		}
 		list.add(newTask);
-		System.out.println("Sorted");
 		FXCollections.sort(list);	//Task implements comparable
 		return true;
 	}
@@ -115,9 +121,12 @@ public class Vault {
 	 * @return            true if deletion is successful.
 	 */
 	public boolean deleteTask(String taskName, TrashVault trash) {
+		if (taskName == null || trash == null) {
+			return false;
+		}
 		Task task = search(taskName);
-		if(search(taskName)==null) {
-			System.out.println("BOOM");
+		if(task == null) {
+			return false;
 		}
 		trash.storeTask(task);
 		return list.remove(task);
@@ -132,12 +141,10 @@ public class Vault {
 	 */
 	public boolean remove(String taskName) {
 		Task task = search(taskName);
-		if (task != null) {
-			return list.remove(task);
-		}
-		else {
+		if (task == null) {
 			return false;
 		}
+		return list.remove(task);
 	}
 	
 	/**
@@ -155,8 +162,7 @@ public class Vault {
 	
 	/**
 	 * Saves the list in a special string format into the relevant file.
-	 */
-	
+	 */	
 	public void save() {
 		try (BufferedWriter writer = Files.newBufferedWriter(filePath, 
 				                         CHAR_SET, StandardOpenOption.CREATE, 
@@ -224,21 +230,48 @@ public class Vault {
 	 * @param dirPath    the path to the directory.    
 	 */
 	public void setFilePath(Path dirPath) {
+		assert dirPath != null;
 		this.filePath = Paths.get(dirPath + fileName).toAbsolutePath();
 	}
 	
+	/**
+	 * Deletes the associated file.
+	 */
 	public void deleteFile(){
 		filePath.toFile().delete();
 	}
+
 	/**
-	 * Search for a Task object in the list based on taskName.
+	 * Search for the first Task object in the list based on taskName.
 	 * 
 	 * @param taskName    name of the task.
 	 * @return            Task object if found else null.
 	 */
 	protected Task search(String taskName) {
-		//search task
+		if (taskName == null) {
+			return null;
+		}
+		// Search from the front for the task
 		for (int i = 0; i < list.size(); i++) {
+			if (list.get(i).getTaskName().equals(taskName)) {
+				return list.get(i);
+			}			
+		}		
+		return null;
+	}
+
+	/**
+	 * Search for the last Task object in the list based on taskName.
+	 * 
+	 * @param taskName    name of the task.
+	 * @return            Task object if found else null.
+	 */
+	protected Task backSearch(String taskName) {
+		if (taskName == null) {
+			return null;
+		}
+		// Search from the back for the task
+		for (int i = list.size() - 1; i >= 0; i--) {
 			if (list.get(i).getTaskName().equals(taskName)) {
 				return list.get(i);
 			}			

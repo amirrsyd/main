@@ -56,8 +56,7 @@ public class TaskVault extends Vault {
 			                  LocalDate endDate, LocalTime endTime) {
 		Task task = new Task(taskName, taskDescription, startDate, startTime,
 				             endDate, endTime);
-		storeTask(task);
-		return true;
+		return storeTask(task);
 	}
 	
 	/**
@@ -83,9 +82,16 @@ public class TaskVault extends Vault {
 	 */
 	public boolean completeTask(String taskName, 
 			                    CompletedTaskVault completedTasks) {
+		if (taskName == null || completedTasks == null) {
+			return false;
+		}
 		Task task = search(taskName);
-		list.remove(task);
-		completedTasks.storeTask(task);
-		return true;
+		if (task == null) {
+			return false;
+		}
+		if (list.remove(task) == false) {
+			return false;
+		}
+		return completedTasks.storeTask(task);
 	}
 }
