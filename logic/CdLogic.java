@@ -1,4 +1,5 @@
 package logic;
+ 
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,8 +21,21 @@ import vault.HistoryVault;
 import vault.TaskVault;
 import vault.TrashVault;
 import model.Task;
-
+/**
+* <h1>CdLogic Class</h1>
+* The CdLogic class implements the comman.DO application that
+* is a task manager. The methods below implement the functionalities
+* of commands entered by a user
+* 
+*/
 public class CdLogic {
+	
+	/**
+	 * Listed below are the String constants e.g. Message returns
+	 * This is to ensure easier code readability
+	 * Start Date & End Date is in the format (DD:MM:YYYY) 
+	 * Start Time & End Time is in the format (HH:MM) 
+	 */
 	private static final String USER_DIR = "user.dir";
 	private static final String DATE_REGEX = "([1-9]|[012][0-9]|3[01])[-/]\\s*(0[1-9]|1[012])[-/]\\s*((19|20)?[0-9]{2})";
 	private static final String TIME_REGEX = "([01]?[0-9]|2[0-3]):[0-5][0-9]";
@@ -41,7 +55,11 @@ public class CdLogic {
 	private static final String MESSAGE_INVALID_DATE = "new date not valid" ;
 	private static final String MESSAGE_DELETE_UNSUCCESS = "Delete not successful" ;
 	private static final String MESSAGE_INVALID_COMMAND = "command type string cannot be null!" ;
-
+	private static final String MESSAGE_NO_UNDO = "no more undo left" ;
+	/**
+	 * We call the classes from Vault (Storage) to use them in our methods as parsers
+	 * 
+	 */
 	private static TaskVault taskVault;
 	private static TrashVault trashVault;
 	private static HistoryVault historyVault;
@@ -66,10 +84,11 @@ public class CdLogic {
 	enum TaskType {
 		FLOAT, EVENT, DATELINE
 	}
-	
-	enum Day {
-		MON, TUE, WED, THU, FRI, SAT, SUN
-	}
+	/**
+	 * Method that will work with GUI and TaskVault class.
+	 *  Initializes the display of tasks that is retrieved from TaskVault
+	 *  @throws I0Exception
+	 */
 
 	public CdLogic() throws IOException {
 		initializeFromConfig();
@@ -81,6 +100,7 @@ public class CdLogic {
 	}
 
 	/**
+	 * initializes config.txt to save to the working directory
 	 * @throws IOException
 	 */
 	private void initializeFromConfig() throws IOException {
@@ -99,17 +119,10 @@ public class CdLogic {
 			vaultPath = getVaultPath("config.txt").trim();
 		}
 	}
-	
 	/**
-	 * For testing purposes: Clears all lists and all data from the files.
+	 * Obtains tasklist from TaskVault class
+	 * Returns tasks to be viewed on the GUI
 	 */
-	public void clear() {
-		taskVault.clear();
-		trashVault.clear();
-		historyVault.clear();
-		completedTaskVault.clear();
-	}
-
 	public ObservableList<Task> getTaskList() {
 		tasks = FXCollections.observableArrayList(taskVault.getList());
 
@@ -119,6 +132,16 @@ public class CdLogic {
 	public ObservableList<Task> getDisplayList() {
 		return toDisplay;
 	}
+	/**
+	 * If command is empty, will display MESSAGE_INVALID_FORMAT
+	 * Else, it will check the first word entered by user
+	 * followed by obtaining the command type from method determineCommandType
+	 * and executes command
+	 * add(userCommand), delete(userCommand), list(userCommand), empty(), search(userCommand)
+	 * complete(userCommand), edit(userCommand), exit(System.exit(0)), next(), undo(), changedir(userCommand)
+	 * getdir() 
+	 * @throws Error Message 
+	 */
 
 	public String executeCommand(String userCommand) throws IOException {
 		tasks = taskVault.getList();
@@ -161,13 +184,21 @@ public class CdLogic {
 			throw new Error(MESSAGE_ERROR);
 		}
 	}
+	/**
+	 * Obtain directory
+	 */
 
 	private String getDirectory() {
 		// TODO Auto-generated method stub
 		
 		return "Working directory: " + vaultPath;
 	}
-
+	/**
+     * method that returns the new directory when change directory command is entered by user
+     * if directory fails to exist, returns MESSAGE_NONEXIST
+	 * @throws IOException
+	 */
+	
 	private String changeDirectory(String userCommand) throws IOException {
 		String newPathString = removeFirstWord(userCommand).trim();
 	
@@ -199,6 +230,7 @@ public class CdLogic {
 	}
 
 	/**
+	 * creates an instance of the different Vault classes 
 	 * @throws IOException
 	 */
 	private void initializeVaults() throws IOException {
@@ -240,11 +272,17 @@ public class CdLogic {
 		oldCompletedFile.delete();
 		oldHistoryFile.delete();
 	}
+	/**
+	 * method that performs undo command
+	 * if task is empty, returns MESSAGE_NO_UNDO
+	 * undoAdd, undoComplete, undoDelete, undoEdit, undoChangedir 
+	 * @throws IOException
+	 */
 
 	private String undo() throws IOException {
 		// TODO Auto-generated method stub
 		if(history.isEmpty()){
-			return "No more undo left";
+			return MESSAGE_NO_UNDO ;
 		}
 		switch (commandStack.peek()){
 		case ADD:
@@ -268,7 +306,11 @@ public class CdLogic {
 		}
 		return null;
 	}
-
+	/**
+	 * performs undoChangedir command
+	 * If directory specified does not exit, returns MESSAGE_NONEXIST
+	 * @throws IOException
+	 */
 	private String undoChangeDir() throws IOException {
 		String newPathString = history.remove(history.size()-1).getTaskName();
 		
@@ -294,7 +336,9 @@ public class CdLogic {
 		
 		return MESSAGE_NONEXIST ;
 	}
-
+	/**
+	 * performs undoEdit command to revert back to original
+	 */
 	private String undoEdit() {
 //		ObservableList<Task> historyList = historyVault.getList();
 //		Task newTask = historyList.get(historyList.size() - 1);
@@ -310,6 +354,9 @@ public class CdLogic {
 		saveVaults();
 		return "Undo: \"" + oldTask.getTaskName() + "\" has been restored to its original";
 	}
+	/**
+	 * performs undoDelete command
+	 */
 
 	private String undoDelete() {
 //		ObservableList<Task> historyList = historyVault.getList();
@@ -323,6 +370,9 @@ public class CdLogic {
 		return "Undo: \"" + historyTask.getTaskName()
 				+ "\" moved back from trash to tasks";
 	}
+	/**
+	 * performs undoDelete command
+	 */
 
 	private String undoComplete() {
 //		ObservableList<Task> historyList = historyVault.getList();
@@ -335,6 +385,10 @@ public class CdLogic {
 		saveVaults();
 		return "Undo: \"" + historyTask.getTaskName() + "\" moved back from completed to tasks";
 	}
+	
+	/**
+	 * performs undoAdd command 
+	 */
 
 	private String undoAdd() {
 //		ObservableList<Task> historyList = historyVault.getList();
@@ -346,6 +400,12 @@ public class CdLogic {
 		saveVaults();
 		return "Undo: \"" + historyTask.getTaskName() + "\" removed from tasks";
 	}
+	/**
+	 * performs add command
+	 * if task list is empty, return MESSAGE_NO_NEXT_TASK
+	 * toDisplay clears the taks list and adds the consecutive task
+	 * task is saved in saveVaults() method
+	 */
 
 	private String next() {
 		// TODO Auto-generated method stub
@@ -366,13 +426,20 @@ public class CdLogic {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	private void saveVaults() {
 		taskVault.save();
 		trashVault.save();
 		completedTaskVault.save();
 	}
+	/**
+	 * method that performs the respective edit instructions
+	 * if invalid String, MESSAGE_INVALID_EDIT will be returned
+	 * e.g. tasknam, startdate, starttime, enddate, endtime, addcomment
+	 * @param userCommand
+	 * @throws IOException
+	 */
 
 	private String edit(String userCommand) throws IOException {
 		userCommand = removeFirstWord(userCommand);
@@ -399,6 +466,12 @@ public class CdLogic {
 		return MESSAGE_INVALID_EDIT;
 
 	}
+	/**
+	 * performs commenting of a task
+	 * adds the new comment to the existing task and saves the changes
+	 * updates display of the task with comment added
+	 * @param userCommand
+	 */
 
 	private String addComment(String userCommand) {
 		// TODO Auto-generated method stub
@@ -426,6 +499,16 @@ public class CdLogic {
 			return "task " + taskName + " not found";
 		}
 	}
+	/**
+	 * method that edits endtime of tasks
+	 * For floating tasks where endtime is null, 
+	 * execution will return message
+	 * For deadline tasks, where endtime is null but starttime is not null, 
+	 * execution will return message
+	 * Method will also not allow if endtime entered is before the stipulated start time of 
+	 * a specific task
+	 * @param userCommand
+	 */
 
 	private String editEndTime(String userCommand) {
 		// TODO Auto-generated method stub
@@ -475,8 +558,9 @@ public class CdLogic {
 	}
 
 	/**
+	 * Method does not allow floating tasks to have starttime edited 
+	 * because it was formerly null
 	 * @param userCommand
-	 * @return
 	 */
 	private String editStartTime(String userCommand) {
 		// TODO Auto-generated method stub
@@ -522,8 +606,10 @@ public class CdLogic {
 	}
 
 	/**
+	 * Method does not allow edit of date for floating tasks
+	 * Method does not allow edit of date for deadline if endDate is null
+	 * Method does not allow endDate to be before Startdate of task
 	 * @param userCommand
-	 * @return
 	 */
 	private String editEndDate(String userCommand) {
 		String[] editArguments = parseEdit(userCommand, "enddate");
@@ -570,8 +656,8 @@ public class CdLogic {
 	}
 
 	/**
+	 * Method does not allow edit of start date of floating task
 	 * @param userCommand
-	 * @return
 	 */
 	private String editStartDate(String userCommand) {
 		String[] editArguments = parseEdit(userCommand, "startdate");
@@ -617,8 +703,8 @@ public class CdLogic {
 	}
 
 	/**
+	 * Method prevents tasks with same name to be stored 
 	 * @param userCommand
-	 * @return
 	 */
 	private String editTaskName(String userCommand) {
 		String[] editArguments = parseEdit(userCommand, "taskname");
@@ -651,16 +737,26 @@ public class CdLogic {
 			return "task " + taskName + " not found";
 		}
 	}
+	/**
+	 * @param taskName 	 
+	 */
 
 	private boolean taskExists(String taskName) {
 		return taskVault.getTask(taskName) != null;
 	}
+	
+	/**
+	 * @param userCommand, string
+	 */
 
 	private String[] parseEdit(String userCommand, String string) {
 		// TODO Auto-generated method stub
 
 		return userCommand.trim().split(string);
 	}
+	/**
+	 * @param toCopy
+	 */
 
 	private ObservableList<Task> copyList(ObservableList<Task> toCopy) {
 		ObservableList<Task> newList = FXCollections.observableArrayList();
@@ -669,6 +765,9 @@ public class CdLogic {
 		}
 		return newList;
 	}
+	/**
+	 * param userCommand
+	 */
 
 	private String complete(String userCommand) {
 		userCommand = removeFirstWord(userCommand);
@@ -685,6 +784,9 @@ public class CdLogic {
 			return "\"" + userCommand + "\"" + "couldn't be completed";
 		}
 	}
+	/**
+	 * @param userCommand
+	 */
 
 	private String search(String userCommand) {
 		userCommand = removeFirstWord(userCommand);
@@ -711,19 +813,27 @@ public class CdLogic {
 		}
 		return found + " tasks found";
 	}
-
+	/**
+	 * @param taskIndex
+	 */
 	private boolean isNotYetFound(int taskIndex) {
 		return !(toDisplay.contains(tasks.get(taskIndex)));
 	}
-
+	/**
+	 * @param currentWord, taskIndex
+	 */
 	private boolean isPartialMatch(String currentWord, int taskIndex) {
 		return tasks.get(taskIndex).getTaskName().contains(currentWord);
 	}
-
+	/**
+	 * @param userCommand, taskIndex
+	 */
 	private boolean isCompleteMatch(String userCommand, int taskIndex) {
 		return tasks.get(taskIndex).getTaskName().equals(userCommand);
 	}
-
+	/**
+	 * 
+	 */
 	private String empty() {
 		if (trashVault.emptyTrash()) {
 			saveVaults();
@@ -732,7 +842,9 @@ public class CdLogic {
 			return MESSAGE_TRASH_UNCLEARED;
 		}
 	}
-
+	/** 
+	 * @param userCommand
+	 */
 	private String list(String userCommand) {
 		userCommand = removeFirstWord(userCommand);
 
@@ -788,6 +900,9 @@ public class CdLogic {
 		return "Invalid list command";
 
 	}
+	/**
+	 * @param listArguments array
+	 */
 
 	private int listDayPeriod(String[] listArguments){
 		int tasksFound = 0;
@@ -816,12 +931,18 @@ public class CdLogic {
 		}
 		return tasksFound;		
 	}
-
+	/**
+	 * @param listArguments array
+	 * @return
+	 */
 	private boolean isValidDayPeriod(String[] listArguments) {
 		// TODO Auto-generated method stub
 		return (listArguments[2] == null && listArguments[0].matches(DATE_REGEX)
 				&& listArguments[1].matches(DATE_REGEX));
 	}
+	/**
+	 * @return Weekly sorted tasks
+	 */
 
 	private int listWeek() {
 		// TODO Auto-generated method stub
@@ -994,11 +1115,17 @@ public class CdLogic {
 
 		return MESSAGE_DELETE_UNSUCCESS ;
 	}
+	/**
+	 * 
+	 */
 
 	private void updateDisplay() {
 		toDisplay.clear();
 		toDisplay = copyList(taskVault.getList());
 	}
+	/**
+	 * @param userCommand
+	 */
 
 	private String add(String userCommand) {
 		userCommand = removeFirstWord(userCommand);
@@ -1082,6 +1209,9 @@ public class CdLogic {
 
 		return "Task \"" + addArguments[0] + "\"" + " cannot be added";
 	}
+	/**
+	 * @param commandTypeString
+	 */
 
 	private COMMAND_TYPE determineCommandType(String commandTypeString) {
 		if (commandTypeString == null) {
@@ -1128,6 +1258,11 @@ public class CdLogic {
 	}
 
 	// PARSE METHODS
+	/**
+	 * Method that takes in taskName, taskDescription, Startdate, Startime, Enddate, Endtime
+	 * @param command
+	 * @return details of task that have been entered by user
+	 */
 
 	public String[] parseAdd(String command) {
 		System.out.println(command);
@@ -1145,6 +1280,11 @@ public class CdLogic {
 
 		return arguments;
 	}
+	/**
+	 * Method to extract dates and times of tasks entered by user
+	 * @param data
+	 * @return Start date, Start time, End date, End time
+	 */
 
 	public String[] parseList(String data) {
 		String[] arguments;
@@ -1163,12 +1303,22 @@ public class CdLogic {
 
 		return arguments;
 	}
+	/**
+	 * Method to search tasks for specific keyword entered by user
+	 * @param data
+	 * @return search keyword
+	 */
 
 	public String[] parseSearch(String data) {
 		return data.trim().split("\\s+");
 	}
 
 	// STRING MANIPULATION METHODS
+	/**
+	 * Method to get task name
+	 * @param data
+	 * @return taskName
+	 */
 
 	public String getTaskName(String data) {
 		String task = data.split(DATE_REGEX, 2)[0];
@@ -1176,6 +1326,11 @@ public class CdLogic {
 
 		return task;
 	}
+	/**
+	 * Method to get task description
+	 * @param data
+	 * @return description of task
+	 */
 
 	public String getDescription(String data) {
 		String[] split = data.split(TIME_REGEX);
@@ -1186,6 +1341,11 @@ public class CdLogic {
 
 		return description;
 	}
+	/**
+	 * Method to extract dates 
+	 * @param data
+	 * @return specific date
+	 */
 
 	public String[] extractDates(String data) {
 		Pattern datePattern = Pattern.compile(DATE_REGEX);
@@ -1197,6 +1357,11 @@ public class CdLogic {
 		}
 		return result;
 	}
+	/**
+	 * Method to extract times entered by user
+	 * @param data
+	 * @return specific time
+	 */
 
 	public String[] extractTimes(String data) {
 		Pattern timePattern = Pattern.compile(TIME_REGEX);
@@ -1208,15 +1373,28 @@ public class CdLogic {
 		}
 		return result;
 	}
+	/**
+	 * Method to extract command from original String
+	 * @param userCommand
+	 * @return command 
+	 */
 
 	private String getFirstWord(String userCommand) {
 		return userCommand.trim().split("\\s+")[0];
 	}
-
+	/**
+	 * Method to remove word from original string and replace with empty space
+	 * @param userCommand
+	 * @return 
+	 */
 	private String removeFirstWord(String userCommand) {
 		return userCommand.replaceFirst(getFirstWord(userCommand), "").trim();
 	}
-
+	/**
+	 * Method to standardize date input (DD:MM:YYYY)
+	 * @param dataString
+	 * @return 
+	 */
 	private LocalDate toLocalDate(String dateString) throws DateTimeParseException{
 		if ((dateString == null) || (!dateString.matches(DATE_REGEX))) {
 			return null;
@@ -1227,6 +1405,11 @@ public class CdLogic {
 
 		return date;
 	}
+	/**
+	 * Method to standardize time (HH:MM)
+	 * @param data
+	 * @return
+	 */
 
 	private LocalTime toLocalTime(String timeString) throws DateTimeParseException{
 		if ((timeString == null) || (!timeString.matches(TIME_REGEX))) {
@@ -1237,26 +1420,53 @@ public class CdLogic {
 
 		return time;
 	}
+	/**
+	 * Method to return Start Date & Start Time
+	 * @param task
+	 * @return Start date, Start time
+	 */
 
 	public LocalDateTime getStartLDT(Task task) {
 		return LocalDateTime.of(task.getStartDate(), task.getStartTime());
 	}
+	/**
+	 * Method to return End Date & End Time
+	 * @param task
+	 * @return End date, End time
+	 */
 
 	public LocalDateTime getEndLDT(Task task) {
 		return LocalDateTime.of(task.getEndDate(), task.getEndTime());
 	}
+	/**
+	 * Method to check if start date & start time is before end date and end time
+	 * @param task
+	 * @return true/false
+	 */
 
 	public boolean isInOrder(LocalDate startDate, LocalTime startTime,
 			LocalDate endDate, LocalTime endTime) {
 		return (LocalDateTime.of(startDate, startTime).isBefore(LocalDateTime
 				.of(endDate, endTime)));
 	}
+	/**
+	 * Method to open and write to file
+	 * @param newString
+	 * @return config.txt
+	 * @throws IOException
+	 */
 
 	private static void writeToConfig(String newString) throws IOException {
 		FileWriter fw = new FileWriter("config.txt", true);
 		fw.write(newString);
 		fw.close();
 	}
+	/**
+	 * Method that includes bufferedReader
+	 * @param fileName
+	 * @return 
+	 * @throws IOException
+	 */
 
 	private static String getVaultPath(String fileName) throws IOException {
 		BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));
@@ -1268,6 +1478,11 @@ public class CdLogic {
 			bufferedReader.close();
 		}
 	}
+	/**
+	 * Method to clear file
+	 * @return config.txt
+	 * @throws IOException
+	 */
 
 	private static void clearConfigFile() throws FileNotFoundException {
 		PrintWriter writer = new PrintWriter(new File("config.txt"));
