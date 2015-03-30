@@ -66,6 +66,10 @@ public class CdLogic {
 	enum TaskType {
 		FLOAT, EVENT, DATELINE
 	}
+	
+	enum Day {
+		MON, TUE, WED, THU, FRI, SAT, SUN
+	}
 
 	public CdLogic() throws IOException {
 		initializeFromConfig();
