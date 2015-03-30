@@ -28,6 +28,7 @@ public class Vault {
 	protected static final int OFFSET_10 = 10;
 	protected static final int OFFSET_8 = 8;
 	protected static final int ZERO = 0;
+	protected static final int INVALID = -1;
 	protected static final String END_TIME_DOUBLE_SPACE = "endtime  ";
 	protected static final String END_DATE_DOUBLE_SPACE = "enddate  ";
 	protected static final String END_TIME_SPACE = "endtime ";
@@ -264,19 +265,19 @@ public class Vault {
 	 * Search for the last Task object in the list based on taskName.
 	 * 
 	 * @param taskName    name of the task.
-	 * @return            Task object if found else null.
+	 * @return            index of the Task object if found else .
 	 */
-	protected Task backSearch(String taskName) {
+	protected int backSearchIndex(String taskName) {
 		if (taskName == null) {
-			return null;
+			return INVALID;
 		}
 		// Search from the back for the task
 		for (int i = list.size() - 1; i >= 0; i--) {
 			if (list.get(i).getTaskName().equals(taskName)) {
-				return list.get(i);
+				return i;
 			}			
 		}		
-		return null;
+		return INVALID;
 	}
 
 	/**

@@ -128,27 +128,26 @@ public class VaultTest {
 	}
 	
 	/**
-	 * Testing that remove will actually remove the last occurrence of object 
+	 * Testing that pop will actually remove the last occurrence of object 
 	 */
 	@Test
-	public void testHistoryOverriddenRemove() {
-		assertTrue(historyVault.remove(""));
+	public void testHistoryPop() {
+		assertNotNull(historyVault.pop(""));
 		assertTrue(historyVault.search("").getComment().equals("first"));
-		assertFalse(historyVault.search("").getComment().equals("last"));
 	}
 	
 	/**
-	 * Testing that storeTask will not store an identical object with the 
+	 * Testing that storeTask will store an identical object with the 
 	 * same reference.
-	 * Testing that storeTask will not store an identical object with a 
+	 * Testing that storeTask will store an identical object with a 
 	 * different reference.
 	 * Testing that storeTask will store a different object but with identical 
 	 * fields.
 	 */
 	@Test
 	public void testHistoryOverriddenStoreTask() {
-		assertFalse(historyVault.storeTask(testingTask));
-		assertFalse(historyVault.storeTask(testingTask2));
+		assertTrue(historyVault.storeTask(testingTask));
+		assertTrue(historyVault.storeTask(testingTask2));
 		assertTrue(historyVault.storeTask(testingTask3));
 	}
 	

@@ -10,8 +10,9 @@ import model.Task;
 
 /**
  * HistoryVault class.
- * The list within HistoryVault must be unsorted and treated 
- * to be Stack-like with a Last-In-First Out priority.
+ * The list within HistoryVault will be unsorted and treated 
+ * to be Stack-like with a Last-In-First Out priority. It will also 
+ * allow duplicates within it.
  *
  * @author Qiyuan
  */
@@ -41,14 +42,14 @@ public class HistoryVault extends Vault {
 	/**
 	 * This method overrides the same method inherited from Vault.
 	 * Inserts the specified Task object into the list and return true 
-	 * if it is successful. Also, The list must not already contain the 
-	 * object and the task object must not have a null taskName.
+	 * if it is successful WITHOUT sorting. Also, the task object must 
+	 * not have a null taskName.
 	 * 
 	 * @param newTask    Task object.
 	 * @return           true if this is successful.
 	 */
 	public boolean storeTask(Task newTask) {
-		if (newTask == null || list.contains(newTask)) {
+		if (newTask == null) {
 			return false;
 		}
 		if (newTask.getTaskName() == null) {
@@ -58,30 +59,30 @@ public class HistoryVault extends Vault {
 	}
 	
 	/**
-	 * This method overrides the same method inherited from Vault.
-	 * Removes the last occurrence of the Task object with the specified 
-	 * taskName from the list WITHOUT moving it to trash.
+	 * Removes the last found occurrence of the specified task and 
+	 * return it.
 	 * 
 	 * @param taskName    name of the task.
-	 * @return            true if simple removal is successful.
-	 */
-	public boolean remove(String taskName) {
-		Task task = backSearch(taskName);
-		if (task == null) {
-			return false;
-		}
-		// task object must be unique as it removes first occurrence
-		return list.remove(task); 
-	}
-	/**
-	 * Pops the last found occurrence of the specified task.
-	 * 
-	 * @param taskName    name of the task.
-	 * @return            the task if successful else null.
+	 * @return            the task if it is successful else null.
 	 */
 	public Task pop(String taskName) {
-		Task task = backSearch(taskName);
-		return task;
+		int index = backSearchIndex(taskName);
+		if (index == INVALID) {
+			return null;
+		}
+		return list.remove(index); 
+	}
+	
+	/**
+	 * This method overrides the same method inherited from Vault.
+	 * Always returns false since this method should not be used on HistoryVault
+	 * as designed-by-contract.
+	 * 
+	 * @param taskName    name of the task.
+	 * @return            false.
+	 */
+	public boolean remove(String taskName) {
+		return false;
 	}
 	
 	/**
