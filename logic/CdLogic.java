@@ -95,6 +95,16 @@ public class CdLogic {
 			vaultPath = getVaultPath("config.txt").trim();
 		}
 	}
+	
+	/**
+	 * For testing purposes: Clears all lists and all data from the files.
+	 */
+	public void clear() {
+		taskVault.clear();
+		trashVault.clear();
+		historyVault.clear();
+		completedTaskVault.clear();
+	}
 
 	public ObservableList<Task> getTaskList() {
 		tasks = FXCollections.observableArrayList(taskVault.getList());
