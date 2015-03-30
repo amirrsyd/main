@@ -17,14 +17,14 @@ import javafx.beans.property.StringProperty;
  */
 
 public class Task implements Comparable<Object> {
-	private final StringProperty taskName;
-	private final StringProperty comment;
+	protected StringProperty taskName;
+	protected StringProperty comment;
 
-	private final ObjectProperty<LocalDate> startDate;
-	private final ObjectProperty<LocalTime> startTime;
+	protected ObjectProperty<LocalDate> startDate;
+	protected ObjectProperty<LocalTime> startTime;
 
-	private final ObjectProperty<LocalDate> endDate;
-	private final ObjectProperty<LocalTime> endTime;
+	protected ObjectProperty<LocalDate> endDate;
+	protected ObjectProperty<LocalTime> endTime;
 
 	private final int EARLIER = -1;
 	private final int SAME = 0;
