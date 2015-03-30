@@ -241,6 +241,14 @@ public class Vault {
 	public void deleteFile(){
 		filePath.toFile().delete();
 	}
+	
+	/**
+	 * For testing purposes: Clears the list and the data in the file.
+	 */
+	public void clear() {
+		list.clear();
+		save();
+	}
 
 	/**
 	 * Search for the first Task object in the list based on taskName.
