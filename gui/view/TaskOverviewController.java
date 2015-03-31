@@ -351,7 +351,7 @@ public class TaskOverviewController{
 	private void addLabelToCalendarTasks(LocalDate startDateToAdd, LocalDate endDateToAdd, Task toAdd, int row, int col, int taskNumber) {
 		
 		while(startDateToAdd.until(endDateToAdd, ChronoUnit.DAYS) >= 0) {
-			System.out.println("Adding: "+toAdd.getTaskName());
+			//System.out.println("Adding: "+toAdd.getTaskName());
 			calendarTasks[row][col][taskNumber] = new Label(toAdd.getTaskName());
 			addClassToLabel(row, col, taskNumber);
 			
@@ -369,15 +369,15 @@ public class TaskOverviewController{
 		switch(taskNumber) {
 		case ROW_1 :
 			calendarTasks[row][col][taskNumber].getStyleClass().add(ROW_1_CLASS);
-			System.out.println("Adding Class 1");
+			//System.out.println("Adding Class 1");
 			break;
 		case ROW_2 :
 			calendarTasks[row][col][taskNumber].getStyleClass().add(ROW_2_CLASS);
-			System.out.println("Adding Class 2");
+			//System.out.println("Adding Class 2");
 			break;
 		case ROW_3 :
 			calendarTasks[row][col][taskNumber].getStyleClass().add(ROW_3_CLASS);
-			System.out.println("Adding Class 3");
+			//System.out.println("Adding Class 3");
 			break;
 		}
 	}
@@ -497,7 +497,7 @@ public class TaskOverviewController{
 
 				//monthView.add(dateNumbers[i][j], j, i+1);
 				if(cellFormat[i][j] == null) {
-					System.out.println(i + ", " + j);
+					//System.out.println(i + ", " + j);
 				}
 				else {
 					calendar.add(cellFormat[i][j], j, i+1);
@@ -593,6 +593,9 @@ public class TaskOverviewController{
 				calendar.requestFocus();
 			}
 		}
+		else if (event.getCode() == KeyCode.ESCAPE) {
+			calendar.requestFocus();
+		}
 		else if(event.getCode() == KeyCode.LEFT) {
 			changePreviousMonth();
 		}
@@ -608,78 +611,73 @@ public class TaskOverviewController{
 	@FXML
 	private void executeKeyEventsInInput(KeyEvent event) throws IOException, EmptyUserInputException {
 		if (event.getCode() == KeyCode.ENTER) {
-			if(getInput().getText() != null && !getInput().getText().isEmpty()) {
-				userInput = getInput().getText();
-				pushNewCommand(userInput);
-				getInput().setText("");
-				String response = "";
-				try {
-					response = getLogic().executeCommand(userInput);
-				}
-				catch(Exception e) {
-					//TaskOverviewControllerLogger.logger.log(Level.SEVERE, "Executed: {0}, Error in logic has occured", userInput);
-				}
-
-				assert !response.equals("") : MESSAGE_LOG_ERROR;
-				
-				//Logging what the user is executing and the response received
-				//TaskOverviewControllerLogger.logger.log(Level.INFO, "Executed: {0}, Response {1}",  new Object[] {userInput, response});
-				userInput = "";
-				outputToTextArea(response);
-				
-				updateTaskTable();
-				removeCellsFromCalendar();
-				setCellFormat();
-				setStartingDate(computeStartDate(currentMonth, currentYear));
-				prepareTaskLabelsForCalendar(startingDate.getDayOfMonth(), startingDate.getMonth(), startingDate.getYear());
-				fillCells();
-				fillTasksIntoCells();
-				fillCalendar();
-			}
-			else {
-				throw new EmptyUserInputException();
-			}
+			executeCommandUserEntered();
 		}
 		
 		//Alternate behaviour for UP and DOWN
 		else if(event.getCode() == KeyCode.UP) {
 			if(input.isFocused()) {
-				String previousCommand = getPreviousCommand();
+				String previousCommand = peekPreviousCommand();
 				String currentCommand = input.getText();
 				if(previousCommand != null && !previousCommand.equals("")) {
-					if(!previousCommand.equals(currentCommand)) {
-						getInput().setText(previousCommand);
-						input.end();
-					}
-					else {
-						previousCommand = getPreviousCommand();
-						getInput().setText(previousCommand);
-						input.end();
-					}
+					popPreviousCommand();
+					getInput().setText(previousCommand);
+					pushDownCommand(currentCommand);
+					input.end();
 				}
 			}
 			event.consume();
 		}
 		else if(event.getCode() == KeyCode.DOWN) {
 			if(input.isFocused()) {
-				String nextCommand = getNextCommand();
+				String nextCommand = peekNextCommand();
 				String currentCommand = input.getText();
 				if(nextCommand != null && !nextCommand.equals("")) {
-					if(!nextCommand.equals(currentCommand)) {
-						getInput().setText(nextCommand);
-						input.end();
-					}
-					else {
-						nextCommand = getNextCommand();
-						getInput().setText(nextCommand);
-						input.end();
-					}
+					popNextCommand();
+					getInput().setText(nextCommand);
+					pushUpCommand(currentCommand);
 				}
 				else {
-					getInput().setText("");
-					input.end();
+					if(!currentCommand.equals("")) {
+						pushUpCommand(currentCommand);
+						getInput().setText("");
+					}
 				}
 			}
+		}
+	}
+
+	private void executeCommandUserEntered() throws EmptyUserInputException {
+		if(getInput().getText() != null && !getInput().getText().isEmpty()) {
+			userInput = getInput().getText();
+			pushUpCommand(userInput);
+			getInput().setText("");
+			String response = "";
+			try {
+				response = getLogic().executeCommand(userInput);
+			}
+			catch(Exception e) {
+				//TaskOverviewControllerLogger.logger.log(Level.SEVERE, "Executed: {0}, Error in logic has occured", userInput);
+			}
+
+			assert !response.equals("") : MESSAGE_LOG_ERROR;
+			
+			//Logging what the user is executing and the response received
+			//TaskOverviewControllerLogger.logger.log(Level.INFO, "Executed: {0}, Response {1}",  new Object[] {userInput, response});
+			userInput = "";
+			outputToTextArea(response);
+			
+			updateTaskTable();
+			removeCellsFromCalendar();
+			setCellFormat();
+			setStartingDate(computeStartDate(currentMonth, currentYear));
+			prepareTaskLabelsForCalendar(startingDate.getDayOfMonth(), startingDate.getMonth(), startingDate.getYear());
+			fillCells();
+			fillTasksIntoCells();
+			fillCalendar();
+		}
+		else {
+			throw new EmptyUserInputException();
 		}
 	}
 	
@@ -779,11 +777,9 @@ public class TaskOverviewController{
 	/**
 	 * Get previous command from stack from up key pressed
 	 */
-	private String getPreviousCommand() {
+	private String peekPreviousCommand() {
 		if(upperCache.size() > 0) {
-			String command = upperCache.pop();
-			lowerCache.push(command);
-			return command;
+			return upperCache.peek();
 		}
 		return null;
 	}
@@ -791,21 +787,39 @@ public class TaskOverviewController{
 	/**
 	 * Get next command from stack from down key pressed
 	 */
-	private String getNextCommand() {
+	private String peekNextCommand() {
 		if(lowerCache.size() > 0) {
-			String command = lowerCache.pop();
-			upperCache.push(command);
-			return command;
+			return lowerCache.peek();
 		}
 		return null;
 	}
 	
 	/**
-	 * Push in new user command to stack
+	 * Push in command to bottom stack
 	 */
-	private void pushNewCommand(String command){
+	private void pushDownCommand(String command){
+		lowerCache.push(command);
+	}
+	
+	/**
+	 * Push in command to upper stack
+	 */
+	private void pushUpCommand(String command){
 		upperCache.push(command);
-		lowerCache = new LinkedList<String>();
+	}
+	
+	/**
+	 * Pop the command in the upper stack
+	 */
+	private String popPreviousCommand() {
+		return upperCache.pop();
+	}
+	
+	/**
+	 * Pop the command in the lower stack
+	 */
+	private String popNextCommand() {
+		return lowerCache.pop();
 	}
 	
 	/**
