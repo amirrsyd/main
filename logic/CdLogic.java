@@ -106,6 +106,16 @@ public class CdLogic {
 		tasks = taskVault.getList();
 		toDisplay = copyList(tasks);
 	}
+	
+	/**
+	 * For testing purposes: Clears all lists and all data from the files.
+	 */
+	public void clear() {
+		taskVault.clear();
+		trashVault.clear();
+		historyVault.clear();
+		completedTaskVault.clear();
+	}
 
 	/**
 	 * initializes config.txt to save to the working directory
