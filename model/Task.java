@@ -25,6 +25,8 @@ public class Task implements Comparable<Object> {
 
 	protected ObjectProperty<LocalDate> endDate;
 	protected ObjectProperty<LocalTime> endTime;
+	
+	protected boolean isRecurring = false;
 
 	private final int EARLIER = -1;
 	private final int SAME = 0;
@@ -44,7 +46,8 @@ public class Task implements Comparable<Object> {
 	/**
 	 * Constructor with some initial data.
 	 * 
-	 * @param taskName    name of the task.
+	 * @param taskName
+	 *            name of the task.
 	 */
 	public Task(String taskName) {
 		this.taskName = new SimpleStringProperty(taskName);
@@ -63,12 +66,18 @@ public class Task implements Comparable<Object> {
 	/**
 	 * Constructor for setting all values of a task and instantiating it.
 	 *
-	 * @param taskName           Name of the task.
-	 * @param taskDescription    Description of the task.
-	 * @param startDate          Starting date of the task.
-	 * @param startTime          Starting time of the task.
-	 * @param endDate            Ending date of the task.
-	 * @param endTime            Ending time of the task.
+	 * @param taskName
+	 *            Name of the task.
+	 * @param taskDescription
+	 *            Description of the task.
+	 * @param startDate
+	 *            Starting date of the task.
+	 * @param startTime
+	 *            Starting time of the task.
+	 * @param endDate
+	 *            Ending date of the task.
+	 * @param endTime
+	 *            Ending time of the task.
 	 */
 	public Task(String taskName, String taskDescription, LocalDate startDate,
 			LocalTime startTime, LocalDate endDate, LocalTime endTime) {
@@ -79,20 +88,21 @@ public class Task implements Comparable<Object> {
 		this.endDate = new SimpleObjectProperty<LocalDate>(endDate);
 		this.endTime = new SimpleObjectProperty<LocalTime>(endTime);
 	}
-	
+
 	/**
 	 * Returns the name of the task.
 	 * 
-	 * @return    name of the task.
+	 * @return name of the task.
 	 */
 	public String getTaskName() {
 		return taskName.get();
 	}
-	
+
 	/**
 	 * Sets the name of the task.
 	 * 
-	 * @param taskName    new name of the task.
+	 * @param taskName
+	 *            new name of the task.
 	 */
 	public void setTaskName(String taskName) {
 		this.taskName.set(taskName);
@@ -101,52 +111,54 @@ public class Task implements Comparable<Object> {
 	/**
 	 * Returns the taskName in a StringProperty instance.
 	 * 
-	 * @return    StringProperty of taskName.
+	 * @return StringProperty of taskName.
 	 */
 	public StringProperty taskNameProperty() {
 		return taskName;
 	}
-	
+
 	/**
 	 * Returns the comment as a String object.
 	 * 
-	 * @return    comment as a String object.
+	 * @return comment as a String object.
 	 */
 	public String getComment() {
 		return comment.get();
 	}
-	
+
 	/**
 	 * Sets the comment.
 	 * 
-	 * @param comment    new comment.
+	 * @param comment
+	 *            new comment.
 	 */
 	public void setComment(String comment) {
 		this.comment.set(comment);
 	}
-	
+
 	/**
 	 * Returns the comment as a StringProperty instance.
 	 * 
-	 * @return    comment as a StringProperty instance.
+	 * @return comment as a StringProperty instance.
 	 */
 	public StringProperty commentProperty() {
 		return comment;
 	}
-	
+
 	/**
 	 * Returns the starting date of the task in a LocalDate instance.
 	 * 
-	 * @return    starting date in a LocalData instance.
+	 * @return starting date in a LocalData instance.
 	 */
 	public LocalDate getStartDate() {
 		return startDate.get();
 	}
-	
+
 	/**
 	 * Sets the starting date of the task.
 	 * 
-	 * @param startDate    new starting date of the task in a LocalDate instance.
+	 * @param startDate
+	 *            new starting date of the task in a LocalDate instance.
 	 */
 	public void setStartDate(LocalDate startDate) {
 		this.startDate.set(startDate);
@@ -155,7 +167,7 @@ public class Task implements Comparable<Object> {
 	/**
 	 * Returns the starting date of the task in an ObjectProperty instance.
 	 * 
-	 * @return    starting date of the task in an ObjectProperty instance.
+	 * @return starting date of the task in an ObjectProperty instance.
 	 */
 	public ObjectProperty<LocalDate> startDateProperty() {
 		return startDate;
@@ -164,7 +176,7 @@ public class Task implements Comparable<Object> {
 	/**
 	 * Returns the starting time of the task in a LocalTime instance.
 	 * 
-	 * @return    starting time of the task in a LocalTime instance.
+	 * @return starting time of the task in a LocalTime instance.
 	 */
 	public LocalTime getStartTime() {
 		return startTime.get();
@@ -173,25 +185,26 @@ public class Task implements Comparable<Object> {
 	/**
 	 * Sets the starting time of the task.
 	 * 
-	 * @param startTime    new starting time of the task in a LocalTime instance.
+	 * @param startTime
+	 *            new starting time of the task in a LocalTime instance.
 	 */
 	public void setStartTime(LocalTime startTime) {
 		this.startTime.set(startTime);
 	}
-	
+
 	/**
 	 * Returns the starting time of the task in an ObjectProperty instance.
 	 * 
-	 * @return    starting time of the task in an ObjectProperty instance.
+	 * @return starting time of the task in an ObjectProperty instance.
 	 */
 	public ObjectProperty<LocalTime> startTimeProperty() {
 		return startTime;
 	}
-	
+
 	/**
 	 * Returns the ending date of the task in a LocalDate instance.
 	 * 
-	 * @return    ending date of the task in a LocalDate instance.
+	 * @return ending date of the task in a LocalDate instance.
 	 */
 	public LocalDate getEndDate() {
 		return endDate.get();
@@ -200,7 +213,8 @@ public class Task implements Comparable<Object> {
 	/**
 	 * Sets the ending date of the task.
 	 * 
-	 * @param endDate    new ending date of the task in a LocalDate instance.
+	 * @param endDate
+	 *            new ending date of the task in a LocalDate instance.
 	 */
 	public void setEndDate(LocalDate endDate) {
 		this.endDate.set(endDate);
@@ -209,7 +223,7 @@ public class Task implements Comparable<Object> {
 	/**
 	 * Returns the ending date of the task in an ObjectProperty instance.
 	 * 
-	 * @return    ending date of the task in an ObjectProperty instance.
+	 * @return ending date of the task in an ObjectProperty instance.
 	 */
 	public ObjectProperty<LocalDate> endDateProperty() {
 		return endDate;
@@ -218,16 +232,17 @@ public class Task implements Comparable<Object> {
 	/**
 	 * Returns the ending time of the task in a LocalTime instance.
 	 * 
-	 * @return    ending time of the task in a LocalTime instance.
+	 * @return ending time of the task in a LocalTime instance.
 	 */
 	public LocalTime getEndTime() {
 		return endTime.get();
 	}
-	
+
 	/**
-	 * Sets the ending time of the task. 
+	 * Sets the ending time of the task.
 	 * 
-	 * @param endTime    new ending time of the task.
+	 * @param endTime
+	 *            new ending time of the task.
 	 */
 	public void setEndTime(LocalTime endTime) {
 		this.endTime.set(endTime);
@@ -236,7 +251,7 @@ public class Task implements Comparable<Object> {
 	/**
 	 * Returns the ending time of the task as an ObjectProperty instance.
 	 * 
-	 * @return    ending time of the task as an ObjectProperty instance.
+	 * @return ending time of the task as an ObjectProperty instance.
 	 */
 	public ObjectProperty<LocalTime> endTimeProperty() {
 		return endTime;
@@ -249,8 +264,9 @@ public class Task implements Comparable<Object> {
 	 * endTime is not be accounted for and the method is seemingly a lot
 	 * shorter.
 	 * 
-	 * @param obj    Task object.
-	 * @return       EARLIER, SAME or LATER depending on chronology.
+	 * @param obj
+	 *            Task object.
+	 * @return EARLIER, SAME or LATER depending on chronology.
 	 */
 	public int compareTo(Object obj) {
 		Task task = (Task) obj;
@@ -272,7 +288,7 @@ public class Task implements Comparable<Object> {
 	/**
 	 * Returns the type of the task.
 	 *
-	 * @return    Type of task.
+	 * @return Type of task.
 	 */
 	public String getType() {
 		if (this.endTime.get() != null) {
@@ -287,9 +303,29 @@ public class Task implements Comparable<Object> {
 	/**
 	 * Returns the LocalDateTime from LocalDate and LocalTime of task.
 	 *
-	 * @return    task as a LocalDateTime instance.
+	 * @return task as a LocalDateTime instance.
 	 */
 	private LocalDateTime getLocalDateTime() {
 		return LocalDateTime.of(startDate.get(), startTime.get());
+	}
+	
+	/**
+	 * Sets if task is a recurring task
+	 * 
+	 * @param isRecurring
+	 *            whether task is recurring
+	 */
+	public void setIsRecurring(boolean isRecurring){
+		this.isRecurring = isRecurring;
+	}
+	
+	/**
+	 * Sets if task is a recurring task
+	 * 
+	 * @return isRecurring
+	 *            whether task is recurring
+	 */
+	public boolean taskIsRecurring(){
+		return this.isRecurring;
 	}
 }
