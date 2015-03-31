@@ -66,7 +66,8 @@ public class TaskOverviewController{
 	private static final int NUMBER_OF_COLS_IN_CALENDAR = 7;
 	private static final int NUMBER_OF_DAYS_IN_A_WEEK = 7;
 	private static final int PLUS = 1;
-	private static final int MINUS = 0;
+	private static final int MINUS = -1;
+	private static final int NOW = 0;
 	private static final int MARGIN_COLUMN = 0;
 	private static final int CONTENT_COLUMN = 1;
 	private static final int MARGIN_ROW = 0;
@@ -507,6 +508,23 @@ public class TaskOverviewController{
 		}
 		
 	}
+	
+	/**
+	 * Update the calendar with the next month.
+	 */
+	@FXML
+	private void goBackNow() {
+		removeCellsFromCalendar();
+		setCellFormat();
+		updateMonth(NOW);
+		prepareLabelsForCalendar(getCurrentMonth(), getCurrentYear());
+		setStartingDate(computeStartDate(currentMonth, currentYear));
+		prepareTaskLabelsForCalendar(getStartingDate().getDayOfMonth(), getStartingDate().getMonth(), getStartingDate().getYear());
+		fillCells();
+		fillTasksIntoCells();
+		fillCalendar();
+		getMonthHeader().setText(getCurrentMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + " " + String.valueOf(getCurrentYear()));
+	}
 
 	/**
 	 * Update the calendar with the next month.
@@ -574,6 +592,10 @@ public class TaskOverviewController{
 			}
 			setCurrentMonth(getCurrentMonth().plus(1));
 		}
+		else if(plusOrMinus == NOW) {
+			setCurrentYear(LocalDate.now().getYear());
+			setCurrentMonth(LocalDate.now().getMonth());
+		}
 	}
 
 	/**
@@ -602,6 +624,10 @@ public class TaskOverviewController{
 		else if(event.getCode() == KeyCode.RIGHT) {
 			changeNextMonth();
 		}
+		else if(event.getCode() == KeyCode.UP || event.getCode() == KeyCode.DOWN) {
+			goBackNow();
+		}
+		event.consume();
 	}
 	
 	/**
