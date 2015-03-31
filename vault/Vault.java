@@ -1,6 +1,7 @@
 package vault;
 
 import model.Task;
+import model.RecurringTask;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -15,6 +16,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -24,6 +26,15 @@ import java.time.format.DateTimeFormatter;
  */
 public class Vault {
 
+	private static final String MONTH_SPACE = "MONTH ";
+	private static final String WEEK_DOUBLE_SPACE = "WEEK  ";
+	private static final String WEEK_SPACE = "WEEK ";
+	private static final String RECURRENCE_SPACE = "RECURRENCE ";
+	private static final int MIN_DAY_LENGTH = 3;
+	private static final int OFFSET_6 = 6;
+	private static final int OFFSET_5 = 5;
+	private static final int OFFSET_11 = 11;
+	private static final String RECURRENCE = "RECURRENCE";
 	protected static final int DATE_TIME_LENGTH = 3;
 	protected static final int OFFSET_10 = 10;
 	protected static final int OFFSET_8 = 8;
@@ -207,6 +218,20 @@ public class Vault {
 					writer.write(END_TIME_DOUBLE_SPACE);
 					writer.newLine();
 				}
+				if (task.taskIsRecurring()) {
+					RecurringTask recurringTask = (RecurringTask) task;
+					writer.write(RECURRENCE_SPACE + recurringTask.getRecurrence());
+					writer.newLine();
+					if (recurringTask.getRecurrenceDay() != null) {
+						writer.write(WEEK_SPACE + recurringTask.getRecurrenceDay().toString());
+					}
+					else {
+						writer.write(WEEK_DOUBLE_SPACE);
+					}
+					writer.newLine();
+					writer.write(MONTH_SPACE + recurringTask.getDayOfMonth());
+					writer.newLine();
+				}
 				i++;
 				writer.write(NULL);
 				writer.newLine();
@@ -319,6 +344,8 @@ public class Vault {
 			String line = reader.readLine();
 		    while (line != null) {
 		    	Task task = new Task(line);
+		    	boolean isRecurring = false;
+		    	RecurringTask recurringTask = null;
 	    		line = reader.readLine();
 		    	while (line != null) {
 		    		if (line.startsWith(COMMENT)) {
@@ -336,12 +363,34 @@ public class Vault {
 		    		if (line.startsWith(END_TIME)) {
 		    			task.setEndTime(changeStringToTime(line.substring(OFFSET_8)));
 		    		}
+		    		if (line.startsWith(RECURRENCE)) {
+		    			isRecurring = true;
+		    			DayOfWeek dayOfWeek = null;
+		    			int recurrence = Integer.parseInt(line.substring(OFFSET_11));
+		    			line = reader.readLine();
+		    			if (line.substring(OFFSET_5).length() > MIN_DAY_LENGTH) {
+		    				dayOfWeek = DayOfWeek.valueOf(line.substring(OFFSET_5));
+		    			}
+		    			line = reader.readLine();
+		    			int dayOfMonth = Integer.parseInt(line.substring(OFFSET_6));
+		    			if (dayOfMonth == ZERO) {
+			    			recurringTask = new RecurringTask(task, recurrence, dayOfWeek);
+		    			}
+		    			else {
+		    				recurringTask = new RecurringTask(task, recurrence, dayOfMonth);
+		    			}
+		    		}
 		    		line = reader.readLine();
 		    		if (line.startsWith(NULL)) {
 		    			break;
 		    		}
 		    	}
-		    	storeTask(task);
+		    	if (isRecurring) {
+		    		storeTask(recurringTask);
+		    	}
+		    	else {
+			    	storeTask(task);
+		    	}
 		    	line = reader.readLine();
 		    }
 		    reader.close();
