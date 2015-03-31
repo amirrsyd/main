@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane id="base" prefHeight="640.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.view.TaskOverviewController">
+<AnchorPane id="base" onKeyPressed="#executeKeyEvents" prefHeight="640.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.view.TaskOverviewController">
    <children>
       <GridPane layoutX="216.0" layoutY="247.0" prefHeight="640.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <columnConstraints>
@@ -70,12 +70,12 @@
                                     </GridPane>
                                     <TilePane alignment="CENTER" prefHeight="78.0" prefWidth="558.0">
                                        <children>
-                                          <Button mnemonicParsing="false" onAction="#handlePreviousMonthButton" text="Prev" textAlignment="CENTER">
+                                          <Button mnemonicParsing="false" onAction="#changePreviousMonth" text="Prev" textAlignment="CENTER">
                                              <padding>
                                                 <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
                                              </padding></Button>
                                           <Label id="monthHeader" fx:id="monthHeader" text="Label" textAlignment="CENTER" />
-                                          <Button mnemonicParsing="false" onAction="#handleNextMonthButton" text="Next" textAlignment="CENTER">
+                                          <Button mnemonicParsing="false" onAction="#changeNextMonth" text="Next" textAlignment="CENTER">
                                              <padding>
                                                 <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
                                              </padding></Button>
@@ -87,7 +87,7 @@
                         </AnchorPane>
                         <AnchorPane prefHeight="585.0" prefWidth="0.0" GridPane.columnIndex="3">
                            <children>
-                              <TableView fx:id="taskTable" prefHeight="506.0" prefWidth="393.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                              <TableView fx:id="taskTable" focusTraversable="false" prefHeight="506.0" prefWidth="393.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                 <columns>
                                   <TableColumn fx:id="taskNameColumn" editable="false" minWidth="50.0" prefWidth="72.0" text="Task" />
                                     <TableColumn fx:id="startDateColumn" editable="false" minWidth="50.0" prefWidth="93.0" text="Start Date" />
@@ -121,7 +121,7 @@
                     </rowConstraints>
                      <children>
                         <TextArea fx:id="output" GridPane.columnIndex="1" />
-                        <TextField fx:id="input" onKeyPressed="#executeUserInput" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <TextField fx:id="input" focusTraversable="false" onKeyPressed="#executeKeyEventsInInput" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                      </children>
                   </GridPane>
                </children>

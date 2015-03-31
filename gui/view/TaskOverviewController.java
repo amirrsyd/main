@@ -25,6 +25,7 @@ import logic.CdLogic;
 import java.time.format.TextStyle;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.LinkedList;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -137,6 +138,10 @@ public class TaskOverviewController{
 	
 	private LocalDate startingDate;
 	
+	private LinkedList<String> upperCache;
+	
+	private LinkedList<String> lowerCache;
+	
 	// Reference to the main application
 	private MainApp mainApp;
 	
@@ -160,9 +165,12 @@ public class TaskOverviewController{
 		initializeLogic();
 		outputToTextArea(MESSAGE_WELCOME);
 		setStartingDate(computeStartDate(getCurrentMonth(), getCurrentYear()));
+		setUpStack();
 	}
 	
-	
+	/**
+	 * Initialize one instance of logic
+	 */
 	static void initializeLogic() {
 		try {
 			setLogic(new CdLogic());
@@ -170,8 +178,6 @@ public class TaskOverviewController{
 			e.printStackTrace();
 		}
 	}
-	
-	
 	
 	/**
 	 * This is a constructor for the labels require to act as header
@@ -506,7 +512,7 @@ public class TaskOverviewController{
 	 * Update the calendar with the next month.
 	 */
 	@FXML
-	private void handleNextMonthButton() {
+	private void changeNextMonth() {
 		removeCellsFromCalendar();
 		setCellFormat();
 		updateMonth(PLUS);
@@ -524,7 +530,7 @@ public class TaskOverviewController{
 	 * Update the calendar with the previous month.
 	 */
 	@FXML
-	private void handlePreviousMonthButton() {
+	private void changePreviousMonth() {
 		removeCellsFromCalendar();
 		setCellFormat();
 		updateMonth(MINUS);
@@ -571,15 +577,40 @@ public class TaskOverviewController{
 	}
 
 	/**
+	 * Takes in the KeyEvent and execute the appropriate actions
+	 * CTRL -> Shifts focus to textField
+	 * @throws IOException 
+	 */
+	@FXML
+	private void executeKeyEvents(KeyEvent event) throws IOException, EmptyUserInputException {
+		
+		if (event.getCode() == KeyCode.CONTROL) {
+			if(!input.isFocused()) {
+				input.requestFocus();
+				input.end();
+			}
+			else {
+				calendar.requestFocus();
+			}
+		}
+		else if(event.getCode() == KeyCode.LEFT) {
+			changePreviousMonth();
+		}
+		else if(event.getCode() == KeyCode.RIGHT) {
+			changeNextMonth();
+		}
+	}
+	
+	/**
 	 * Takes in the user input from the textfield after he press 'enter'
 	 * @throws IOException 
 	 */
 	@FXML
-	private void executeUserInput(KeyEvent event) throws IOException, EmptyUserInputException {
-		
+	private void executeKeyEventsInInput(KeyEvent event) throws IOException, EmptyUserInputException {
 		if (event.getCode() == KeyCode.ENTER) {
 			if(getInput().getText() != null && !getInput().getText().isEmpty()) {
 				userInput = getInput().getText();
+				pushNewCommand(userInput);
 				getInput().setText("");
 				String response = "";
 				try {
@@ -607,6 +638,47 @@ public class TaskOverviewController{
 			}
 			else {
 				throw new EmptyUserInputException();
+			}
+		}
+		
+		//Alternate behaviour for UP and DOWN
+		else if(event.getCode() == KeyCode.UP) {
+			if(input.isFocused()) {
+				String previousCommand = getPreviousCommand();
+				String currentCommand = input.getText();
+				if(previousCommand != null && !previousCommand.equals("")) {
+					if(!previousCommand.equals(currentCommand)) {
+						getInput().setText(previousCommand);
+						input.end();
+					}
+					else {
+						previousCommand = getPreviousCommand();
+						getInput().setText(previousCommand);
+						input.end();
+					}
+				}
+			}
+			event.consume();
+		}
+		else if(event.getCode() == KeyCode.DOWN) {
+			if(input.isFocused()) {
+				String nextCommand = getNextCommand();
+				String currentCommand = input.getText();
+				if(nextCommand != null && !nextCommand.equals("")) {
+					if(!nextCommand.equals(currentCommand)) {
+						getInput().setText(nextCommand);
+						input.end();
+					}
+					else {
+						nextCommand = getNextCommand();
+						getInput().setText(nextCommand);
+						input.end();
+					}
+				}
+				else {
+					getInput().setText("");
+					input.end();
+				}
 			}
 		}
 	}
@@ -694,7 +766,48 @@ public class TaskOverviewController{
 	private void setStartingDate(LocalDate startingDate) {
 		this.startingDate = startingDate;
 	}
-
+	
+	/**
+	 * Set up the stacks for storing previous user inputs
+	 * @return 
+	 */
+	private void setUpStack() {
+		upperCache = new LinkedList<String>();
+		lowerCache = new LinkedList<String>();
+	}
+	
+	/**
+	 * Get previous command from stack from up key pressed
+	 */
+	private String getPreviousCommand() {
+		if(upperCache.size() > 0) {
+			String command = upperCache.pop();
+			lowerCache.push(command);
+			return command;
+		}
+		return null;
+	}
+	
+	/**
+	 * Get next command from stack from down key pressed
+	 */
+	private String getNextCommand() {
+		if(lowerCache.size() > 0) {
+			String command = lowerCache.pop();
+			upperCache.push(command);
+			return command;
+		}
+		return null;
+	}
+	
+	/**
+	 * Push in new user command to stack
+	 */
+	private void pushNewCommand(String command){
+		upperCache.push(command);
+		lowerCache = new LinkedList<String>();
+	}
+	
 	/**
 	 * The setup() method initializes the data only after the reference to mainApp is obtained
 	 */
