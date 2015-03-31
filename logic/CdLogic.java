@@ -56,6 +56,12 @@ public class CdLogic {
 	private static final String MESSAGE_DELETE_UNSUCCESS = "Delete not successful" ;
 	private static final String MESSAGE_INVALID_COMMAND = "command type string cannot be null!" ;
 	private static final String MESSAGE_NO_UNDO = "no more undo left" ;
+	private static final String MESSAGE_FLOAT_ETIME = "Cannot edit end time of floating task" ;
+    private static final String MESSAGE_DEADLINE_ETIME = "Cannot edit end time of deadline" ;
+    private static final String MESSAGE_FLOAT_EDATE = "cannot edit end date of floating task" ;
+    private static final String MESSAGE_DEADLINE_EDATE = "cannot edit end date of deadline" ;
+    		
+	
 	/**
 	 * We call the classes from Vault (Storage) to use them in our methods as parsers
 	 * 
@@ -451,87 +457,34 @@ public class CdLogic {
 		return MESSAGE_INVALID_EDIT;
 
 	}
+	
 	/**
-	 * performs commenting of a task
-	 * adds the new comment to the existing task and saves the changes
-	 * updates display of the task with comment added
+	 * Method prevents tasks with same name to be stored 
 	 * @param userCommand
 	 */
-
-	private String addComment(String userCommand) {
-		// TODO Auto-generated method stub
-		String[] editArguments = parseEdit(userCommand, "addcomment");
+	private String editTaskName(String userCommand) {
+		String[] editArguments = parseEdit(userCommand, "taskname");
 		String taskName = editArguments[0].trim();
-		String newComment = editArguments[1].trim();
+		String newTaskName = editArguments[1].trim();
 
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
 
+			for(int i = 0; i<tasks.size(); i++){
+				if(tasks.get(i).getTaskName().equals(newTaskName)){
+					return "\"" + newTaskName + "\" already exists";
+				}
+			}
+
 			taskVault.remove(taskName);
-			taskVault.createTask(oldTask.getTaskName(), newComment,
+			taskVault.createTask(newTaskName, oldTask.getComment(),
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), oldTask.getEndTime());
 
 			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));	
+			historyVault.storeTask(taskVault.getTask(newTaskName));	
 //			history.add(oldTask);
-//			history.add(taskVault.getTask(oldTask.getTaskName()));
-			commandStack.push(UNDOABLE.EDIT);			
-			updateDisplay();
-			saveVaults();
-			return "comment added";
-		} else {
-			return "task " + taskName + " not found";
-		}
-	}
-	/**
-	 * method that edits endtime of tasks
-	 * For floating tasks where endtime is null, 
-	 * execution will return message
-	 * For deadline tasks, where endtime is null but starttime is not null, 
-	 * execution will return message
-	 * Method will also not allow if endtime entered is before the stipulated start time of 
-	 * a specific task
-	 * @param userCommand
-	 */
-
-	private String editEndTime(String userCommand) {
-		// TODO Auto-generated method stub
-		String[] editArguments = parseEdit(userCommand, "enddate");
-		String[] endTimes = extractTimes(editArguments[1]);
-		String taskName = editArguments[0].trim();
-		LocalTime newEndTime;
-		try {
-			newEndTime = toLocalTime(endTimes[0]);
-		} catch (DateTimeParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return MESSAGE_INVALID_TIME;
-		}
-		if (taskExists(taskName)) {			
-			Task oldTask = taskVault.getTask(taskName);
-			
-
-			if (oldTask.getEndTime() == null) {
-				if (oldTask.getStartTime() == null) {
-					return "Cannot edit end time of floating task";
-				} else {
-					return "Cannot edit end time of deadline";
-				}
-			}
-			if(!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(),
-					oldTask.getEndDate(), newEndTime)){
-				return MESSAGE_NOT_CHRON;
-			}
-			taskVault.remove(taskName);
-			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
-					oldTask.getStartDate(), oldTask.getStartTime(),
-					oldTask.getEndDate(), newEndTime);
-
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));		
-//			history.add(oldTask);
-//			history.add(taskVault.getTask(oldTask.getTaskName()));
+//			history.add(taskVault.getTask(newTaskName));
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
@@ -539,17 +492,60 @@ public class CdLogic {
 		} else {
 			return "task " + taskName + " not found";
 		}
-
 	}
-
 	/**
+	 * Method does not allow edit of start date of floating task
+	 * @param userCommand
+	 */
+	private String editStartDate(String userCommand) {
+		String[] editArguments = parseEdit(userCommand, "startdate");
+		String[] startDates = extractDates(editArguments[1]);
+		String taskName = editArguments[0].trim();
+		LocalDate newStartDate;
+		try {
+			newStartDate = toLocalDate(startDates[0]);
+		} catch (DateTimeParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return MESSAGE_INVALID_DATE;
+		}
+
+		if (newStartDate == null) {
+			return "Enter a valid date";
+		} else if (taskExists(taskName)) {
+			Task oldTask = taskVault.getTask(taskName);
+			if(oldTask.getStartDate()==null){
+				return "Cannot edit start date of floating task";
+			}
+
+			if((oldTask.getEndDate()!=null) && !isInOrder(newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
+					oldTask.getEndTime())){
+				return MESSAGE_NOT_CHRON ;
+			}
+			taskVault.remove(taskName);
+			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
+					newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
+					oldTask.getEndTime());
+
+			historyVault.storeTask(oldTask);
+			historyVault.storeTask(taskVault.getTask(taskName));	
+//			history.add(oldTask);
+//			history.add(taskVault.getTask(oldTask.getTaskName()));
+			commandStack.push(UNDOABLE.EDIT);
+			updateDisplay();
+			saveVaults();
+			return MESSAGE_EDIT_SUCCESS ;
+		} else {
+			return "task " + taskName + " not found";
+		}
+	}/**
 	 * Method does not allow floating tasks to have starttime edited 
 	 * because it was formerly null
 	 * @param userCommand
 	 */
 	private String editStartTime(String userCommand) {
 		// TODO Auto-generated method stub
-		String[] editArguments = parseEdit(userCommand, "enddate");
+		String[] editArguments = parseEdit(userCommand, "starttime");
 		String[] startTimes = extractTimes(editArguments[1]);
 		String taskName = editArguments[0].trim();
 		LocalTime newStartTime;
@@ -613,9 +609,9 @@ public class CdLogic {
 			Task oldTask = taskVault.getTask(taskName);
 			if (oldTask.getEndDate() == null) {
 				if (oldTask.getStartTime() == null) {
-					return "Cannot edit end date of floating task";
+					return MESSAGE_FLOAT_EDATE;
 				} else {
-					return "Cannot edit end date of deadline";
+					return MESSAGE_DEADLINE_EDATE;
 				}
 			}
 			if(!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(), newEndDate,
@@ -640,80 +636,55 @@ public class CdLogic {
 		}
 	}
 
+
 	/**
-	 * Method does not allow edit of start date of floating task
+	 * method that edits endtime of tasks
+	 * For floating tasks where endtime is null, 
+	 * execution will return message
+	 * For deadline tasks, where endtime is null but starttime is not null, 
+	 * execution will return message
+	 * Method will also not allow if endtime entered is before the stipulated start time of 
+	 * a specific task
 	 * @param userCommand
 	 */
-	private String editStartDate(String userCommand) {
-		String[] editArguments = parseEdit(userCommand, "startdate");
-		String[] startDates = extractDates(editArguments[1]);
+
+	private String editEndTime(String userCommand) {
+		// TODO Auto-generated method stub
+		String[] editArguments = parseEdit(userCommand, "endtime");
+		String[] endTimes = extractTimes(editArguments[1]);
 		String taskName = editArguments[0].trim();
-		LocalDate newStartDate;
+		LocalTime newEndTime;
 		try {
-			newStartDate = toLocalDate(startDates[0]);
+			newEndTime = toLocalTime(endTimes[0]);
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return MESSAGE_INVALID_DATE;
+			return MESSAGE_INVALID_TIME;
 		}
-
-		if (newStartDate == null) {
-			return "Enter a valid date";
-		} else if (taskExists(taskName)) {
+		if (taskExists(taskName)) {			
 			Task oldTask = taskVault.getTask(taskName);
-			if(oldTask.getStartDate()==null){
-				return "Cannot edit start date of floating task";
-			}
+			
 
-			if((oldTask.getEndDate()!=null) && !isInOrder(newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
-					oldTask.getEndTime())){
-				return MESSAGE_NOT_CHRON ;
+			if (oldTask.getEndTime() == null) {
+				if (oldTask.getStartTime() == null) {
+					return MESSAGE_FLOAT_ETIME;
+				} else {
+					return MESSAGE_DEADLINE_ETIME ;
+				}
+			}
+			if(!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(),
+					oldTask.getEndDate(), newEndTime)){
+				return MESSAGE_NOT_CHRON;
 			}
 			taskVault.remove(taskName);
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
-					newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
-					oldTask.getEndTime());
+					oldTask.getStartDate(), oldTask.getStartTime(),
+					oldTask.getEndDate(), newEndTime);
 
 			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));	
+			historyVault.storeTask(taskVault.getTask(taskName));		
 //			history.add(oldTask);
 //			history.add(taskVault.getTask(oldTask.getTaskName()));
-			commandStack.push(UNDOABLE.EDIT);
-			updateDisplay();
-			saveVaults();
-			return MESSAGE_EDIT_SUCCESS ;
-		} else {
-			return "task " + taskName + " not found";
-		}
-	}
-
-	/**
-	 * Method prevents tasks with same name to be stored 
-	 * @param userCommand
-	 */
-	private String editTaskName(String userCommand) {
-		String[] editArguments = parseEdit(userCommand, "taskname");
-		String taskName = editArguments[0].trim();
-		String newTaskName = editArguments[1].trim();
-
-		if (taskExists(taskName)) {
-			Task oldTask = taskVault.getTask(taskName);
-
-			for(int i = 0; i<tasks.size(); i++){
-				if(tasks.get(i).getTaskName().equals(newTaskName)){
-					return "\"" + newTaskName + "\" already exists";
-				}
-			}
-
-			taskVault.remove(taskName);
-			taskVault.createTask(newTaskName, oldTask.getComment(),
-					oldTask.getStartDate(), oldTask.getStartTime(),
-					oldTask.getEndDate(), oldTask.getEndTime());
-
-			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(newTaskName));	
-//			history.add(oldTask);
-//			history.add(taskVault.getTask(newTaskName));
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
@@ -721,7 +692,46 @@ public class CdLogic {
 		} else {
 			return "task " + taskName + " not found";
 		}
+
 	}
+
+	
+	
+	/**
+	 * performs commenting of a task
+	 * adds the new comment to the existing task and saves the changes
+	 * updates display of the task with comment added
+	 * @param userCommand
+	 */
+
+	private String addComment(String userCommand) {
+		// TODO Auto-generated method stub
+		String[] editArguments = parseEdit(userCommand, "addcomment");
+		String taskName = editArguments[0].trim();
+		String newComment = editArguments[1].trim();
+
+		if (taskExists(taskName)) {
+			Task oldTask = taskVault.getTask(taskName);
+
+			taskVault.remove(taskName);
+			taskVault.createTask(oldTask.getTaskName(), newComment,
+					oldTask.getStartDate(), oldTask.getStartTime(),
+					oldTask.getEndDate(), oldTask.getEndTime());
+
+			historyVault.storeTask(oldTask);
+			historyVault.storeTask(taskVault.getTask(taskName));	
+//			history.add(oldTask);
+//			history.add(taskVault.getTask(oldTask.getTaskName()));
+			commandStack.push(UNDOABLE.EDIT);			
+			updateDisplay();
+			saveVaults();
+			return "comment added";
+		} else {
+			return "task " + taskName + " not found";
+		}
+	}
+
+	
 	/**
 	 * @param taskName 	 
 	 */
