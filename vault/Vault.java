@@ -1,5 +1,6 @@
 package vault;
 
+import model.IdGenerator;
 import model.Task;
 import model.RecurringTask;
 import javafx.collections.FXCollections;
@@ -141,6 +142,8 @@ public class Vault {
 			return false;
 		}
 		trash.storeTask(task);
+		IdGenerator idGenerator = new IdGenerator();
+		idGenerator.removeId(task.getId());
 		return list.remove(task);
 	}
 	
@@ -156,6 +159,8 @@ public class Vault {
 		if (task == null) {
 			return false;
 		}
+		IdGenerator idGenerator = new IdGenerator();
+		idGenerator.removeId(task.getId());
 		return list.remove(task);
 	}
 	
@@ -232,6 +237,14 @@ public class Vault {
 					writer.write(MONTH_SPACE + recurringTask.getDayOfMonth());
 					writer.newLine();
 				}
+				if (task.getId() != null) {
+					writer.write("ID " + task.getId());
+					writer.newLine();
+				}
+				else {
+					writer.write("ID");
+					writer.newLine();
+				}
 				i++;
 				writer.write(NULL);
 				writer.newLine();
@@ -285,13 +298,25 @@ public class Vault {
 		if (taskName == null) {
 			return null;
 		}
-		// Search from the front for the task
-		for (int i = 0; i < list.size(); i++) {
-			if (list.get(i).getTaskName().equals(taskName)) {
-				return list.get(i);
-			}			
-		}		
-		return null;
+		if (taskName.startsWith("@")) {
+			String idString = taskName;
+			// Search from the front for the task using id
+			for (int i = 0; i < list.size(); i++) {
+				if (list.get(i).getId().equals(idString)) {
+					return list.get(i);
+				}			
+			}		
+			return null;
+		}
+		else {
+			// Search from the front for the task using taskName
+			for (int i = 0; i < list.size(); i++) {
+				if (list.get(i).getTaskName().equals(taskName)) {
+					return list.get(i);
+				}			
+			}		
+			return null;
+		}
 	}
 
 	/**
@@ -378,6 +403,14 @@ public class Vault {
 		    			}
 		    			else {
 		    				recurringTask = new RecurringTask(task, recurrence, dayOfMonth);
+		    			}
+		    		}
+		    		if (line.startsWith("ID")) {
+		    			if (line.length() > 2) {
+		    				task.setId(line.substring(3).trim());
+		    			}
+		    			else {
+		    				task.setId(null);
 		    			}
 		    		}
 		    		line = reader.readLine();

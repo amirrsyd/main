@@ -19,10 +19,6 @@ public class RecurringTask extends Task {
 	private DayOfWeek day;
 	private int dayOfMonth;
 
-	public enum Day {
-		MON, TUE, WED, THU, FRI, SAT, SUN
-	}
-
 	/**
 	 * Default constructor.
 	 */

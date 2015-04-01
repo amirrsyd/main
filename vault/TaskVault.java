@@ -3,11 +3,13 @@ package vault;
 import javafx.collections.FXCollections;
 //import javafx.collections.ObservableList;
 
+
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import model.IdGenerator;
 import model.Task;
 
 /**
@@ -56,6 +58,9 @@ public class TaskVault extends Vault {
 			                  LocalDate endDate, LocalTime endTime) {
 		Task task = new Task(taskName, taskDescription, startDate, startTime,
 				             endDate, endTime);
+		IdGenerator idGenerator = new IdGenerator();
+		String idString = idGenerator.generateId(taskName);
+		task.setId(idString);
 		return storeTask(task);
 	}
 	

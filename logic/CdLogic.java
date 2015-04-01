@@ -26,7 +26,6 @@ import vault.HistoryVault;
 import vault.TaskVault;
 import vault.TrashVault;
 import model.RecurringTask;
-import model.RecurringTask.Day;
 import model.Task;
 /**
 * <h1>CdLogic Class</h1>
@@ -750,7 +749,6 @@ public class CdLogic {
 //		historyVault.remove(historyTask.getTaskName());
 		updateDisplay();
 		saveVaults();
-		sound.playUndoComplete();
 		return "Undo: \"" + historyTask.getTaskName() + "\" moved back from completed to tasks";
 	}
 	

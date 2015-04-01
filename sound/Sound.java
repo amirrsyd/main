@@ -16,9 +16,22 @@ public class Sound {
 	}
 	
 	public void playComplete() {
-		if (streak > 1) {
+		if (streak >= 2) {
 			try {
 				Path filePath = Paths.get(System.getProperty("user.dir") + "/src/sound/cheering.wav");
+				File soundFile = new File(filePath.toString());
+				AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
+				Clip clip = AudioSystem.getClip();
+				clip.open(audioInputStream);
+				clip.start();
+				streak++;
+			} catch (Exception error) {
+				System.err.println(error);
+			}
+		}
+		else if (streak == 1) {
+			try {
+				Path filePath = Paths.get(System.getProperty("user.dir") + "/src/sound/applause_2.wav");
 				File soundFile = new File(filePath.toString());
 				AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
 				Clip clip = AudioSystem.getClip();
@@ -43,18 +56,5 @@ public class Sound {
 			}
 		}
 
-	}
-	
-	public void playUndoComplete() {
-		try {
-			Path filePath = Paths.get(System.getProperty("user.dir") + "/src/sound/boo.wav");
-			File soundFile = new File(filePath.toString());
-			AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
-			Clip clip = AudioSystem.getClip();
-			clip.open(audioInputStream);
-			clip.start();
-		} catch (Exception error) {
-			System.err.println(error);
-		}
 	}
 }
