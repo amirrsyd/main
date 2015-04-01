@@ -60,11 +60,6 @@ public class VaultTest {
 	}
 	
 	@Test
-	public void testGetNextTask() {
-		assertNotNull(taskVault.getNextTask());
-	}
-	
-	@Test
 	public void testClear() {
 		assertTrue(trashVault.clear());
 	}

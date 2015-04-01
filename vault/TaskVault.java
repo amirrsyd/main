@@ -65,19 +65,6 @@ public class TaskVault extends Vault {
 	}
 	
 	/**
-	 * Returns the first Task object in the list. It returns null if the list
-	 * is empty.
-	 * 
-	 * @return    first Task object in the list if list is not empty else null.
-	 */
-	public Task getNextTask() {
-		if (list.size() == ZERO) {
-			return null;
-		}
-		return list.get(ZERO);
-	}
-	
-	/**
 	 * Removes the first Task object with the same name from the list and 
 	 * move it to completedTasks and return true.
 	 * 

@@ -50,8 +50,6 @@ public class CdLogic {
 			+ "format :%1$s";
 	private static final String MESSAGE_ERROR = "Unrecognized command type" ;
 	private static final String MESSAGE_NONEXIST = "Directory doesnt exist" ;
-	private static final String MESSAGE_NO_NEXT_TASK = "no next tasks" ;
-	private static final String MESSAGE_SHOW_NEXT_TASK = "next task shown" ;
 	private static final String MESSAGE_INVALID_EDIT = "invalid edit command" ;
 	private static final String MESSAGE_INVALID_TIME = "new time not valid" ;
 	private static final String MESSAGE_TRASH_CLEARED = "trash emptied successfully" ;
@@ -199,8 +197,6 @@ public class CdLogic {
 			return String.format(MESSAGE_INVALID_FORMAT, userCommand);
 		case EXIT:
 			System.exit(0);
-		case NEXT:
-			return next();
 		case UNDO:
 			return undo();
 		case CHANGEDIR:
@@ -765,30 +761,6 @@ public class CdLogic {
 		updateDisplay();
 		saveVaults();
 		return "Undo: \"" + historyTask.getTaskName() + "\" removed from tasks";
-	}
-	/**
-	 * performs add command
-	 * if task list is empty, return MESSAGE_NO_NEXT_TASK
-	 * toDisplay clears the taks list and adds the consecutive task
-	 * task is saved in saveVaults() method
-	 */
-
-	private String next() {
-		// TODO Auto-generated method stub
-
-		if (tasks.isEmpty()) {
-			return MESSAGE_NO_NEXT_TASK;
-		}
-
-		toDisplay.clear();
-		toDisplay.add(taskVault.getNextTask());
-
-		assert(toDisplay.size() <= 1);
-
-		saveVaults();
-
-		return MESSAGE_SHOW_NEXT_TASK;
-
 	}
 
 	/**
