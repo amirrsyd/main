@@ -65,8 +65,8 @@ public class VaultTest {
 	}
 	
 	@Test
-	public void testEmptyTrash() {
-		assertTrue(trashVault.emptyTrash());
+	public void testClear() {
+		assertTrue(trashVault.clear());
 	}
 	
 	@Test

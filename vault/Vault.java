@@ -281,11 +281,12 @@ public class Vault {
 	}
 	
 	/**
-	 * For testing purposes: Clears the list and the data in the file.
+	 * Clears the list and the data in the file.
 	 */
-	public void clear() {
+	public boolean clear() {
 		list.clear();
 		save();
+		return true;
 	}
 
 	/**

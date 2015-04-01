@@ -35,14 +35,4 @@ public class TrashVault extends Vault {
 			list = FXCollections.observableArrayList();
 		}
 	}
-	
-	/**
-	 * Removes all elements from the list.
-	 * 
-	 * @return    true if it is successful.
-	 */
-	public boolean emptyTrash() {
-		list.clear();
-		return true;
-	}
 }

@@ -1210,7 +1210,7 @@ public class CdLogic {
 	private String empty(String userCommand) throws IOException {
 		userCommand = removeFirstWord(userCommand).trim();
 		if (userCommand.equalsIgnoreCase("trash")) {
-			if (trashVault.emptyTrash()) {
+			if (trashVault.clear()) {
 				saveVaults();
 				return MESSAGE_TRASH_CLEARED;
 			} else {
