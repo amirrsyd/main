@@ -99,6 +99,8 @@ public class TaskOverviewController{
 	@FXML
 	private TableColumn<Task, String> taskNameColumn;
 	@FXML
+	private TableColumn<Task, String> taskCommentColumn;
+	@FXML
 	private TableColumn<Task, LocalDate> startDateColumn;
 	@FXML
 	private TableColumn<Task, LocalTime> startTimeColumn;
@@ -143,6 +145,8 @@ public class TaskOverviewController{
 	
 	private LinkedList<String> lowerCache;
 	
+	private KeyEvent prevEvent;
+	
 	// Reference to the main application
 	private MainApp mainApp;
 	
@@ -156,6 +160,7 @@ public class TaskOverviewController{
 	private void initialize() {
 		//Initialize the task table with the five columns.
 		taskNameColumn.setCellValueFactory(cellData -> cellData.getValue().taskNameProperty());
+		taskCommentColumn.setCellValueFactory(cellData -> cellData.getValue().commentProperty());
 		startDateColumn.setCellValueFactory(cellData -> cellData.getValue().startDateProperty());
 		startTimeColumn.setCellValueFactory(cellData -> cellData.getValue().startTimeProperty());
 		endDateColumn.setCellValueFactory(cellData -> cellData.getValue().endDateProperty());
@@ -644,31 +649,50 @@ public class TaskOverviewController{
 		else if(event.getCode() == KeyCode.UP) {
 			if(input.isFocused()) {
 				String previousCommand = peekPreviousCommand();
-				String currentCommand = input.getText();
 				if(previousCommand != null && !previousCommand.equals("")) {
-					popPreviousCommand();
-					getInput().setText(previousCommand);
-					pushDownCommand(currentCommand);
-					input.end();
+					if(prevEvent == null || prevEvent.getCode() == KeyCode.UP) {
+						getInput().setText(previousCommand);
+						pushDownCommand(popPreviousCommand());
+						input.end();
+					}
+					else if(prevEvent.getCode() == KeyCode.DOWN && peekNextCommand() != null) {
+						System.out.println("PD");
+						pushDownCommand(popPreviousCommand());
+						previousCommand = peekPreviousCommand();
+						getInput().setText(previousCommand);
+						pushDownCommand(popPreviousCommand());
+						input.end();
+					}
+					else if(prevEvent.getCode() == KeyCode.DOWN) {
+						getInput().setText(previousCommand);
+						pushDownCommand(popPreviousCommand());
+						input.end();
+						
+					}
 				}
+				prevEvent = event;
 			}
 			event.consume();
 		}
 		else if(event.getCode() == KeyCode.DOWN) {
 			if(input.isFocused()) {
 				String nextCommand = peekNextCommand();
-				String currentCommand = input.getText();
 				if(nextCommand != null && !nextCommand.equals("")) {
-					popNextCommand();
-					getInput().setText(nextCommand);
-					pushUpCommand(currentCommand);
-				}
-				else {
-					if(!currentCommand.equals("")) {
-						pushUpCommand(currentCommand);
-						getInput().setText("");
+					if(prevEvent == null || prevEvent.getCode() == KeyCode.DOWN) {
+						getInput().setText(nextCommand);
+						pushUpCommand(popNextCommand());
+					}
+					else if(prevEvent.getCode() == KeyCode.UP) {
+						pushUpCommand(popNextCommand());
+						nextCommand = peekNextCommand();
+						getInput().setText(nextCommand);
+						pushUpCommand(popNextCommand());
 					}
 				}
+				else {
+					getInput().setText("");
+				}
+				prevEvent = event;
 			}
 		}
 	}
@@ -677,6 +701,7 @@ public class TaskOverviewController{
 		if(getInput().getText() != null && !getInput().getText().isEmpty()) {
 			userInput = getInput().getText();
 			pushUpCommand(userInput);
+			lowerCache = new LinkedList<String>();
 			getInput().setText("");
 			String response = "";
 			try {
@@ -863,6 +888,7 @@ public class TaskOverviewController{
 		fillCells();
 		fillTasksIntoCells();
 		fillCalendar();
+		input.requestFocus();
 	}
 
 	public TextField getInput() {
