@@ -20,6 +20,7 @@ import java.nio.file.StandardCopyOption;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import sound.Sound;
 import vault.CompletedTaskVault;
 import vault.HistoryVault;
 import vault.TaskVault;
@@ -81,6 +82,8 @@ public class CdLogic {
 	private static ObservableList<Task> tasks;
 	//private static ObservableList<Task> history;
 	
+	private Sound sound;
+	
 	
 	enum UNDOABLE {
 		ADD, DELETE, COMPLETE, EDIT, CHANGEDIR
@@ -110,6 +113,7 @@ public class CdLogic {
 		tasks = taskVault.getList();
 		toDisplay = copyList(tasks);
 		lookForRecurrence();
+		sound = new Sound();
 	}
 
 	/**
@@ -746,6 +750,7 @@ public class CdLogic {
 //		historyVault.remove(historyTask.getTaskName());
 		updateDisplay();
 		saveVaults();
+		sound.playUndoComplete();
 		return "Undo: \"" + historyTask.getTaskName() + "\" moved back from completed to tasks";
 	}
 	
@@ -1147,6 +1152,7 @@ public class CdLogic {
 			}
 			updateDisplay();
 			saveVaults();
+			sound.playComplete();
 			return "\"" + userCommand + "\"" + " completed successfully";
 		} else {
 			return "\"" + userCommand + "\"" + "couldn't be completed";
