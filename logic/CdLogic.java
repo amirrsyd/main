@@ -1,5 +1,4 @@
 package logic;
- 
 
 import java.time.DateTimeException;
 import java.time.DayOfWeek;
@@ -29,45 +28,105 @@ import vault.TrashVault;
 import model.IdGenerator;
 import model.RecurringTask;
 import model.Task;
+
 /**
-* <h1>CdLogic Class</h1>
-* The CdLogic class implements the comman.DO application that
-* is a task manager. The methods below implement the functionalities
-* of commands entered by a user
-* 
-*/
+ * <h1>CdLogic Class</h1> The CdLogic class implements the comman.DO application
+ * that is a task manager. The methods below implement the functionalities of
+ * commands entered by a user
+ * 
+ */
 public class CdLogic {
-	
+
+	private static final String MESSAGE_END_BEFORE_START = "Task cannot end before it starts";
+	private static final String MESSAGE_NO_ENDTIME = "End date must be accompanied with an end time";
+	private static final String MESSAGE_NO_STARTTIME = "Start date must be accompanied with start time";
+	private static final String MESSAGE_INVALID_TASKNAME = "Task Name cannot start with \"@\"";
+	private static final String MESSAGE_TASKS_FOUND = " tasks found";
+	private static final String MESSAGE_COMPLETE_FAIL = "\"%s\" could not be completed";
+	private static final String MESSAGE_COMPLETE_SUCCESS = "\"%s\" completed successfully";
+	private static final String MESSAGE_ALREADY_EXISTS = "\"%s\" already exists";
+	private static final String MESSAGE_DATE_MISSING = "Enter a valid date";
+	private static final String MESSAGE_FLOAT_SDATE = "Cannot edit start date of floating task";
+	private static final String MESSAGE_FLOAT_STIME = "Cannot edit start time of floating task";
+	private static final String MESSAGE_COMMENT_ADDED = "comment added";
+	private static final String MESSAGE_UNDO_ADD = "Undo add: \"%s\" removed from tasks";
+	private static final String MESSAGE_UNDO_COMPLETE = "Undo complete: \"%s\" moved back from completed to tasks";
+	private static final String MESSAGE_UNDO_DELETE = "Undo delete: \"%s\" moved back from trash to tasks";
+	private static final String MESSAGE_UNDO_EDIT = "Undo edit: Change made to \"%s\" discarded";
+	private static final String MESSAGE_FILES_MOVED = "Files moved to \"%s\"";
+	private static final String MESSAGE_WORKING_DIRECTORY = "Working directory: ";
+	private static final String MESSAGE_WILL_RECUR_FOREVER = "%s will recur on %d %s";
+	private static final String MESSAGE_WILL_RECUR = "%s will recur on %s %s for %d times";
+	private static final String MESSAGE_INVALID_RECURRENCES = "insert valid number for number of recurrence";
+	private static final String MESSAGE_INVALID_DAYMONTH = "insert valid day and month (dd/mm)";
+	private static final String DATEMONTH_PATTERN = "dd/MM";
+	private static final String MESSAGE_NOT_FOUND = "task %s not found";
+	private static final String MESSAGE_RECUR_FLOATING = "cannot recur floating task";
+	private static final String MESSAGE_RECURSION_DETAILS = "insert recursion details";
 	/**
-	 * Listed below are the String constants e.g. Message returns
-	 * This is to ensure easier code readability
-	 * Start Date & End Date is in the format (DD:MM:YYYY) 
-	 * Start Time & End Time is in the format (HH:MM) 
+	 * Listed below are the String constants e.g. Message returns This is to
+	 * ensure easier code readability Start Date & End Date is in the format
+	 * (DD:MM:YYYY) Start Time & End Time is in the format (HH:MM)
 	 */
 	private static final String USER_DIR = "user.dir";
-	private static final String DATE_REGEX = "([1-9]|[012][0-9]|3[01])[-/]\\s*(0[1-9]|1[012])[-/]\\s*((19|20)?[0-9]{2})";
+	private static final String DATE_REGEX = "([0-9][0-9])[-/]\\s*([0-9][0-9])[-/]"
+			+ "\\s*([0-9][0-9][0-9][0-9])";
 	private static final String TIME_REGEX = "([01]?[0-9]|2[0-3]):[0-5][0-9]";
 
 	private static final String MESSAGE_INVALID_FORMAT = "invalid command "
 			+ "format :%1$s";
-	private static final String MESSAGE_ERROR = "Unrecognized command type" ;
-	private static final String MESSAGE_NONEXIST = "Directory doesnt exist" ;
-	private static final String MESSAGE_INVALID_EDIT = "invalid edit command" ;
-	private static final String MESSAGE_INVALID_TIME = "new time not valid" ;
-	private static final String MESSAGE_TRASH_CLEARED = "trash emptied successfully" ;
-	private static final String MESSAGE_TRASH_UNCLEARED = "trash can't be emptied" ;
-	private static final String MESSAGE_NOT_CHRON = "new date not chronologically correct" ;
-	private static final String MESSAGE_EDIT_SUCCESS = "edit complete" ;
-	private static final String MESSAGE_INVALID_DATE = "new date not valid" ;
-	private static final String MESSAGE_DELETE_UNSUCCESS = "Delete not successful" ;
-	private static final String MESSAGE_INVALID_COMMAND = "command type string cannot be null!" ;
-	private static final String MESSAGE_NO_UNDO = "no more undo left" ;
-	private static final String MESSAGE_FLOAT_ETIME = "Cannot edit end time of floating task" ;
-    private static final String MESSAGE_DEADLINE_ETIME = "Cannot edit end time of deadline" ;
-    private static final String MESSAGE_FLOAT_EDATE = "cannot edit end date of floating task" ;
-    private static final String MESSAGE_DEADLINE_EDATE = "cannot edit end date of deadline" ;
+	private static final String MESSAGE_ERROR = "Unrecognized command type";
+	private static final String MESSAGE_NONEXIST = "Directory doesnt exist";
+	private static final String MESSAGE_INVALID_EDIT = "invalid edit command";
+	private static final String MESSAGE_INVALID_TIME = "Time %s is not valid";
+	private static final String MESSAGE_TRASH_CLEARED = "trash emptied successfully";
+	private static final String MESSAGE_TRASH_UNCLEARED = "trash can't be emptied";
+	private static final String MESSAGE_NOT_CHRON = "new date not chronologically correct";
+	private static final String MESSAGE_EDIT_SUCCESS = "edit complete";
+	private static final String MESSAGE_INVALID_DATE = "Date %s is not valid";
+	private static final String MESSAGE_DELETE_UNSUCCESS = "Delete not successful";
+	private static final String MESSAGE_INVALID_COMMAND = "command type string cannot be null!";
+	private static final String MESSAGE_NO_UNDO = "no more undo left";
+	private static final String MESSAGE_FLOAT_ETIME = "Cannot edit end time of floating task";
+	private static final String MESSAGE_DEADLINE_ETIME = "Cannot edit end time of deadline";
+	private static final String MESSAGE_FLOAT_EDATE = "cannot edit end date of floating task";
+	private static final String MESSAGE_DEADLINE_EDATE = "cannot edit end date of deadline";
+	private static final String MESSAGE_HELP_COMMANDS = "A list of commands that you can use:\n"
+			+ "add, list, edit, delete, search, undo, help, addrecur, recur, complete, empty, getdir, changedir, exit\n"
+			+ "Enter help [command] for help with specific command syntax.";
+	private static final String MESSAGE_HELP_ADD = "Action: Creates a task\n"
+			+ "Syntax: add [TaskName] {StartDate StartTime} {EndDate EndTime}";
+	private static final String MESSAGE_HELP_DELETE = "Action: Deletes a task\nSyntax: delete [TaskName]";
+	private static final String MESSAGE_HELP_LIST = "Action: List out tasks\n"
+			+ "Syntax: list {today/week/date/completed/trash}";
+	private static final String MESSAGE_HELP_EMPTY = "Action: Empty a list\n"
+			+ "Syntax: empty {completed/trash}";
+	private static final String MESSAGE_HELP_SEARCH = "Action: Search for tasks through keywords\n"
+			+ "Syntax: search [keywords]";
+	private static final String MESSAGE_HELP_COMPLETE = "Action: Sets a task as complete\n"
+			+ "Syntax: complete [TaskName]";
+	private static final String MESSAGE_HELP_EDIT = "Action: Edit a field in a task\n"
+			+ "Syntax: edit [TaskName] [Field To Edit] [New Value]";
+	private static final String MESSAGE_HELP_EXIT = "Action: Exits Comman.Do\n"
+			+ "Syntax: exit";
+	private static final String MESSAGE_HELP_CHANGEDIR = "Action: Change the directory that stores your data\n"
+			+ "Syntax: changedir [PATH]";
+	private static final String MESSAGE_HELP_UNDO = "Action: Undo the last command\n"
+			+ "Syntax: undo";
+	private static final String MESSAGE_HELP_GETDIR = "Action: Get the current directory that stores your data\n"
+			+ "Syntax: getdir";
+	private static final String MESSAGE_HELP_ADDRECUR = "Action: Creates a recurring task\n"
+			+ "Syntax: addrecur [same as adding tasks] {daily/weekly/monthly/yearly} [day of week/day of month/day and month] [recurrence] ";
+	private static final String MESSAGE_HELP_RECUR = "Action: Recur a task\n"
+			+ "Syntax: recur [TaskName] {daily/weekly/monthly/yearly} [day of week/day of month/ day and month] [recurrence]";
+	private static final String MESSAGE_HELP_INVALID = "Invalid help command: Enter \"help\" for list of commands";
+	private static final String YEARLY = "yearly";
+	private static final String MONTHLY = "monthly";
+	private static final String WEEKLY = "weekly";
+	private static final String MESSAGE_TIME_MISSING = "Enter a valid time";
 	/**
-	 * We call the classes from Vault (Storage) to use them in our methods as parsers
+	 * We call the classes from Vault (Storage) to use them in our methods as
+	 * parsers
 	 * 
 	 */
 	private static TaskVault taskVault;
@@ -79,27 +138,28 @@ public class CdLogic {
 
 	private static ObservableList<Task> toDisplay;
 	private static ObservableList<Task> tasks;
-	//private static ObservableList<Task> history;
-	
+	// private static ObservableList<Task> history;
+
 	private Sound sound;
-	
-	
+
 	enum UNDOABLE {
 		ADD, DELETE, COMPLETE, EDIT, CHANGEDIR
 	}
 
-
 	enum COMMAND_TYPE {
-		ADD, DELETE, LIST, EMPTY, SEARCH, COMPLETE, EDIT, INVALID, EXIT, CHANGEDIR, UNDO, NEXT, GETDIR, ADDRECUR, RECUR
+		ADD, DELETE, LIST, EMPTY, SEARCH, COMPLETE, EDIT, INVALID, EXIT, CHANGEDIR, UNDO, NEXT, 
+		GETDIR, ADDRECUR, RECUR, HELP
 	}
 
 	enum TaskType {
 		FLOAT, EVENT, DATELINE
 	}
+
 	/**
-	 * Method that will work with GUI and TaskVault class.
-	 *  Initializes the display of tasks that is retrieved from TaskVault
-	 *  @throws I0Exception
+	 * Method that will work with GUI and TaskVault class. Initializes the
+	 * display of tasks that is retrieved from TaskVault
+	 * 
+	 * @throws I0Exception
 	 */
 
 	public CdLogic() throws IOException {
@@ -107,11 +167,11 @@ public class CdLogic {
 		initializeVaults();
 		historyVault.clear();
 		historyVault = new HistoryVault(vaultPath);
-		//history = FXCollections.observableArrayList();
+		// history = FXCollections.observableArrayList();
 		commandStack = new Stack<UNDOABLE>();
 		tasks = taskVault.getList();
 		toDisplay = copyList(tasks);
-		lookForRecurrence();
+		//lookForRecurrence();
 		sound = new Sound();
 	}
 
@@ -124,30 +184,31 @@ public class CdLogic {
 		historyVault.clear();
 		completedTaskVault.clear();
 	}
-	
+
 	/**
 	 * initializes config.txt to save to the working directory
+	 * 
 	 * @throws IOException
 	 */
 	private void initializeFromConfig() throws IOException {
 		File config = new File("config.txt");
 		/*
-		 * Warning: If config.txt exists but is empty,
-		 * a nullpointerexception will be thrown. If it exists but
-	 	 * the path inside is not a directory, tasks will not be
-	 	 * saved.
+		 * Warning: If config.txt exists but is empty, a nullpointerexception
+		 * will be thrown. If it exists but the path inside is not a directory,
+		 * tasks will not be saved.
 		 */
-		if (!config.exists()){
+		if (!config.exists()) {
 			config.createNewFile();
 			writeToConfig(System.getProperty(USER_DIR));
 			vaultPath = System.getProperty(USER_DIR);
-		}else{
+		} else {
 			vaultPath = getVaultPath("config.txt").trim();
 		}
 	}
+
 	/**
-	 * Obtains tasklist from TaskVault class
-	 * Returns tasks to be viewed on the GUI
+	 * Obtains tasklist from TaskVault class Returns tasks to be viewed on the
+	 * GUI
 	 */
 	public ObservableList<Task> getTaskList() {
 		tasks = FXCollections.observableArrayList(taskVault.getList());
@@ -158,32 +219,33 @@ public class CdLogic {
 	public ObservableList<Task> getDisplayList() {
 		return toDisplay;
 	}
+
 	/**
-	 * If command is empty, will display MESSAGE_INVALID_FORMAT
-	 * Else, it will check the first word entered by user
-	 * followed by obtaining the command type from method determineCommandType
-	 * and executes command
-	 * add(userCommand), delete(userCommand), list(userCommand), empty(), search(userCommand)
-	 * complete(userCommand), edit(userCommand), exit(System.exit(0)), next(), undo(), changedir(userCommand)
-	 * getdir() 
-	 * @throws Error Message 
+	 * If command is empty, will display MESSAGE_INVALID_FORMAT Else, it will
+	 * check the first word entered by user followed by obtaining the command
+	 * type from method determineCommandType and executes command
+	 * add(userCommand), delete(userCommand), list(userCommand), empty(),
+	 * search(userCommand) complete(userCommand), edit(userCommand),
+	 * exit(System.exit(0)), next(), undo(), changedir(userCommand) getdir()
+	 * 
+	 * @throws Error
+	 *             Message
 	 */
 
 	public String executeCommand(String userCommand) throws IOException {
 		tasks = taskVault.getList();
 		lookForRecurrence();
-		
+
 		if (userCommand.trim().equals(""))
 			return String.format(MESSAGE_INVALID_FORMAT, userCommand);
 
 		String commandTypeString = getFirstWord(userCommand);
 		COMMAND_TYPE commandType = determineCommandType(commandTypeString);
-		
-		
+
 		switch (commandType) {
 		case ADD:
 			return add(userCommand);
-		case DELETE: 
+		case DELETE:
 			return delete(userCommand);
 		case LIST:
 			return list(userCommand);
@@ -209,31 +271,86 @@ public class CdLogic {
 			return recur(userCommand);
 		case ADDRECUR:
 			return addrecur(userCommand);
+		case HELP:
+			return help(userCommand);
 		default:
 			// throw an error if the command is not recognized
 			throw new Error(MESSAGE_ERROR);
 		}
 	}
 
-	private void lookForRecurrence(){
+	private String help(String userCommand) {
+		// TODO Auto-generated method stub
+		userCommand = removeFirstWord(userCommand).trim();
+		
+		if(userCommand.equals("")){
+			return MESSAGE_HELP_COMMANDS;
+		}
+		if(userCommand.equalsIgnoreCase("add")){
+			return MESSAGE_HELP_ADD;
+		}
+		if(userCommand.equalsIgnoreCase("delete")){
+			return MESSAGE_HELP_DELETE;
+		}
+		if(userCommand.equalsIgnoreCase("edit")){
+			return MESSAGE_HELP_EDIT;
+		}
+		if(userCommand.equalsIgnoreCase("list")){
+			return MESSAGE_HELP_LIST;
+		}
+		if(userCommand.equalsIgnoreCase("search")){
+			return MESSAGE_HELP_SEARCH;
+		}
+		if(userCommand.equalsIgnoreCase("complete")){
+			return MESSAGE_HELP_COMPLETE;
+		}
+		if(userCommand.equalsIgnoreCase("empty")){
+			return MESSAGE_HELP_EMPTY;
+		}
+		if(userCommand.equalsIgnoreCase("undo")){
+			return MESSAGE_HELP_UNDO;
+		}
+		if(userCommand.equalsIgnoreCase("changedir")){
+			return MESSAGE_HELP_CHANGEDIR;
+		}
+		if(userCommand.equalsIgnoreCase("getdir")){
+			return MESSAGE_HELP_GETDIR;
+		}
+		if(userCommand.equalsIgnoreCase("recur")){
+			return MESSAGE_HELP_RECUR;
+		}
+		if(userCommand.equalsIgnoreCase("addrecur")){
+			return MESSAGE_HELP_ADDRECUR;
+		}
+		if(userCommand.equalsIgnoreCase("exit")){
+			return MESSAGE_HELP_EXIT;
+		}
+		return MESSAGE_HELP_INVALID;
+	}
+
+	private void lookForRecurrence() {
 		ObservableList<Task> list = taskVault.getList();
-		for (int i = 0; i<list.size(); i++){
+		for (int i = 0; i < list.size(); i++) {
 			Task currTask = list.get(i);
-			if(currTask.isRecurring()){
+			if (currTask.isRecurring()) {
 				RecurringTask recurringTask = (RecurringTask) list.get(i);
-				if(recurringTask.getEndDate() != null){
-					while(getEndLDT(recurringTask).isBefore(LocalDateTime.now())){
-						System.out.println(getEndLDT(recurringTask).isBefore(LocalDateTime.now()));
+				if (recurringTask.getEndDate() != null) {
+					while (getEndLDT(recurringTask).isBefore(
+							LocalDateTime.now())) {
+						System.out.println(getEndLDT(recurringTask).isBefore(
+								LocalDateTime.now()));
 						taskVault.remove(recurringTask.getTaskName());
 						setNextRecurrence(recurringTask);
-						recurringTask = (RecurringTask) taskVault.getTask(currTask.getTaskName());
+						recurringTask = (RecurringTask) taskVault
+								.getTask(currTask.getTaskName());
 					}
-				}else{
-					while(getStartLDT(recurringTask).isBefore(LocalDateTime.now())){
-						System.out.println("Here");
+				} else {
+					while (getStartLDT(recurringTask).isBefore(
+							LocalDateTime.now())) {
 						taskVault.remove(recurringTask.getTaskName());
 						setNextRecurrence(recurringTask);
-						recurringTask = (RecurringTask) taskVault.getTask(currTask.getTaskName());
+						recurringTask = (RecurringTask) taskVault
+								.getTask(currTask.getTaskName());
 					}
 				}
 			}
@@ -241,18 +358,18 @@ public class CdLogic {
 		updateDisplay();
 		saveVaults();
 	}
-	
+
 	private void setNextRecurrence(RecurringTask recurringTask) {
 		System.out.println(recurringTask.getRecurrenceDay());
-		if (recurringTask.getRecurrence()==1){
-			
-		}else if (recurringTask.getRecurrenceDay() != null) {
+		if (recurringTask.getRecurrence() == 1) {
+
+		} else if (recurringTask.getRecurrenceDay() != null) {
 			setNextWeek(recurringTask);
-		}else if(recurringTask.getDayOfMonth()!= 0){
+		} else if (recurringTask.getDayOfMonth() != 0) {
 			setNextMonth(recurringTask);
-		}else if(recurringTask.isDaily()){
+		} else if (recurringTask.isDaily()) {
 			setNextDay(recurringTask);
-		}else if(recurringTask.getMonthDay()!= null){
+		} else if (recurringTask.getMonthDay() != null) {
 			setNextYear(recurringTask);
 		}
 	}
@@ -265,9 +382,10 @@ public class CdLogic {
 		LocalDate newEndDate = null;
 		RecurringTask newTask;
 		int dayOfMonth = monthDay.getDayOfMonth();
-		
-		newStartDate = oldStartDate.plusYears(1).withMonth(monthDay.getMonthValue());
-		
+
+		newStartDate = oldStartDate.plusYears(1).withMonth(
+				monthDay.getMonthValue());
+
 		while (true) {
 			try {
 				newStartDate = newStartDate.withDayOfMonth(dayOfMonth);
@@ -277,24 +395,26 @@ public class CdLogic {
 				continue;
 			}
 		}
-		
-		if (oldEndDate != null){
-			newEndDate = newStartDate.plusDays(Period.between(oldStartDate, oldEndDate).getDays());
+
+		if (oldEndDate != null) {
+			newEndDate = newStartDate.plusDays(Period.between(oldStartDate,
+					oldEndDate).getDays());
 		}
-		
-		
-		
+
 		newTask = new RecurringTask(recurringTask.getTaskName(),
 				recurringTask.getComment(), newStartDate,
 				recurringTask.getStartTime(), newEndDate,
 				recurringTask.getEndTime(), recurringTask.getRecurrence() - 1,
 				monthDay);
-		
+
 		newTask.setId(recurringTask.getId());
 		IdGenerator idGenerator = new IdGenerator();
-		idGenerator.addId(Integer.parseInt(recurringTask.getId().substring(1), 36), recurringTask.getTaskName());
-		
-		if ((oldEndDate != null) && hasOverlap(getStartLDT(newTask), getEndLDT(newTask))) {
+		idGenerator.addId(
+				Integer.parseInt(recurringTask.getId().substring(1), 36),
+				recurringTask.getTaskName());
+
+		if ((oldEndDate != null)
+				&& hasOverlap(getStartLDT(newTask), getEndLDT(newTask))) {
 			newTask.setRecurrence(recurringTask.getRecurrence());
 			setNextRecurrence(newTask);
 		} else {
@@ -309,23 +429,27 @@ public class CdLogic {
 		LocalDate oldEndDate = recurringTask.getEndDate();
 		LocalDate newEndDate = null;
 		RecurringTask newTask;
-		
+
 		newStartDate = oldStartDate.plusDays(1);
-		
-		if (oldEndDate != null){
-			newEndDate = newStartDate.plusDays(Period.between(oldStartDate, oldEndDate).getDays());
+
+		if (oldEndDate != null) {
+			newEndDate = newStartDate.plusDays(Period.between(oldStartDate,
+					oldEndDate).getDays());
 		}
-		
+
 		newTask = new RecurringTask(recurringTask.getTaskName(),
 				recurringTask.getComment(), newStartDate,
 				recurringTask.getStartTime(), newEndDate,
 				recurringTask.getEndTime(), recurringTask.getRecurrence() - 1);
-		
+
 		newTask.setId(recurringTask.getId());
 		IdGenerator idGenerator = new IdGenerator();
-		idGenerator.addId(Integer.parseInt(recurringTask.getId().substring(1), 36), recurringTask.getTaskName());
-		
-		if ((oldEndDate != null) && hasOverlap(getStartLDT(newTask), getEndLDT(newTask))) {
+		idGenerator.addId(
+				Integer.parseInt(recurringTask.getId().substring(1), 36),
+				recurringTask.getTaskName());
+
+		if ((oldEndDate != null)
+				&& hasOverlap(getStartLDT(newTask), getEndLDT(newTask))) {
 			newTask.setRecurrence(recurringTask.getRecurrence());
 			setNextRecurrence(newTask);
 		} else {
@@ -341,40 +465,43 @@ public class CdLogic {
 		LocalDate oldEndDate = recurringTask.getEndDate();
 		LocalDate newEndDate = null;
 		RecurringTask newTask;
-		
+
 		while (true) {
 			try {
-				newStartDate = oldStartDate.plusMonths(1).withDayOfMonth(dayOfMonth);
+				newStartDate = oldStartDate.plusMonths(1).withDayOfMonth(
+						dayOfMonth);
 				break;
 			} catch (DateTimeException e) {
 				dayOfMonth--;
 				continue;
 			}
 		}
-		
-		if (oldEndDate != null){
-			newEndDate = newStartDate.plusDays(Period.between(oldStartDate, oldEndDate).getDays());
+
+		if (oldEndDate != null) {
+			newEndDate = newStartDate.plusDays(Period.between(oldStartDate,
+					oldEndDate).getDays());
 		}
-		
-		
-		
+
 		newTask = new RecurringTask(recurringTask.getTaskName(),
 				recurringTask.getComment(), newStartDate,
 				recurringTask.getStartTime(), newEndDate,
 				recurringTask.getEndTime(), recurringTask.getRecurrence() - 1,
 				recurringTask.getDayOfMonth());
-		
+
 		newTask.setId(recurringTask.getId());
 		IdGenerator idGenerator = new IdGenerator();
-		idGenerator.addId(Integer.parseInt(recurringTask.getId().substring(1), 36), recurringTask.getTaskName());
-		
-		if ((oldEndDate != null) && hasOverlap(getStartLDT(newTask), getEndLDT(newTask))) {
+		idGenerator.addId(
+				Integer.parseInt(recurringTask.getId().substring(1), 36),
+				recurringTask.getTaskName());
+
+		if ((oldEndDate != null)
+				&& hasOverlap(getStartLDT(newTask), getEndLDT(newTask))) {
 			newTask.setRecurrence(recurringTask.getRecurrence());
 			setNextRecurrence(newTask);
 		} else {
 			taskVault.storeTask(newTask);
 		}
-		
+
 	}
 
 	/**
@@ -387,17 +514,20 @@ public class CdLogic {
 		LocalDate oldEndDate = recurringTask.getEndDate();
 		LocalDate newEndDate = null;
 		RecurringTask newTask;
-		
+
 		if (oldStartDate.getDayOfWeek().getValue() < recurrenceDay.getValue()) {
-			newStartDate = oldStartDate.plusWeeks(1).with(TemporalAdjusters.next(recurrenceDay));
-		}else {
-			newStartDate = oldStartDate.with(TemporalAdjusters.next(recurrenceDay));
+			newStartDate = oldStartDate.plusWeeks(1).with(
+					TemporalAdjusters.next(recurrenceDay));
+		} else {
+			newStartDate = oldStartDate.with(TemporalAdjusters
+					.next(recurrenceDay));
 		}
-		
-		if (oldEndDate != null){
-			newEndDate = newStartDate.plusDays(Period.between(oldStartDate, oldEndDate).getDays());
+
+		if (oldEndDate != null) {
+			newEndDate = newStartDate.plusDays(Period.between(oldStartDate,
+					oldEndDate).getDays());
 		}
-		
+
 		newTask = new RecurringTask(recurringTask.getTaskName(),
 				recurringTask.getComment(), newStartDate,
 				recurringTask.getStartTime(), newEndDate,
@@ -406,27 +536,33 @@ public class CdLogic {
 
 		newTask.setId(recurringTask.getId());
 		IdGenerator idGenerator = new IdGenerator();
-		idGenerator.addId(Integer.parseInt(recurringTask.getId().substring(1), 36), recurringTask.getTaskName());
-		
-		if ((oldEndDate != null) && hasOverlap(getStartLDT(newTask), getEndLDT(newTask))) {
-			System.out.println("pls not here");
+		idGenerator.addId(
+				Integer.parseInt(recurringTask.getId().substring(1), 36),
+				recurringTask.getTaskName());
+
+		if ((oldEndDate != null)
+				&& hasOverlap(getStartLDT(newTask), getEndLDT(newTask))) {
 			newTask.setRecurrence(recurringTask.getRecurrence());
 			setNextRecurrence(newTask);
 		} else {
 			taskVault.storeTask(newTask);
 		}
-			
+
 	}
 
-	private boolean hasOverlap(LocalDateTime localDateTime, LocalDateTime localDateTime2) {
+	private boolean hasOverlap(LocalDateTime localDateTime,
+			LocalDateTime localDateTime2) {
 		// TODO Auto-generated method stub
-		for (int i = 0; i < taskVault.getList().size(); i++){
+		for (int i = 0; i < taskVault.getList().size(); i++) {
 			Task currTask = taskVault.getList().get(i);
-			if((currTask.getStartDate()!=null)&&(currTask.getEndDate()!=null)){
-				if(localDateTime2.isAfter(getStartLDT(currTask)) && localDateTime2.isBefore(getEndLDT(currTask))){
+			if ((currTask.getStartDate() != null)
+					&& (currTask.getEndDate() != null)) {
+				if (localDateTime2.isAfter(getStartLDT(currTask))
+						&& localDateTime2.isBefore(getEndLDT(currTask))) {
 					return true;
 				}
-				if(localDateTime.isAfter(getStartLDT(currTask)) && localDateTime.isBefore(getEndLDT(currTask))){
+				if (localDateTime.isAfter(getStartLDT(currTask))
+						&& localDateTime.isBefore(getEndLDT(currTask))) {
 					return true;
 				}
 			}
@@ -437,38 +573,38 @@ public class CdLogic {
 	private String addrecur(String userCommand) {
 		String response = add(userCommand);
 		String[] addArguments = parseAdd(removeFirstWord(userCommand));
-		if(!response.contains("successfully added")){
+		if (!response.contains("successfully added")) {
 			return response;
 		}
-		
+
 		String taskName = addArguments[0];
 		String recurDetails = addArguments[1];
-		
+
 		taskVault.getTask(taskName).setComment(null);
-		
-		if(addArguments[2]==null){
+
+		if (addArguments[2] == null) {
 			taskVault.remove(removeFirstWord(userCommand));
 			updateDisplay();
 			saveVaults();
-			return "cannot recur floating task";
+			return MESSAGE_RECUR_FLOATING;
 		}
-		
-		if(recurDetails ==null){
+
+		if (recurDetails == null) {
 			taskVault.remove(taskName);
 			updateDisplay();
 			saveVaults();
-			return "insert recursion details";
+			return MESSAGE_RECURSION_DETAILS;
 		}
-		
+
 		String recurResponse = recur("recur " + taskName + " " + recurDetails);
-		if(!recurResponse.contains("will recur")){
+		if (!recurResponse.contains("will recur")) {
 			taskVault.remove(taskName);
 			lookForRecurrence();
 			updateDisplay();
 			saveVaults();
 			return recurResponse;
 		}
-		
+
 		lookForRecurrence();
 		updateDisplay();
 		saveVaults();
@@ -478,33 +614,31 @@ public class CdLogic {
 	private String recur(String userCommand) {
 		// TODO Auto-generated method stub
 		String trimmedCommand = removeFirstWord(userCommand).trim();
-		
-		
+
 		String taskName = lookForTaskName(trimmedCommand);
-		
-		if(taskName.equals("")){
+
+		if (taskName.equals("")) {
 			return "Task not found";
 		}
-		
+
 		trimmedCommand = trimmedCommand.replaceFirst(taskName, "");
-		if (getFirstWord(trimmedCommand).equals("monthly")){
+		if (getFirstWord(trimmedCommand).equals("monthly")) {
 			String recurDetails = removeFirstWord(trimmedCommand);
 			return recurMonth(taskName, recurDetails);
 		}
-		if (getFirstWord(trimmedCommand).equals("weekly")){
+		if (getFirstWord(trimmedCommand).equals("weekly")) {
 			String recurDetails = removeFirstWord(trimmedCommand);
 			return recurWeek(taskName, recurDetails);
 		}
-		if (getFirstWord(trimmedCommand).equals("daily")){
+		if (getFirstWord(trimmedCommand).equals("daily")) {
 			String recurDetails = removeFirstWord(trimmedCommand);
 			return recurDaily(taskName, recurDetails);
 		}
-		if (getFirstWord(trimmedCommand).equals("yearly")){
+		if (getFirstWord(trimmedCommand).equals("yearly")) {
 			String recurDetails = removeFirstWord(trimmedCommand);
 			return recurYearly(taskName, recurDetails);
 		}
-		
-		
+
 		return "specify to recur daily, weekly, monthly, or yearly";
 	}
 
@@ -512,46 +646,47 @@ public class CdLogic {
 		// TODO Auto-generated method stub
 		int recurrence;
 		MonthDay monthDay;
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM");
-		
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATEMONTH_PATTERN);
+
 		String[] recurDetailsArray = recurDetails.split("\\s+");
 		if (recurDetailsArray.length == 2) {
 			try {
-				 monthDay = MonthDay.parse(recurDetailsArray[0], formatter);
+				monthDay = MonthDay.parse(recurDetailsArray[0], formatter);
 			} catch (NumberFormatException e) {
-				return "insert valid day and month (dd/mm)";
+				return MESSAGE_INVALID_DAYMONTH;
 			}
 
 			try {
 				recurrence = Integer.parseInt(recurDetailsArray[1]);
 			} catch (NumberFormatException e) {
-				return "insert valid number for number of recurrence";
+				return MESSAGE_INVALID_RECURRENCES;
 			}
-			
-			
+
 			Task toRecur = taskVault.getTask(taskName);
 			taskVault.remove(taskName);
 			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
 					monthDay);
 			newRecurringTask.setId(toRecur.getId());
 			IdGenerator idGenerator = new IdGenerator();
-			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
-			
+			idGenerator.addId(
+					Integer.parseInt(toRecur.getId().substring(1), 36),
+					toRecur.getTaskName());
+
 			taskVault.storeTask(newRecurringTask);
+			
+			return String.format(MESSAGE_WILL_RECUR, taskName, monthDay, YEARLY, recurrence);
 
-			return taskName + " will recur every " + monthDay
-					+ " of the year " + " for " + recurrence + " times.";
-
-		}else if(recurDetailsArray.length == 1 && !recurDetailsArray[0].equals("")){
+		} else if (recurDetailsArray.length == 1
+				&& !recurDetailsArray[0].equals("")) {
 			try {
 				recurrence = Integer.parseInt(recurDetailsArray[0]);
-				if(recurrence<1){
-					return "Insert valid number for number of recurrence";
+				if (recurrence < 1) {
+					return MESSAGE_INVALID_RECURRENCES;
 				}
 			} catch (NumberFormatException e) {
-				return "insert valid number for number of recurrence";
+				return MESSAGE_INVALID_RECURRENCES;
 			}
-			
+
 			Task toRecur = taskVault.getTask(taskName);
 			taskVault.remove(taskName);
 			monthDay = MonthDay.from(toRecur.getStartDate());
@@ -559,14 +694,15 @@ public class CdLogic {
 					monthDay);
 			newRecurringTask.setId(toRecur.getId());
 			IdGenerator idGenerator = new IdGenerator();
-			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
-			
-			taskVault.storeTask(newRecurringTask);
-			
-			return taskName + " will recur every " + monthDay
-					+ " of the year " + " for " + recurrence + " times.";
+			idGenerator.addId(
+					Integer.parseInt(toRecur.getId().substring(1), 36),
+					toRecur.getTaskName());
 
-		}else if(recurDetails.equals("")){
+			taskVault.storeTask(newRecurringTask);
+
+			return String.format(MESSAGE_WILL_RECUR, taskName, monthDay, YEARLY, recurrence);
+
+		} else if (recurDetails.equals("")) {
 			Task toRecur = taskVault.getTask(taskName);
 			taskVault.remove(taskName);
 			monthDay = MonthDay.from(toRecur.getStartDate());
@@ -575,60 +711,64 @@ public class CdLogic {
 					monthDay);
 			newRecurringTask.setId(toRecur.getId());
 			IdGenerator idGenerator = new IdGenerator();
-			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
-			
+			idGenerator.addId(
+					Integer.parseInt(toRecur.getId().substring(1), 36),
+					toRecur.getTaskName());
+
 			taskVault.storeTask(newRecurringTask);
-			
-			return taskName + " will recur every " + monthDay
-					+ " of the year forever and ever";
+
+			return String.format("%s will recur on %s %s", taskName, monthDay, YEARLY);
 		}
-		
-		
+
 		return null;
 	}
 
 	private String recurDaily(String taskName, String recurDetails) {
 		// TODO Auto-generated method stub
 		int recurrence;
-		
+
 		String[] recurDetailsArray = recurDetails.split("\\s+");
-		
-		if(recurDetailsArray.length == 1 && !recurDetailsArray[0].equals("")){
+
+		if (recurDetailsArray.length == 1 && !recurDetailsArray[0].equals("")) {
 			try {
 				recurrence = Integer.parseInt(recurDetailsArray[0]);
-				if(recurrence<1){
+				if (recurrence < 1) {
 					return "Insert valid number for number of recurrence";
 				}
 			} catch (NumberFormatException e) {
 				return "Insert valid number for number of recurrence";
 			}
-			
+
 			Task toRecur = taskVault.getTask(taskName);
 			taskVault.remove(taskName);
 			Task newRecurringTask = new RecurringTask(toRecur, recurrence);
 			newRecurringTask.setId(toRecur.getId());
 			IdGenerator idGenerator = new IdGenerator();
-			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
-			
-			taskVault.storeTask(newRecurringTask);
-			
-			return taskName + " will recur everyday for " + recurrence + " times.";
+			idGenerator.addId(
+					Integer.parseInt(toRecur.getId().substring(1), 36),
+					toRecur.getTaskName());
 
-		}else if(recurDetails.equals("")){
+			taskVault.storeTask(newRecurringTask);
+
+			return taskName + " will recur everyday for " + recurrence
+					+ " times.";
+
+		} else if (recurDetails.equals("")) {
 			Task toRecur = taskVault.getTask(taskName);
 			taskVault.remove(taskName);
 			recurrence = Integer.MAX_VALUE;
 			Task newRecurringTask = new RecurringTask(toRecur, recurrence);
 			newRecurringTask.setId(toRecur.getId());
 			IdGenerator idGenerator = new IdGenerator();
-			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
-			
+			idGenerator.addId(
+					Integer.parseInt(toRecur.getId().substring(1), 36),
+					toRecur.getTaskName());
+
 			taskVault.storeTask(newRecurringTask);
-		
+
 			return taskName + " will recur everyday forever and ever";
 		}
-		
-		
+
 		return "Invalid recurrence format";
 	}
 
@@ -642,96 +782,100 @@ public class CdLogic {
 
 			try {
 				recurrence = Integer.parseInt(recurDetailsArray[1]);
-				if(recurrence<1){
+				if (recurrence < 1) {
 					return "Insert valid number for number of recurrence";
 				}
 			} catch (NumberFormatException e) {
-				return "insert valid number for number of recurrence";
+				return MESSAGE_INVALID_RECURRENCES;
 			}
-			
-			if(dayOfWeek == null){
+
+			if (dayOfWeek == null) {
 				return "insert valid day to recur on";
 			}
-			
+
 			Task toRecur = taskVault.getTask(taskName);
 			taskVault.remove(taskName);
 			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
 					dayOfWeek);
 			newRecurringTask.setId(toRecur.getId());
 			IdGenerator idGenerator = new IdGenerator();
-			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
-			
+			idGenerator.addId(
+					Integer.parseInt(toRecur.getId().substring(1), 36),
+					toRecur.getTaskName());
+
 			taskVault.storeTask(newRecurringTask);
 
-			return taskName + " will recur every " + dayOfWeek
-					+ " for " + recurrence + " times.";
+			return String.format(MESSAGE_WILL_RECUR, taskName, dayOfWeek, WEEKLY, recurrence);
 
-		}else if(recurDetailsArray.length == 1 && !recurDetailsArray[0].equals("")){
+		} else if (recurDetailsArray.length == 1
+				&& !recurDetailsArray[0].equals("")) {
 			try {
 				recurrence = Integer.parseInt(recurDetailsArray[0]);
-				if(recurrence<1){
+				if (recurrence < 1) {
 					return "Insert valid number for number of recurrence";
 				}
 			} catch (NumberFormatException e) {
-				return "insert valid number for number of recurrence";
+				return MESSAGE_INVALID_RECURRENCES;
 			}
-			
-			Task toRecur = taskVault.getTask(taskName);
-			taskVault.remove(taskName);
-			dayOfWeek = toRecur.getStartDate().getDayOfWeek();
-			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
-					dayOfWeek);
-			newRecurringTask.setId(toRecur.getId());
-			IdGenerator idGenerator = new IdGenerator();
-			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
-			
-			taskVault.storeTask(newRecurringTask);
-			
-			return taskName + " will recur every " + dayOfWeek
-					+ " for " + recurrence + " times.";
 
-		}else if(recurDetails.equals("")){
 			Task toRecur = taskVault.getTask(taskName);
 			taskVault.remove(taskName);
 			dayOfWeek = toRecur.getStartDate().getDayOfWeek();
-			recurrence = Integer.MAX_VALUE;;
 			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
 					dayOfWeek);
 			newRecurringTask.setId(toRecur.getId());
 			IdGenerator idGenerator = new IdGenerator();
-			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
-			
+			idGenerator.addId(
+					Integer.parseInt(toRecur.getId().substring(1), 36),
+					toRecur.getTaskName());
+
 			taskVault.storeTask(newRecurringTask);
-			
-			return taskName + " will recur every " + dayOfWeek
-					+ " forever and ever";
+
+			return String.format(MESSAGE_WILL_RECUR, taskName, dayOfWeek, WEEKLY, recurrence);
+
+		} else if (recurDetails.equals("")) {
+			Task toRecur = taskVault.getTask(taskName);
+			taskVault.remove(taskName);
+			dayOfWeek = toRecur.getStartDate().getDayOfWeek();
+			recurrence = Integer.MAX_VALUE;
+			;
+			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
+					dayOfWeek);
+			newRecurringTask.setId(toRecur.getId());
+			IdGenerator idGenerator = new IdGenerator();
+			idGenerator.addId(
+					Integer.parseInt(toRecur.getId().substring(1), 36),
+					toRecur.getTaskName());
+
+			taskVault.storeTask(newRecurringTask);
+
+			return String.format("%s will recur on %s %s", taskName, dayOfWeek, WEEKLY);
 		}
-	
-			
+
 		return "invalid recurrence format";
 	}
 
 	private DayOfWeek getDay(String dayString) {
 		// TODO Auto-generated method stub
-		if(dayString.toLowerCase().contains("mon")){
+		if (dayString.toLowerCase().contains("mon")) {
 			return DayOfWeek.MONDAY;
 		}
-		if(dayString.toLowerCase().contains("tue")){
+		if (dayString.toLowerCase().contains("tue")) {
 			return DayOfWeek.TUESDAY;
 		}
-		if(dayString.toLowerCase().contains("wed")){
+		if (dayString.toLowerCase().contains("wed")) {
 			return DayOfWeek.WEDNESDAY;
 		}
-		if(dayString.toLowerCase().contains("thu")){
+		if (dayString.toLowerCase().contains("thu")) {
 			return DayOfWeek.THURSDAY;
 		}
-		if(dayString.toLowerCase().contains("fri")){
+		if (dayString.toLowerCase().contains("fri")) {
 			return DayOfWeek.FRIDAY;
 		}
-		if(dayString.toLowerCase().contains("sat")){
+		if (dayString.toLowerCase().contains("sat")) {
 			return DayOfWeek.SATURDAY;
 		}
-		if(dayString.toLowerCase().contains("sun")){
+		if (dayString.toLowerCase().contains("sun")) {
 			return DayOfWeek.SUNDAY;
 		}
 		return null;
@@ -751,40 +895,42 @@ public class CdLogic {
 
 			try {
 				recurrence = Integer.parseInt(recurDetailsArray[1]);
-				if(recurrence<1){
+				if (recurrence < 1) {
 					return "Insert valid number for number of recurrence";
 				}
 			} catch (NumberFormatException e) {
-				return "insert valid number for number of recurrence";
+				return MESSAGE_INVALID_RECURRENCES;
 			}
-			
-			if(dayOfMonth<1 || dayOfMonth>31){
+
+			if (dayOfMonth < 1 || dayOfMonth > 31) {
 				return "day of month must be between 1 and 31";
 			}
-			
+
 			Task toRecur = taskVault.getTask(taskName);
 			taskVault.remove(taskName);
 			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
 					dayOfMonth);
 			newRecurringTask.setId(toRecur.getId());
 			IdGenerator idGenerator = new IdGenerator();
-			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
-			
+			idGenerator.addId(
+					Integer.parseInt(toRecur.getId().substring(1), 36),
+					toRecur.getTaskName());
+
 			taskVault.storeTask(newRecurringTask);
 
-			return taskName + " will recur every " + dayOfMonth
-					+ " of the month " + " for " + recurrence + " times.";
+			return String.format(MESSAGE_WILL_RECUR, taskName, dayOfMonth, MONTHLY, recurrence);
 
-		}else if(recurDetailsArray.length == 1 && !recurDetailsArray[0].equals("")){
+		} else if (recurDetailsArray.length == 1
+				&& !recurDetailsArray[0].equals("")) {
 			try {
 				recurrence = Integer.parseInt(recurDetailsArray[0]);
-				if(recurrence<1){
+				if (recurrence < 1) {
 					return "Insert valid number for number of recurrence";
 				}
 			} catch (NumberFormatException e) {
-				return "insert valid number for number of recurrence";
+				return MESSAGE_INVALID_RECURRENCES;
 			}
-			
+
 			Task toRecur = taskVault.getTask(taskName);
 			taskVault.remove(taskName);
 			dayOfMonth = toRecur.getStartDate().getDayOfMonth();
@@ -792,14 +938,15 @@ public class CdLogic {
 					dayOfMonth);
 			newRecurringTask.setId(toRecur.getId());
 			IdGenerator idGenerator = new IdGenerator();
-			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
-			
-			taskVault.storeTask(newRecurringTask);
-			
-			return taskName + " will recur every " + dayOfMonth
-					+ " of the month " + " for " + recurrence + " times.";
+			idGenerator.addId(
+					Integer.parseInt(toRecur.getId().substring(1), 36),
+					toRecur.getTaskName());
 
-		}else if(recurDetails.equals("")){
+			taskVault.storeTask(newRecurringTask);
+
+			return String.format(MESSAGE_WILL_RECUR, taskName, dayOfMonth, MONTHLY, recurrence);
+
+		} else if (recurDetails.equals("")) {
 			Task toRecur = taskVault.getTask(taskName);
 			taskVault.remove(taskName);
 			dayOfMonth = toRecur.getStartDate().getDayOfMonth();
@@ -808,20 +955,18 @@ public class CdLogic {
 					dayOfMonth);
 			newRecurringTask.setId(toRecur.getId());
 			IdGenerator idGenerator = new IdGenerator();
-			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
-			
+			idGenerator.addId(
+					Integer.parseInt(toRecur.getId().substring(1), 36),
+					toRecur.getTaskName());
+
 			taskVault.storeTask(newRecurringTask);
-			
-			return taskName + " will recur every " + dayOfMonth
-					+ " of the month forever and ever";
+
+			return String.format(MESSAGE_WILL_RECUR_FOREVER, taskName, dayOfMonth, MONTHLY);
 		}
-	
-			
+
 		return "invalid recurrence format";
 	}
 
-	
-	
 	private String lookForTaskName(String trimmedCommand) {
 		String found = "";
 		ObservableList<Task> list = taskVault.getList();
@@ -854,25 +999,27 @@ public class CdLogic {
 
 	private String getDirectory() {
 		// TODO Auto-generated method stub
-		
-		return "Working directory: " + vaultPath;
+
+		return MESSAGE_WORKING_DIRECTORY + vaultPath;
 	}
+
 	/**
-     * method that returns the new directory when change directory command is entered by user
-     * if directory fails to exist, returns MESSAGE_NONEXIST
+	 * method that returns the new directory when change directory command is
+	 * entered by user if directory fails to exist, returns MESSAGE_NONEXIST
+	 * 
 	 * @throws IOException
 	 */
-	
+
 	private String changeDirectory(String userCommand) throws IOException {
 		String newPathString = removeFirstWord(userCommand).trim();
-	
+
 		File newPath = new File(newPathString);
 		newPath = newPath.getAbsoluteFile();
 		if (newPath.isDirectory()) {
 			Task oldDirTask = new Task(vaultPath);
-			//history.add(oldDirTask);
+			// history.add(oldDirTask);
 			historyVault.storeTask(oldDirTask);
-			
+
 			commandStack.push(UNDOABLE.CHANGEDIR);
 			taskVault.deleteFile();
 			trashVault.deleteFile();
@@ -888,15 +1035,16 @@ public class CdLogic {
 			vaultPath = Paths.get(newPathString).toAbsolutePath().toString();
 			saveVaults();
 			updateDisplay();
-			return "files moved to \"" + newPathString + "\"";
+			return String.format(MESSAGE_FILES_MOVED, newPathString);
 		}
-		
-		return MESSAGE_NONEXIST ;
-		
+
+		return MESSAGE_NONEXIST;
+
 	}
 
 	/**
-	 * creates an instance of the different Vault classes 
+	 * creates an instance of the different Vault classes
+	 * 
 	 * @throws IOException
 	 */
 	private void initializeVaults() throws IOException {
@@ -908,18 +1056,19 @@ public class CdLogic {
 	}
 
 	/**
-	 * method that performs undo command
-	 * if task is empty, returns MESSAGE_NO_UNDO
-	 * undoAdd, undoComplete, undoDelete, undoEdit, undoChangedir 
+	 * method that performs undo command if task is empty, returns
+	 * MESSAGE_NO_UNDO undoAdd, undoComplete, undoDelete, undoEdit,
+	 * undoChangedir
+	 * 
 	 * @throws IOException
 	 */
 
 	private String undo() throws IOException {
 		// TODO Auto-generated method stub
-		if(commandStack.isEmpty()){
-			return MESSAGE_NO_UNDO ;
+		if (commandStack.isEmpty()) {
+			return MESSAGE_NO_UNDO;
 		}
-		switch (commandStack.peek()){
+		switch (commandStack.peek()) {
 		case ADD:
 			commandStack.pop();
 			return undoAdd();
@@ -941,16 +1090,19 @@ public class CdLogic {
 		}
 		return null;
 	}
+
 	/**
-	 * performs undoChangedir command
-	 * If directory specified does not exit, returns MESSAGE_NONEXIST
+	 * performs undoChangedir command If directory specified does not exit,
+	 * returns MESSAGE_NONEXIST
+	 * 
 	 * @throws IOException
 	 */
 	private String undoChangeDir() throws IOException {
-		//String newPathString = history.remove(history.size()-1).getTaskName();
+		// String newPathString =
+		// history.remove(history.size()-1).getTaskName();
 		String newPathString = getLastHistoryName();
 		historyVault.pop(newPathString);
-		
+
 		File newPath = new File(newPathString);
 		newPath = newPath.getAbsoluteFile();
 		if (newPath.isDirectory()) {
@@ -968,83 +1120,84 @@ public class CdLogic {
 			vaultPath = Paths.get(newPathString).toAbsolutePath().toString();
 			saveVaults();
 			updateDisplay();
-			return "files moved to \"" + newPathString + "\"";
+			return String.format(MESSAGE_FILES_MOVED, newPathString);
 		}
-		
-		return MESSAGE_NONEXIST ;
+
+		return MESSAGE_NONEXIST;
 	}
-	
+
 	/**
 	 * @return
 	 */
 	private String getLastHistoryName() {
-		return historyVault.getList().get(historyVault.getList().size() -1).getTaskName();
+		return historyVault.getList().get(historyVault.getList().size() - 1)
+				.getTaskName();
 	}
-	
+
 	/**
 	 * performs undoEdit command to revert back to original
 	 */
 	private String undoEdit() {
-//		ObservableList<Task> historyList = historyVault.getList();
-//		Task newTask = historyList.get(historyList.size() - 1);
-//		Task oldTask = historyList.get(historyList.size() - 2);
+		// ObservableList<Task> historyList = historyVault.getList();
+		// Task newTask = historyList.get(historyList.size() - 1);
+		// Task oldTask = historyList.get(historyList.size() - 2);
 		Task newTask = historyVault.pop(getLastHistoryName());
 		Task oldTask = historyVault.pop(getLastHistoryName());
 		trashVault.remove(oldTask.getTaskName());
 		taskVault.remove(newTask.getTaskName());
 		taskVault.storeTask(oldTask);
-//		historyVault.remove(oldTask.getTaskName());
-//		historyVault.remove(newTask.getTaskName());
+		// historyVault.remove(oldTask.getTaskName());
+		// historyVault.remove(newTask.getTaskName());
 		updateDisplay();
 		saveVaults();
-		return "Undo: \"" + oldTask.getTaskName() + "\" has been restored to its original";
+		return String.format(MESSAGE_UNDO_EDIT, oldTask.getTaskName());
 	}
+
 	/**
 	 * performs undoDelete command
 	 */
 
 	private String undoDelete() {
-//		ObservableList<Task> historyList = historyVault.getList();
-//		Task historyTask = historyList.get(historyList.size() - 1);
+		// ObservableList<Task> historyList = historyVault.getList();
+		// Task historyTask = historyList.get(historyList.size() - 1);
 		System.out.println("Latest deleted:" + getLastHistoryName());
 		Task historyTask = historyVault.pop(getLastHistoryName());
 		taskVault.storeTask(historyTask);
 		trashVault.remove(historyTask.getTaskName());
-//		historyVault.remove(historyTask.getTaskName());
+		// historyVault.remove(historyTask.getTaskName());
 		updateDisplay();
 		saveVaults();
-		return "Undo: \"" + historyTask.getTaskName()
-				+ "\" moved back from trash to tasks";
+		return String.format(MESSAGE_UNDO_DELETE, historyTask.getTaskName());
 	}
-	
+
 	/**
 	 * performs undoComplete command
 	 */
 	private String undoComplete() {
-//		ObservableList<Task> historyList = historyVault.getList();
-//		Task historyTask = historyList.get(historyList.size() - 1);
+		// ObservableList<Task> historyList = historyVault.getList();
+		// Task historyTask = historyList.get(historyList.size() - 1);
 		Task historyTask = historyVault.pop(getLastHistoryName());
 		taskVault.storeTask(historyTask);
 		completedTaskVault.remove(historyTask.getTaskName());
-//		historyVault.remove(historyTask.getTaskName());
+		// historyVault.remove(historyTask.getTaskName());
 		updateDisplay();
 		saveVaults();
-		return "Undo: \"" + historyTask.getTaskName() + "\" moved back from completed to tasks";
+		return String.format(MESSAGE_UNDO_COMPLETE, historyTask.getTaskName());
 	}
-	
+
 	/**
-	 * performs undoAdd command 
+	 * performs undoAdd command
 	 */
 
 	private String undoAdd() {
-//		ObservableList<Task> historyList = historyVault.getList();
-//		Task historyTask = historyList.get(historyList.size()-1);
+		// ObservableList<Task> historyList = historyVault.getList();
+		// Task historyTask = historyList.get(historyList.size()-1);
 		Task historyTask = historyVault.pop(getLastHistoryName());
 		taskVault.remove(historyTask.getTaskName());
-//		historyVault.remove(historyTask.getTaskName());
+		// historyVault.remove(historyTask.getTaskName());
 		updateDisplay();
 		saveVaults();
-		return "Undo: \"" + historyTask.getTaskName() + "\" removed from tasks";
+		return String.format(MESSAGE_UNDO_ADD, historyTask.getTaskName());
 	}
 
 	/**
@@ -1056,10 +1209,12 @@ public class CdLogic {
 		completedTaskVault.save();
 		historyVault.save();
 	}
+
 	/**
-	 * method that performs the respective edit instructions
-	 * if invalid String, MESSAGE_INVALID_EDIT will be returned
-	 * e.g. tasknam, startdate, starttime, enddate, endtime, addcomment
+	 * method that performs the respective edit instructions if invalid String,
+	 * MESSAGE_INVALID_EDIT will be returned e.g. tasknam, startdate, starttime,
+	 * enddate, endtime, addcomment
+	 * 
 	 * @param userCommand
 	 * @throws IOException
 	 */
@@ -1089,10 +1244,11 @@ public class CdLogic {
 		return MESSAGE_INVALID_EDIT;
 
 	}
+
 	/**
-	 * performs commenting of a task
-	 * adds the new comment to the existing task and saves the changes
-	 * updates display of the task with comment added
+	 * performs commenting of a task adds the new comment to the existing task
+	 * and saves the changes updates display of the task with comment added
+	 * 
 	 * @param userCommand
 	 */
 
@@ -1111,31 +1267,34 @@ public class CdLogic {
 					oldTask.getEndDate(), oldTask.getEndTime());
 
 			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));	
-//			history.add(oldTask);
-//			history.add(taskVault.getTask(oldTask.getTaskName()));
-			commandStack.push(UNDOABLE.EDIT);			
+			historyVault.storeTask(taskVault.getTask(taskName));
+			// history.add(oldTask);
+			// history.add(taskVault.getTask(oldTask.getTaskName()));
+			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
-			return "comment added";
+			return MESSAGE_COMMENT_ADDED;
 		} else {
-			return "task " + taskName + " not found";
+			return String.format(MESSAGE_NOT_FOUND, taskName);
 		}
 	}
+
 	/**
-	 * method that edits endtime of tasks
-	 * For floating tasks where endtime is null, 
-	 * execution will return message
-	 * For deadline tasks, where endtime is null but starttime is not null, 
-	 * execution will return message
-	 * Method will also not allow if endtime entered is before the stipulated start time of 
+	 * method that edits endtime of tasks For floating tasks where endtime is
+	 * null, execution will return message For deadline tasks, where endtime is
+	 * null but starttime is not null, execution will return message Method will
+	 * also not allow if endtime entered is before the stipulated start time of
 	 * a specific task
+	 * 
 	 * @param userCommand
 	 */
 
 	private String editEndTime(String userCommand) {
 		// TODO Auto-generated method stub
 		String[] editArguments = parseEdit(userCommand, "endtime");
+		if(editArguments.length==1){
+			return MESSAGE_TIME_MISSING;
+		}
 		String[] endTimes = extractTimes(editArguments[1]);
 		String taskName = editArguments[0].trim();
 		LocalTime newEndTime;
@@ -1143,12 +1302,11 @@ public class CdLogic {
 			newEndTime = toLocalTime(endTimes[0]);
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return MESSAGE_INVALID_TIME;
+			return String.format(MESSAGE_INVALID_TIME, endTimes[0]);
 		}
-		if (taskExists(taskName)) {			
+		
+		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
-			
 
 			if (oldTask.getEndTime() == null) {
 				if (oldTask.getStartTime() == null) {
@@ -1157,8 +1315,8 @@ public class CdLogic {
 					return MESSAGE_DEADLINE_ETIME;
 				}
 			}
-			if(!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(),
-					oldTask.getEndDate(), newEndTime)){
+			if (!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(),
+					oldTask.getEndDate(), newEndTime)) {
 				return MESSAGE_NOT_CHRON;
 			}
 			taskVault.remove(taskName);
@@ -1167,27 +1325,31 @@ public class CdLogic {
 					oldTask.getEndDate(), newEndTime);
 
 			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));		
-//			history.add(oldTask);
-//			history.add(taskVault.getTask(oldTask.getTaskName()));
+			historyVault.storeTask(taskVault.getTask(taskName));
+			// history.add(oldTask);
+			// history.add(taskVault.getTask(oldTask.getTaskName()));
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
 			return MESSAGE_EDIT_SUCCESS;
 		} else {
-			return "task " + taskName + " not found";
+			return String.format(MESSAGE_NOT_FOUND, taskName);
 		}
 
 	}
 
 	/**
-	 * Method does not allow floating tasks to have starttime edited 
-	 * because it was formerly null
+	 * Method does not allow floating tasks to have starttime edited because it
+	 * was formerly null
+	 * 
 	 * @param userCommand
 	 */
 	private String editStartTime(String userCommand) {
 		// TODO Auto-generated method stub
 		String[] editArguments = parseEdit(userCommand, "starttime");
+		if(editArguments.length==1){
+			return MESSAGE_TIME_MISSING;
+		}
 		String[] startTimes = extractTimes(editArguments[1]);
 		String taskName = editArguments[0].trim();
 		LocalTime newStartTime;
@@ -1195,20 +1357,18 @@ public class CdLogic {
 			newStartTime = toLocalTime(startTimes[0]);
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return MESSAGE_INVALID_TIME;
+			return String.format(MESSAGE_INVALID_TIME, startTimes[0]);
 		}
 
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
-			if(oldTask.getStartTime()==null){
-				return "Cannot edit start time of floating task";
+			if (oldTask.getStartTime() == null) {
+				return MESSAGE_FLOAT_STIME;
 			}
-			if(!isInOrder(oldTask.getStartDate(), newStartTime, oldTask.getEndDate(),
-					oldTask.getEndTime())){
-				return MESSAGE_NOT_CHRON ;
+			if (!isInOrder(oldTask.getStartDate(), newStartTime,
+					oldTask.getEndDate(), oldTask.getEndTime())) {
+				return MESSAGE_NOT_CHRON;
 			}
-
 
 			taskVault.remove(taskName);
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
@@ -1216,26 +1376,30 @@ public class CdLogic {
 					oldTask.getEndTime());
 
 			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));	
-//			history.add(oldTask);
-//			history.add(taskVault.getTask(oldTask.getTaskName()));
+			historyVault.storeTask(taskVault.getTask(taskName));
+			// history.add(oldTask);
+			// history.add(taskVault.getTask(oldTask.getTaskName()));
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
 			return MESSAGE_EDIT_SUCCESS;
 		} else {
-			return "task " + taskName + " not found";
+			return String.format(MESSAGE_NOT_FOUND, taskName);
 		}
 	}
 
 	/**
-	 * Method does not allow edit of date for floating tasks
-	 * Method does not allow edit of date for deadline if endDate is null
-	 * Method does not allow endDate to be before Startdate of task
+	 * Method does not allow edit of date for floating tasks Method does not
+	 * allow edit of date for deadline if endDate is null Method does not allow
+	 * endDate to be before Startdate of task
+	 * 
 	 * @param userCommand
 	 */
 	private String editEndDate(String userCommand) {
 		String[] editArguments = parseEdit(userCommand, "enddate");
+		if(editArguments.length==1){
+			return MESSAGE_DATE_MISSING;
+		}
 		String[] endDates = extractDates(editArguments[1]);
 		String taskName = editArguments[0].trim();
 		LocalDate newEndDate;
@@ -1243,8 +1407,7 @@ public class CdLogic {
 			newEndDate = toLocalDate(endDates[0]);
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return MESSAGE_INVALID_DATE;
+			return String.format(MESSAGE_INVALID_DATE, endDates[0]);
 		}
 
 		if (taskExists(taskName)) {
@@ -1256,8 +1419,8 @@ public class CdLogic {
 					return MESSAGE_DEADLINE_EDATE;
 				}
 			}
-			if(!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(), newEndDate,
-					oldTask.getEndTime())){
+			if (!isInOrder(oldTask.getStartDate(), oldTask.getStartTime(),
+					newEndDate, oldTask.getEndTime())) {
 				return MESSAGE_NOT_CHRON;
 			}
 			taskVault.remove(taskName);
@@ -1266,24 +1429,28 @@ public class CdLogic {
 					oldTask.getEndTime());
 
 			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));		
-//			history.add(oldTask);
-//			history.add(taskVault.getTask(oldTask.getTaskName()));
+			historyVault.storeTask(taskVault.getTask(taskName));
+			// history.add(oldTask);
+			// history.add(taskVault.getTask(oldTask.getTaskName()));
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
 			return MESSAGE_EDIT_SUCCESS;
 		} else {
-			return "task " + taskName + " not found";
+			return String.format(MESSAGE_NOT_FOUND, taskName);
 		}
 	}
 
 	/**
 	 * Method does not allow edit of start date of floating task
+	 * 
 	 * @param userCommand
 	 */
 	private String editStartDate(String userCommand) {
 		String[] editArguments = parseEdit(userCommand, "startdate");
+		if(editArguments.length==1){
+			return MESSAGE_DATE_MISSING;
+		}
 		String[] startDates = extractDates(editArguments[1]);
 		String taskName = editArguments[0].trim();
 		LocalDate newStartDate;
@@ -1291,21 +1458,19 @@ public class CdLogic {
 			newStartDate = toLocalDate(startDates[0]);
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return MESSAGE_INVALID_DATE;
+			return String.format(MESSAGE_INVALID_DATE, startDates[0]);
 		}
 
-		if (newStartDate == null) {
-			return "Enter a valid date";
-		} else if (taskExists(taskName)) {
+		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
-			if(oldTask.getStartDate()==null){
-				return "Cannot edit start date of floating task";
+			if (oldTask.getStartDate() == null) {
+				return MESSAGE_FLOAT_SDATE;
 			}
 
-			if((oldTask.getEndDate()!=null) && !isInOrder(newStartDate, oldTask.getStartTime(), oldTask.getEndDate(),
-					oldTask.getEndTime())){
-				return MESSAGE_NOT_CHRON ;
+			if ((oldTask.getEndDate() != null)
+					&& !isInOrder(newStartDate, oldTask.getStartTime(),
+							oldTask.getEndDate(), oldTask.getEndTime())) {
+				return MESSAGE_NOT_CHRON;
 			}
 			taskVault.remove(taskName);
 			taskVault.createTask(oldTask.getTaskName(), oldTask.getComment(),
@@ -1313,20 +1478,21 @@ public class CdLogic {
 					oldTask.getEndTime());
 
 			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(taskName));	
-//			history.add(oldTask);
-//			history.add(taskVault.getTask(oldTask.getTaskName()));
+			historyVault.storeTask(taskVault.getTask(taskName));
+			// history.add(oldTask);
+			// history.add(taskVault.getTask(oldTask.getTaskName()));
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
-			return MESSAGE_EDIT_SUCCESS ;
+			return MESSAGE_EDIT_SUCCESS;
 		} else {
-			return "task " + taskName + " not found";
+			return String.format(MESSAGE_NOT_FOUND, taskName);
 		}
 	}
 
 	/**
-	 * Method prevents tasks with same name to be stored 
+	 * Method prevents tasks with same name to be stored
+	 * 
 	 * @param userCommand
 	 */
 	private String editTaskName(String userCommand) {
@@ -1337,9 +1503,9 @@ public class CdLogic {
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
 
-			for(int i = 0; i<tasks.size(); i++){
-				if(tasks.get(i).getTaskName().equals(newTaskName)){
-					return "\"" + newTaskName + "\" already exists";
+			for (int i = 0; i < tasks.size(); i++) {
+				if (tasks.get(i).getTaskName().equals(newTaskName)) {
+					return String.format(MESSAGE_ALREADY_EXISTS, newTaskName);
 				}
 			}
 
@@ -1349,27 +1515,29 @@ public class CdLogic {
 					oldTask.getEndDate(), oldTask.getEndTime());
 
 			historyVault.storeTask(oldTask);
-			historyVault.storeTask(taskVault.getTask(newTaskName));	
-//			history.add(oldTask);
-//			history.add(taskVault.getTask(newTaskName));
+			historyVault.storeTask(taskVault.getTask(newTaskName));
+			// history.add(oldTask);
+			// history.add(taskVault.getTask(newTaskName));
 			commandStack.push(UNDOABLE.EDIT);
 			updateDisplay();
 			saveVaults();
 			return MESSAGE_EDIT_SUCCESS;
 		} else {
-			return "task " + taskName + " not found";
+			return String.format(MESSAGE_NOT_FOUND, taskName);
 		}
 	}
+
 	/**
-	 * @param taskName 	 
+	 * @param taskName
 	 */
 
 	private boolean taskExists(String taskName) {
 		return taskVault.getTask(taskName) != null;
 	}
-	
+
 	/**
-	 * @param userCommand, string
+	 * @param userCommand
+	 *            , string
 	 */
 
 	private String[] parseEdit(String userCommand, String string) {
@@ -1377,6 +1545,7 @@ public class CdLogic {
 
 		return userCommand.trim().split(string);
 	}
+
 	/**
 	 * @param toCopy
 	 */
@@ -1388,6 +1557,7 @@ public class CdLogic {
 		}
 		return newList;
 	}
+
 	/**
 	 * param userCommand
 	 */
@@ -1395,23 +1565,24 @@ public class CdLogic {
 	private String complete(String userCommand) {
 		userCommand = removeFirstWord(userCommand);
 
-		if (taskVault.getTask(userCommand)!=null) {
+		if (taskVault.getTask(userCommand) != null) {
 			Task completedTask = taskVault.getTask(userCommand);
 			commandStack.push(UNDOABLE.COMPLETE);
 			historyVault.storeTask(taskVault.getTask(userCommand));
-//			history.add(taskVault.getTask(userCommand));
+			// history.add(taskVault.getTask(userCommand));
 			taskVault.completeTask(userCommand, completedTaskVault);
-			if(completedTask.isRecurring()){
+			if (completedTask.isRecurring()) {
 				setNextRecurrence((RecurringTask) completedTask);
 			}
 			updateDisplay();
 			saveVaults();
 			sound.playComplete();
-			return "\"" + userCommand + "\"" + " completed successfully";
+			return String.format(MESSAGE_COMPLETE_SUCCESS, userCommand);
 		} else {
-			return "\"" + userCommand + "\"" + "couldn't be completed";
+			return String.format(MESSAGE_COMPLETE_FAIL, userCommand);
 		}
 	}
+
 	/**
 	 * @param userCommand
 	 */
@@ -1439,28 +1610,34 @@ public class CdLogic {
 				}
 			}
 		}
-		return found + " tasks found";
+		return found + MESSAGE_TASKS_FOUND;
 	}
+
 	/**
 	 * @param taskIndex
 	 */
 	private boolean isNotYetFound(int taskIndex) {
 		return !(toDisplay.contains(tasks.get(taskIndex)));
 	}
+
 	/**
-	 * @param currentWord, taskIndex
+	 * @param currentWord
+	 *            , taskIndex
 	 */
 	private boolean isPartialMatch(String currentWord, int taskIndex) {
 		return tasks.get(taskIndex).getTaskName().contains(currentWord);
 	}
+
 	/**
-	 * @param userCommand, taskIndex
+	 * @param userCommand
+	 *            , taskIndex
 	 */
 	private boolean isCompleteMatch(String userCommand, int taskIndex) {
 		return tasks.get(taskIndex).getTaskName().equals(userCommand);
 	}
+
 	/**
-	 * @throws IOException 
+	 * @throws IOException
 	 * 
 	 */
 	private String empty(String userCommand) throws IOException {
@@ -1472,7 +1649,7 @@ public class CdLogic {
 			} else {
 				return MESSAGE_TRASH_UNCLEARED;
 			}
-		} else if (userCommand.equalsIgnoreCase("completed")){
+		} else if (userCommand.equalsIgnoreCase("completed")) {
 			completedTaskVault.clear();
 			completedTaskVault = new CompletedTaskVault(vaultPath);
 			return "Completed tasks cleared";
@@ -1480,7 +1657,8 @@ public class CdLogic {
 			return "Specify to empty trash or completed tasks";
 		}
 	}
-	/** 
+
+	/**
 	 * @param userCommand
 	 */
 	private String list(String userCommand) {
@@ -1495,11 +1673,11 @@ public class CdLogic {
 			return "All tasks displayed";
 		}
 
-		if(listArguments[0].equalsIgnoreCase("today")){
+		if (listArguments[0].equalsIgnoreCase("today")) {
 			return listToday() + " tasks displayed";
 		}
 
-		if(listArguments[0].equalsIgnoreCase("week")){
+		if (listArguments[0].equalsIgnoreCase("week")) {
 			return listWeek() + " tasks displayed";
 		}
 		if (listArguments[0].equalsIgnoreCase("trash")
@@ -1521,15 +1699,13 @@ public class CdLogic {
 				return listDate(listArguments[0]) + "tasks displayed";
 			} else if (isValidListDateTime(listArguments)) {
 				return listDateTime(listArguments) + "tasks displayed";
-			} else if (isValidDayPeriod(listArguments)){
+			} else if (isValidDayPeriod(listArguments)) {
 				return listDayPeriod(listArguments) + " tasks displayed";
-			}
-			else if (isValidListPeriod(listArguments)) {
+			} else if (isValidListPeriod(listArguments)) {
 				return listPeriod(listArguments) + "tasks displayed";
 			}
 		} catch (ArrayIndexOutOfBoundsException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
 			updateDisplay();
 			return "Invalid list command";
 		}
@@ -1538,11 +1714,13 @@ public class CdLogic {
 		return "Invalid list command";
 
 	}
+
 	/**
-	 * @param listArguments array
+	 * @param listArguments
+	 *            array
 	 */
 
-	private int listDayPeriod(String[] listArguments){
+	private int listDayPeriod(String[] listArguments) {
 		int tasksFound = 0;
 		LocalDate date1 = toLocalDate(listArguments[0]);
 		LocalDate date2 = toLocalDate(listArguments[1]);
@@ -1551,33 +1729,39 @@ public class CdLogic {
 			Task currTask = tasks.get(tasksIndex);
 			if (currTask.getEndDate() != null) {
 				if (currTask.getStartDate().equals(date1)
-						|| currTask.getEndDate().equals(date1) || currTask.getStartDate().equals(date2)
-						|| currTask.getEndDate().equals(date2) ) {
+						|| currTask.getEndDate().equals(date1)
+						|| currTask.getStartDate().equals(date2)
+						|| currTask.getEndDate().equals(date2)) {
 					toDisplay.add(currTask);
 					tasksFound++;
-				} else if (!(currTask.getStartDate().isAfter(date2)
-						|| currTask.getEndDate().isBefore(date1))) {
+				} else if (!(currTask.getStartDate().isAfter(date2) || currTask
+						.getEndDate().isBefore(date1))) {
 					toDisplay.add(currTask);
 					tasksFound++;
 				}
 			} else if (currTask.getStartDate() != null) {
-				if (!(currTask.getStartDate().isBefore(date1)||currTask.getStartDate().isAfter(date2))) {
+				if (!(currTask.getStartDate().isBefore(date1) || currTask
+						.getStartDate().isAfter(date2))) {
 					toDisplay.add(currTask);
 					tasksFound++;
 				}
 			}
 		}
-		return tasksFound;		
+		return tasksFound;
 	}
+
 	/**
-	 * @param listArguments array
+	 * @param listArguments
+	 *            array
 	 * @return
 	 */
 	private boolean isValidDayPeriod(String[] listArguments) {
 		// TODO Auto-generated method stub
-		return (listArguments[2] == null && listArguments[0].matches(DATE_REGEX)
-				&& listArguments[1].matches(DATE_REGEX));
+		return (listArguments[2] == null
+				&& listArguments[0].matches(DATE_REGEX) && listArguments[1]
+					.matches(DATE_REGEX));
 	}
+
 	/**
 	 * @return Weekly sorted tasks
 	 */
@@ -1741,18 +1925,19 @@ public class CdLogic {
 		userCommand = removeFirstWord(userCommand);
 
 		String taskName = userCommand;
-		if (taskVault.getTask(taskName)!=null) {
+		if (taskExists(taskName)) {
 			commandStack.push(UNDOABLE.DELETE);
 			historyVault.storeTask(taskVault.getTask(taskName));
-//			history.add(taskVault.getTask(taskName));
+			// history.add(taskVault.getTask(taskName));
 			taskVault.deleteTask(taskName, trashVault);
 			updateDisplay();
 			saveVaults();
-			return "\"" + taskName + "\"" + " deleted successfully";
+			return String.format("\"%s\" deleted successfully", taskName);
 		}
 
-		return MESSAGE_DELETE_UNSUCCESS ;
+		return MESSAGE_DELETE_UNSUCCESS;
 	}
+
 	/**
 	 * 
 	 */
@@ -1761,6 +1946,7 @@ public class CdLogic {
 		toDisplay.clear();
 		toDisplay = copyList(taskVault.getList());
 	}
+
 	/**
 	 * @param userCommand
 	 */
@@ -1770,73 +1956,86 @@ public class CdLogic {
 
 		String[] addArguments = parseAdd(userCommand);
 
-		
-		
 		LocalDate startDate;
 		try {
 			startDate = toLocalDate(addArguments[2]);
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return "Date " + addArguments[2] + " is not valid";
+			return String.format("Date %s is not valid", addArguments[2]);
 		}
 		LocalTime startTime;
 		try {
 			startTime = toLocalTime(addArguments[3]);
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return "Time " + addArguments[3] + " is not valid";
+			return String.format("Time %s is not valid", addArguments[3]);
 		}
 		LocalDate endDate;
 		try {
 			endDate = toLocalDate(addArguments[4]);
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return "Date " + addArguments[4] + " is not valid";
+			return String.format("Date %s is not valid", addArguments[4]);
 		}
 		LocalTime endTime;
 		try {
 			endTime = toLocalTime(addArguments[5]);
 		} catch (DateTimeParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return "Date " + addArguments[5] + " is not valid";
+			return String.format("Time %s is not valid", addArguments[5]);
 		}
 
-		if((taskVault.getTask(addArguments[0])!=null)){
-			return "\"" + addArguments[0] + "\" already exists";
+		if ((taskVault.getTask(addArguments[0]) != null)) {
+			return String.format(MESSAGE_ALREADY_EXISTS, addArguments[0]);
 		}
-		
-		if(addArguments[0].startsWith("@")){
-			return "Task Name cannot start with \"@\"";
+
+		if (addArguments[0].startsWith("@")) {
+			return MESSAGE_INVALID_TASKNAME;
 		}
-		
-		if((startDate!=null) && (startTime==null)){
-			return ("Start date must be accompanied with start time");
+
+		if ((startDate != null) && (startTime == null)) {
+			return MESSAGE_NO_STARTTIME;
 		}
-		
-		if(endDate!=null){
-			if (endTime==null){
-				return "End date must be accompanied with an end time";
+
+		if (endDate != null) {
+			if (endTime == null) {
+				return MESSAGE_NO_ENDTIME;
 			}
-		
-			LocalDateTime startDateTime = LocalDateTime.of(startDate, startTime);
+
+			LocalDateTime startDateTime = LocalDateTime
+					.of(startDate, startTime);
 			LocalDateTime endDateTime = LocalDateTime.of(endDate, endTime);
-			if(endDateTime.isBefore(startDateTime)){
-				return "Task cannot end before it starts";
+			if (endDateTime.isBefore(startDateTime)) {
+				return MESSAGE_END_BEFORE_START;
 			}
 
-			for(int i = 0; i<tasks.size(); i++){
+			for (int i = 0; i < tasks.size(); i++) {
 				Task currTask = tasks.get(i);
-				if (currTask.getEndDate()!=null){
-					if(startDateTime.isAfter(getStartLDT(currTask)) && startDateTime.isBefore(getEndLDT(currTask))){
-						return "\"" + addArguments[0] + "\" cannot overlap with \"" + currTask.getTaskName() + "\"";
+				if (currTask.getEndDate() != null) {
+					if (startDateTime.isAfter(getStartLDT(currTask))
+							&& startDateTime.isBefore(getEndLDT(currTask))) {
+						return "\"" + addArguments[0]
+								+ "\" cannot overlap with \""
+								+ currTask.getTaskName() + "\"";
 					}
-					if(endDateTime.isAfter(getStartLDT(currTask)) && endDateTime.isBefore(getEndLDT(currTask))){
-						return "\"" + addArguments[0] + "\" cannot overlap with \"" + currTask.getTaskName() + "\"";
-					}					
+					if (endDateTime.isAfter(getStartLDT(currTask))
+							&& endDateTime.isBefore(getEndLDT(currTask))) {
+						return "\"" + addArguments[0]
+								+ "\" cannot overlap with \""
+								+ currTask.getTaskName() + "\"";
+					}
+					if (getStartLDT(currTask).isAfter(startDateTime)
+							&& getStartLDT(currTask).isBefore(endDateTime)) {
+						return "\"" + addArguments[0]
+								+ "\" cannot overlap with \""
+								+ currTask.getTaskName() + "\"";
+					}
+					if (getEndLDT(currTask).isAfter(startDateTime)
+							&& getEndLDT(currTask).isBefore(endDateTime)) {
+						return "\"" + addArguments[0]
+								+ "\" cannot overlap with \""
+								+ currTask.getTaskName() + "\"";
+					}
 				}
 			}
 		}
@@ -1845,7 +2044,7 @@ public class CdLogic {
 				startTime, endDate, endTime)) {
 			commandStack.push(UNDOABLE.ADD);
 			historyVault.storeTask(taskVault.getTask(addArguments[0]));
-//			history.add(taskVault.getTask(addArguments[0]));
+			// history.add(taskVault.getTask(addArguments[0]));
 			updateDisplay();
 			saveVaults();
 			return "Task \"" + addArguments[0] + "\" successfully added";
@@ -1853,6 +2052,7 @@ public class CdLogic {
 
 		return "Task \"" + addArguments[0] + "\"" + " cannot be added";
 	}
+
 	/**
 	 * @param commandTypeString
 	 */
@@ -1889,27 +2089,32 @@ public class CdLogic {
 		if (commandTypeString.equalsIgnoreCase("next")) {
 			return COMMAND_TYPE.NEXT;
 		}
-		if (commandTypeString.equalsIgnoreCase("undo")){
+		if (commandTypeString.equalsIgnoreCase("undo")) {
 			return COMMAND_TYPE.UNDO;
 		}
-		if (commandTypeString.equalsIgnoreCase("changedir")){
+		if (commandTypeString.equalsIgnoreCase("changedir")) {
 			return COMMAND_TYPE.CHANGEDIR;
 		}
-		if (commandTypeString.equalsIgnoreCase("getdir")){
+		if (commandTypeString.equalsIgnoreCase("getdir")) {
 			return COMMAND_TYPE.GETDIR;
 		}
-		if (commandTypeString.equalsIgnoreCase("recur")){
+		if (commandTypeString.equalsIgnoreCase("recur")) {
 			return COMMAND_TYPE.RECUR;
 		}
-		if (commandTypeString.equalsIgnoreCase("addrecur")){
+		if (commandTypeString.equalsIgnoreCase("addrecur")) {
 			return COMMAND_TYPE.ADDRECUR;
+		}
+		if (commandTypeString.equalsIgnoreCase("help")) {
+			return COMMAND_TYPE.HELP;
 		}
 		return COMMAND_TYPE.INVALID;
 	}
 
 	// PARSE METHODS
 	/**
-	 * Method that takes in taskName, taskDescription, Startdate, Startime, Enddate, Endtime
+	 * Method that takes in taskName, taskDescription, Startdate, Startime,
+	 * Enddate, Endtime
+	 * 
 	 * @param command
 	 * @return details of task that have been entered by user
 	 */
@@ -1930,8 +2135,10 @@ public class CdLogic {
 
 		return arguments;
 	}
+
 	/**
 	 * Method to extract dates and times of tasks entered by user
+	 * 
 	 * @param data
 	 * @return Start date, Start time, End date, End time
 	 */
@@ -1939,7 +2146,8 @@ public class CdLogic {
 	public String[] parseList(String data) {
 		String[] arguments;
 		arguments = data.trim().split("\\s+");
-		if(!(arguments[0].matches(DATE_REGEX)||arguments[0].matches(TIME_REGEX))){
+		if (!(arguments[0].matches(DATE_REGEX) || arguments[0]
+				.matches(TIME_REGEX))) {
 			return arguments;
 		}
 
@@ -1953,8 +2161,10 @@ public class CdLogic {
 
 		return arguments;
 	}
+
 	/**
 	 * Method to search tasks for specific keyword entered by user
+	 * 
 	 * @param data
 	 * @return search keyword
 	 */
@@ -1966,6 +2176,7 @@ public class CdLogic {
 	// STRING MANIPULATION METHODS
 	/**
 	 * Method to get task name
+	 * 
 	 * @param data
 	 * @return taskName
 	 */
@@ -1976,8 +2187,10 @@ public class CdLogic {
 
 		return task;
 	}
+
 	/**
 	 * Method to get task description
+	 * 
 	 * @param data
 	 * @return description of task
 	 */
@@ -1991,8 +2204,10 @@ public class CdLogic {
 
 		return description;
 	}
+
 	/**
-	 * Method to extract dates 
+	 * Method to extract dates
+	 * 
 	 * @param data
 	 * @return specific date
 	 */
@@ -2007,8 +2222,10 @@ public class CdLogic {
 		}
 		return result;
 	}
+
 	/**
 	 * Method to extract times entered by user
+	 * 
 	 * @param data
 	 * @return specific time
 	 */
@@ -2023,29 +2240,36 @@ public class CdLogic {
 		}
 		return result;
 	}
+
 	/**
 	 * Method to extract command from original String
+	 * 
 	 * @param userCommand
-	 * @return command 
+	 * @return command
 	 */
 
 	private String getFirstWord(String userCommand) {
 		return userCommand.trim().split("\\s+")[0];
 	}
+
 	/**
 	 * Method to remove word from original string and replace with empty space
+	 * 
 	 * @param userCommand
-	 * @return 
+	 * @return
 	 */
 	private String removeFirstWord(String userCommand) {
 		return userCommand.replaceFirst(getFirstWord(userCommand), "").trim();
 	}
+
 	/**
 	 * Method to standardize date input (DD:MM:YYYY)
+	 * 
 	 * @param dataString
-	 * @return 
+	 * @return
 	 */
-	private LocalDate toLocalDate(String dateString) throws DateTimeParseException{
+	private LocalDate toLocalDate(String dateString)
+			throws DateTimeParseException {
 		if ((dateString == null) || (!dateString.matches(DATE_REGEX))) {
 			return null;
 		}
@@ -2055,13 +2279,16 @@ public class CdLogic {
 
 		return date;
 	}
+
 	/**
 	 * Method to standardize time (HH:MM)
+	 * 
 	 * @param data
 	 * @return
 	 */
 
-	private LocalTime toLocalTime(String timeString) throws DateTimeParseException{
+	private LocalTime toLocalTime(String timeString)
+			throws DateTimeParseException {
 		if ((timeString == null) || (!timeString.matches(TIME_REGEX))) {
 			return null;
 		}
@@ -2070,8 +2297,10 @@ public class CdLogic {
 
 		return time;
 	}
+
 	/**
 	 * Method to return Start Date & Start Time
+	 * 
 	 * @param task
 	 * @return Start date, Start time
 	 */
@@ -2079,8 +2308,10 @@ public class CdLogic {
 	public LocalDateTime getStartLDT(Task task) {
 		return LocalDateTime.of(task.getStartDate(), task.getStartTime());
 	}
+
 	/**
 	 * Method to return End Date & End Time
+	 * 
 	 * @param task
 	 * @return End date, End time
 	 */
@@ -2088,8 +2319,11 @@ public class CdLogic {
 	public LocalDateTime getEndLDT(Task task) {
 		return LocalDateTime.of(task.getEndDate(), task.getEndTime());
 	}
+
 	/**
-	 * Method to check if start date & start time is before end date and end time
+	 * Method to check if start date & start time is before end date and end
+	 * time
+	 * 
 	 * @param task
 	 * @return true/false
 	 */
@@ -2099,8 +2333,10 @@ public class CdLogic {
 		return (LocalDateTime.of(startDate, startTime).isBefore(LocalDateTime
 				.of(endDate, endTime)));
 	}
+
 	/**
 	 * Method to open and write to file
+	 * 
 	 * @param newString
 	 * @return config.txt
 	 * @throws IOException
@@ -2111,15 +2347,18 @@ public class CdLogic {
 		fw.write(newString);
 		fw.close();
 	}
+
 	/**
 	 * Method that includes bufferedReader
+	 * 
 	 * @param fileName
-	 * @return 
+	 * @return
 	 * @throws IOException
 	 */
 
 	private static String getVaultPath(String fileName) throws IOException {
-		BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));
+		BufferedReader bufferedReader = new BufferedReader(new FileReader(
+				fileName));
 
 		try {
 			String line = bufferedReader.readLine();
@@ -2128,8 +2367,10 @@ public class CdLogic {
 			bufferedReader.close();
 		}
 	}
+
 	/**
 	 * Method to clear file
+	 * 
 	 * @return config.txt
 	 * @throws IOException
 	 */

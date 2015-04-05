@@ -223,7 +223,7 @@ public class Vault {
 					writer.write(END_TIME_DOUBLE_SPACE);
 					writer.newLine();
 				}
-				if (task.taskIsRecurring()) {
+				if (task.isRecurring()) {
 					RecurringTask recurringTask = (RecurringTask) task;
 					writer.write(RECURRENCE_SPACE + recurringTask.getRecurrence());
 					writer.newLine();
