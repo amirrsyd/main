@@ -19,8 +19,8 @@ public class RecurringTask extends Task {
 	private int recurrence;
 	private DayOfWeek day;
 	private int dayOfMonth;
-	private boolean isDaily;
-	private MonthDay monthDay;
+	private boolean isDaily; //true if daily, false is not
+	private MonthDay monthDay; //null if not yearly
 
 	/**
 	 * Default constructor.

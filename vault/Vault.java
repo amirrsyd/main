@@ -409,9 +409,11 @@ public class Vault {
 		    		if (line.startsWith("ID")) {
 		    			if (line.length() > 2) {
 		    				task.setId(line.substring(3).trim());
+		    				recurringTask.setId(line.substring(3).trim());
 		    			}
 		    			else {
 		    				task.setId(null);
+		    				recurringTask.setId(null);
 		    			}
 		    		}
 		    		line = reader.readLine();
