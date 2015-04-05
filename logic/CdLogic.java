@@ -6,6 +6,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.MonthDay;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -25,6 +26,7 @@ import vault.CompletedTaskVault;
 import vault.HistoryVault;
 import vault.TaskVault;
 import vault.TrashVault;
+import model.IdGenerator;
 import model.RecurringTask;
 import model.Task;
 /**
@@ -217,15 +219,18 @@ public class CdLogic {
 		ObservableList<Task> list = taskVault.getList();
 		for (int i = 0; i<list.size(); i++){
 			Task currTask = list.get(i);
-			if(currTask.taskIsRecurring()){
+			if(currTask.isRecurring()){
 				RecurringTask recurringTask = (RecurringTask) list.get(i);
 				if(recurringTask.getEndDate() != null){
 					while(getEndLDT(recurringTask).isBefore(LocalDateTime.now())){
+						System.out.println(getEndLDT(recurringTask).isBefore(LocalDateTime.now()));
 						taskVault.remove(recurringTask.getTaskName());
 						setNextRecurrence(recurringTask);
+						recurringTask = (RecurringTask) taskVault.getTask(currTask.getTaskName());
 					}
 				}else{
 					while(getStartLDT(recurringTask).isBefore(LocalDateTime.now())){
+						System.out.println("Here");
 						taskVault.remove(recurringTask.getTaskName());
 						setNextRecurrence(recurringTask);
 						recurringTask = (RecurringTask) taskVault.getTask(currTask.getTaskName());
@@ -238,12 +243,93 @@ public class CdLogic {
 	}
 	
 	private void setNextRecurrence(RecurringTask recurringTask) {
+		System.out.println(recurringTask.getRecurrenceDay());
 		if (recurringTask.getRecurrence()==1){
 			
 		}else if (recurringTask.getRecurrenceDay() != null) {
 			setNextWeek(recurringTask);
-		} else if(recurringTask.getDayOfMonth()!= 0){
+		}else if(recurringTask.getDayOfMonth()!= 0){
 			setNextMonth(recurringTask);
+		}else if(recurringTask.isDaily()){
+			setNextDay(recurringTask);
+		}else if(recurringTask.getMonthDay()!= null){
+			setNextYear(recurringTask);
+		}
+	}
+
+	private void setNextYear(RecurringTask recurringTask) {
+		MonthDay monthDay = recurringTask.getMonthDay();
+		LocalDate oldStartDate = recurringTask.getStartDate();
+		LocalDate newStartDate;
+		LocalDate oldEndDate = recurringTask.getEndDate();
+		LocalDate newEndDate = null;
+		RecurringTask newTask;
+		int dayOfMonth = monthDay.getDayOfMonth();
+		
+		newStartDate = oldStartDate.plusYears(1).withMonth(monthDay.getMonthValue());
+		
+		while (true) {
+			try {
+				newStartDate = newStartDate.withDayOfMonth(dayOfMonth);
+				break;
+			} catch (DateTimeException e) {
+				dayOfMonth--;
+				continue;
+			}
+		}
+		
+		if (oldEndDate != null){
+			newEndDate = newStartDate.plusDays(Period.between(oldStartDate, oldEndDate).getDays());
+		}
+		
+		
+		
+		newTask = new RecurringTask(recurringTask.getTaskName(),
+				recurringTask.getComment(), newStartDate,
+				recurringTask.getStartTime(), newEndDate,
+				recurringTask.getEndTime(), recurringTask.getRecurrence() - 1,
+				monthDay);
+		
+		newTask.setId(recurringTask.getId());
+		IdGenerator idGenerator = new IdGenerator();
+		idGenerator.addId(Integer.parseInt(recurringTask.getId().substring(1), 36), recurringTask.getTaskName());
+		
+		if ((oldEndDate != null) && hasOverlap(getStartLDT(newTask), getEndLDT(newTask))) {
+			newTask.setRecurrence(recurringTask.getRecurrence());
+			setNextRecurrence(newTask);
+		} else {
+			taskVault.storeTask(newTask);
+		}
+	}
+
+	private void setNextDay(RecurringTask recurringTask) {
+		// TODO Auto-generated method stub
+		LocalDate oldStartDate = recurringTask.getStartDate();
+		LocalDate newStartDate;
+		LocalDate oldEndDate = recurringTask.getEndDate();
+		LocalDate newEndDate = null;
+		RecurringTask newTask;
+		
+		newStartDate = oldStartDate.plusDays(1);
+		
+		if (oldEndDate != null){
+			newEndDate = newStartDate.plusDays(Period.between(oldStartDate, oldEndDate).getDays());
+		}
+		
+		newTask = new RecurringTask(recurringTask.getTaskName(),
+				recurringTask.getComment(), newStartDate,
+				recurringTask.getStartTime(), newEndDate,
+				recurringTask.getEndTime(), recurringTask.getRecurrence() - 1);
+		
+		newTask.setId(recurringTask.getId());
+		IdGenerator idGenerator = new IdGenerator();
+		idGenerator.addId(Integer.parseInt(recurringTask.getId().substring(1), 36), recurringTask.getTaskName());
+		
+		if ((oldEndDate != null) && hasOverlap(getStartLDT(newTask), getEndLDT(newTask))) {
+			newTask.setRecurrence(recurringTask.getRecurrence());
+			setNextRecurrence(newTask);
+		} else {
+			taskVault.storeTask(newTask);
 		}
 	}
 
@@ -256,23 +342,33 @@ public class CdLogic {
 		LocalDate newEndDate = null;
 		RecurringTask newTask;
 		
-		try{
-			newStartDate = oldStartDate.plusMonths(1).withDayOfMonth(dayOfMonth);
-		}catch (DateTimeException e){
-			newStartDate = oldStartDate.plusMonths(1);
+		while (true) {
+			try {
+				newStartDate = oldStartDate.plusMonths(1).withDayOfMonth(dayOfMonth);
+				break;
+			} catch (DateTimeException e) {
+				dayOfMonth--;
+				continue;
+			}
 		}
 		
 		if (oldEndDate != null){
 			newEndDate = newStartDate.plusDays(Period.between(oldStartDate, oldEndDate).getDays());
 		}
 		
+		
+		
 		newTask = new RecurringTask(recurringTask.getTaskName(),
 				recurringTask.getComment(), newStartDate,
 				recurringTask.getStartTime(), newEndDate,
 				recurringTask.getEndTime(), recurringTask.getRecurrence() - 1,
-				dayOfMonth);
-
-		if ((oldEndDate != null) && hasOverlap(newStartDate, newEndDate)) {
+				recurringTask.getDayOfMonth());
+		
+		newTask.setId(recurringTask.getId());
+		IdGenerator idGenerator = new IdGenerator();
+		idGenerator.addId(Integer.parseInt(recurringTask.getId().substring(1), 36), recurringTask.getTaskName());
+		
+		if ((oldEndDate != null) && hasOverlap(getStartLDT(newTask), getEndLDT(newTask))) {
 			newTask.setRecurrence(recurringTask.getRecurrence());
 			setNextRecurrence(newTask);
 		} else {
@@ -292,25 +388,28 @@ public class CdLogic {
 		LocalDate newEndDate = null;
 		RecurringTask newTask;
 		
-		if (oldStartDate.getDayOfWeek() == recurrenceDay) {
-			newStartDate = oldStartDate.plusWeeks(1);
-			if (oldEndDate != null) {
-				newEndDate = oldEndDate.plusWeeks(1);
-			}
+		if (oldStartDate.getDayOfWeek().getValue() < recurrenceDay.getValue()) {
+			newStartDate = oldStartDate.plusWeeks(1).with(TemporalAdjusters.next(recurrenceDay));
 		}else {
 			newStartDate = oldStartDate.with(TemporalAdjusters.next(recurrenceDay));
-			if (oldEndDate != null){
-				newEndDate = newStartDate.plusDays(Period.between(oldStartDate, oldEndDate).getDays());
-			}
-				
 		}
+		
+		if (oldEndDate != null){
+			newEndDate = newStartDate.plusDays(Period.between(oldStartDate, oldEndDate).getDays());
+		}
+		
 		newTask = new RecurringTask(recurringTask.getTaskName(),
 				recurringTask.getComment(), newStartDate,
 				recurringTask.getStartTime(), newEndDate,
 				recurringTask.getEndTime(), recurringTask.getRecurrence() - 1,
 				recurrenceDay);
 
-		if ((oldEndDate != null) && hasOverlap(newStartDate, newEndDate)) {
+		newTask.setId(recurringTask.getId());
+		IdGenerator idGenerator = new IdGenerator();
+		idGenerator.addId(Integer.parseInt(recurringTask.getId().substring(1), 36), recurringTask.getTaskName());
+		
+		if ((oldEndDate != null) && hasOverlap(getStartLDT(newTask), getEndLDT(newTask))) {
+			System.out.println("pls not here");
 			newTask.setRecurrence(recurringTask.getRecurrence());
 			setNextRecurrence(newTask);
 		} else {
@@ -319,15 +418,15 @@ public class CdLogic {
 			
 	}
 
-	private boolean hasOverlap(LocalDate newStartDate, LocalDate newEndDate) {
+	private boolean hasOverlap(LocalDateTime localDateTime, LocalDateTime localDateTime2) {
 		// TODO Auto-generated method stub
 		for (int i = 0; i < taskVault.getList().size(); i++){
 			Task currTask = taskVault.getList().get(i);
 			if((currTask.getStartDate()!=null)&&(currTask.getEndDate()!=null)){
-				if(newEndDate.isAfter(currTask.getStartDate()) && newEndDate.isBefore(currTask.getEndDate())){
+				if(localDateTime2.isAfter(getStartLDT(currTask)) && localDateTime2.isBefore(getEndLDT(currTask))){
 					return true;
 				}
-				if(newStartDate.isAfter(currTask.getStartDate()) && newStartDate.isBefore(currTask.getEndDate())){
+				if(localDateTime.isAfter(getStartLDT(currTask)) && localDateTime.isBefore(getEndLDT(currTask))){
 					return true;
 				}
 			}
@@ -364,11 +463,13 @@ public class CdLogic {
 		String recurResponse = recur("recur " + taskName + " " + recurDetails);
 		if(!recurResponse.contains("will recur")){
 			taskVault.remove(taskName);
+			lookForRecurrence();
 			updateDisplay();
 			saveVaults();
 			return recurResponse;
 		}
 		
+		lookForRecurrence();
 		updateDisplay();
 		saveVaults();
 		return recurResponse;
@@ -377,6 +478,7 @@ public class CdLogic {
 	private String recur(String userCommand) {
 		// TODO Auto-generated method stub
 		String trimmedCommand = removeFirstWord(userCommand).trim();
+		
 		
 		String taskName = lookForTaskName(trimmedCommand);
 		
@@ -393,8 +495,141 @@ public class CdLogic {
 			String recurDetails = removeFirstWord(trimmedCommand);
 			return recurWeek(taskName, recurDetails);
 		}
+		if (getFirstWord(trimmedCommand).equals("daily")){
+			String recurDetails = removeFirstWord(trimmedCommand);
+			return recurDaily(taskName, recurDetails);
+		}
+		if (getFirstWord(trimmedCommand).equals("yearly")){
+			String recurDetails = removeFirstWord(trimmedCommand);
+			return recurYearly(taskName, recurDetails);
+		}
+		
+		
+		return "specify to recur daily, weekly, monthly, or yearly";
+	}
+
+	private String recurYearly(String taskName, String recurDetails) {
+		// TODO Auto-generated method stub
+		int recurrence;
+		MonthDay monthDay;
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM");
+		
+		String[] recurDetailsArray = recurDetails.split("\\s+");
+		if (recurDetailsArray.length == 2) {
+			try {
+				 monthDay = MonthDay.parse(recurDetailsArray[0], formatter);
+			} catch (NumberFormatException e) {
+				return "insert valid day and month (dd/mm)";
+			}
+
+			try {
+				recurrence = Integer.parseInt(recurDetailsArray[1]);
+			} catch (NumberFormatException e) {
+				return "insert valid number for number of recurrence";
+			}
+			
+			
+			Task toRecur = taskVault.getTask(taskName);
+			taskVault.remove(taskName);
+			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
+					monthDay);
+			newRecurringTask.setId(toRecur.getId());
+			IdGenerator idGenerator = new IdGenerator();
+			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
+			
+			taskVault.storeTask(newRecurringTask);
+
+			return taskName + " will recur every " + monthDay
+					+ " of the year " + " for " + recurrence + " times.";
+
+		}else if(recurDetailsArray.length == 1 && !recurDetailsArray[0].equals("")){
+			try {
+				recurrence = Integer.parseInt(recurDetailsArray[0]);
+				if(recurrence<1){
+					return "Insert valid number for number of recurrence";
+				}
+			} catch (NumberFormatException e) {
+				return "insert valid number for number of recurrence";
+			}
+			
+			Task toRecur = taskVault.getTask(taskName);
+			taskVault.remove(taskName);
+			monthDay = MonthDay.from(toRecur.getStartDate());
+			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
+					monthDay);
+			newRecurringTask.setId(toRecur.getId());
+			IdGenerator idGenerator = new IdGenerator();
+			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
+			
+			taskVault.storeTask(newRecurringTask);
+			
+			return taskName + " will recur every " + monthDay
+					+ " of the year " + " for " + recurrence + " times.";
+
+		}else if(recurDetails.equals("")){
+			Task toRecur = taskVault.getTask(taskName);
+			taskVault.remove(taskName);
+			monthDay = MonthDay.from(toRecur.getStartDate());
+			recurrence = Integer.MAX_VALUE;
+			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
+					monthDay);
+			newRecurringTask.setId(toRecur.getId());
+			IdGenerator idGenerator = new IdGenerator();
+			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
+			
+			taskVault.storeTask(newRecurringTask);
+			
+			return taskName + " will recur every " + monthDay
+					+ " of the year forever and ever";
+		}
+		
 		
 		return null;
+	}
+
+	private String recurDaily(String taskName, String recurDetails) {
+		// TODO Auto-generated method stub
+		int recurrence;
+		
+		String[] recurDetailsArray = recurDetails.split("\\s+");
+		
+		if(recurDetailsArray.length == 1 && !recurDetailsArray[0].equals("")){
+			try {
+				recurrence = Integer.parseInt(recurDetailsArray[0]);
+				if(recurrence<1){
+					return "Insert valid number for number of recurrence";
+				}
+			} catch (NumberFormatException e) {
+				return "Insert valid number for number of recurrence";
+			}
+			
+			Task toRecur = taskVault.getTask(taskName);
+			taskVault.remove(taskName);
+			Task newRecurringTask = new RecurringTask(toRecur, recurrence);
+			newRecurringTask.setId(toRecur.getId());
+			IdGenerator idGenerator = new IdGenerator();
+			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
+			
+			taskVault.storeTask(newRecurringTask);
+			
+			return taskName + " will recur everyday for " + recurrence + " times.";
+
+		}else if(recurDetails.equals("")){
+			Task toRecur = taskVault.getTask(taskName);
+			taskVault.remove(taskName);
+			recurrence = Integer.MAX_VALUE;
+			Task newRecurringTask = new RecurringTask(toRecur, recurrence);
+			newRecurringTask.setId(toRecur.getId());
+			IdGenerator idGenerator = new IdGenerator();
+			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
+			
+			taskVault.storeTask(newRecurringTask);
+		
+			return taskName + " will recur everyday forever and ever";
+		}
+		
+		
+		return "Invalid recurrence format";
 	}
 
 	private String recurWeek(String taskName, String recurDetails) {
@@ -407,6 +642,9 @@ public class CdLogic {
 
 			try {
 				recurrence = Integer.parseInt(recurDetailsArray[1]);
+				if(recurrence<1){
+					return "Insert valid number for number of recurrence";
+				}
 			} catch (NumberFormatException e) {
 				return "insert valid number for number of recurrence";
 			}
@@ -419,6 +657,10 @@ public class CdLogic {
 			taskVault.remove(taskName);
 			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
 					dayOfWeek);
+			newRecurringTask.setId(toRecur.getId());
+			IdGenerator idGenerator = new IdGenerator();
+			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
+			
 			taskVault.storeTask(newRecurringTask);
 
 			return taskName + " will recur every " + dayOfWeek
@@ -427,6 +669,9 @@ public class CdLogic {
 		}else if(recurDetailsArray.length == 1 && !recurDetailsArray[0].equals("")){
 			try {
 				recurrence = Integer.parseInt(recurDetailsArray[0]);
+				if(recurrence<1){
+					return "Insert valid number for number of recurrence";
+				}
 			} catch (NumberFormatException e) {
 				return "insert valid number for number of recurrence";
 			}
@@ -436,6 +681,10 @@ public class CdLogic {
 			dayOfWeek = toRecur.getStartDate().getDayOfWeek();
 			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
 					dayOfWeek);
+			newRecurringTask.setId(toRecur.getId());
+			IdGenerator idGenerator = new IdGenerator();
+			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
+			
 			taskVault.storeTask(newRecurringTask);
 			
 			return taskName + " will recur every " + dayOfWeek
@@ -445,13 +694,17 @@ public class CdLogic {
 			Task toRecur = taskVault.getTask(taskName);
 			taskVault.remove(taskName);
 			dayOfWeek = toRecur.getStartDate().getDayOfWeek();
-			recurrence = 10;
+			recurrence = Integer.MAX_VALUE;;
 			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
 					dayOfWeek);
+			newRecurringTask.setId(toRecur.getId());
+			IdGenerator idGenerator = new IdGenerator();
+			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
+			
 			taskVault.storeTask(newRecurringTask);
 			
 			return taskName + " will recur every " + dayOfWeek
-					+ " for " + recurrence + " times.";
+					+ " forever and ever";
 		}
 	
 			
@@ -498,6 +751,9 @@ public class CdLogic {
 
 			try {
 				recurrence = Integer.parseInt(recurDetailsArray[1]);
+				if(recurrence<1){
+					return "Insert valid number for number of recurrence";
+				}
 			} catch (NumberFormatException e) {
 				return "insert valid number for number of recurrence";
 			}
@@ -510,6 +766,10 @@ public class CdLogic {
 			taskVault.remove(taskName);
 			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
 					dayOfMonth);
+			newRecurringTask.setId(toRecur.getId());
+			IdGenerator idGenerator = new IdGenerator();
+			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
+			
 			taskVault.storeTask(newRecurringTask);
 
 			return taskName + " will recur every " + dayOfMonth
@@ -518,6 +778,9 @@ public class CdLogic {
 		}else if(recurDetailsArray.length == 1 && !recurDetailsArray[0].equals("")){
 			try {
 				recurrence = Integer.parseInt(recurDetailsArray[0]);
+				if(recurrence<1){
+					return "Insert valid number for number of recurrence";
+				}
 			} catch (NumberFormatException e) {
 				return "insert valid number for number of recurrence";
 			}
@@ -527,6 +790,10 @@ public class CdLogic {
 			dayOfMonth = toRecur.getStartDate().getDayOfMonth();
 			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
 					dayOfMonth);
+			newRecurringTask.setId(toRecur.getId());
+			IdGenerator idGenerator = new IdGenerator();
+			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
+			
 			taskVault.storeTask(newRecurringTask);
 			
 			return taskName + " will recur every " + dayOfMonth
@@ -536,13 +803,17 @@ public class CdLogic {
 			Task toRecur = taskVault.getTask(taskName);
 			taskVault.remove(taskName);
 			dayOfMonth = toRecur.getStartDate().getDayOfMonth();
-			recurrence = 10;
+			recurrence = Integer.MAX_VALUE;
 			Task newRecurringTask = new RecurringTask(toRecur, recurrence,
 					dayOfMonth);
+			newRecurringTask.setId(toRecur.getId());
+			IdGenerator idGenerator = new IdGenerator();
+			idGenerator.addId(Integer.parseInt(toRecur.getId().substring(1), 36), toRecur.getTaskName());
+			
 			taskVault.storeTask(newRecurringTask);
 			
 			return taskName + " will recur every " + dayOfMonth
-					+ " of the month " + " for " + recurrence + " times.";
+					+ " of the month forever and ever";
 		}
 	
 			
@@ -554,14 +825,27 @@ public class CdLogic {
 	private String lookForTaskName(String trimmedCommand) {
 		String found = "";
 		ObservableList<Task> list = taskVault.getList();
-		for (int i = 0; i < list.size(); i++) {
-			Task currTask = list.get(i);
-			if (trimmedCommand.contains(currTask.getTaskName())
-					&& (currTask.getTaskName().length() > found.length())) {
-				found = currTask.getTaskName();
+
+		if (trimmedCommand.startsWith("@")) {
+			for (int i = 0; i < list.size(); i++) {
+				Task currTask = list.get(i);
+				if (trimmedCommand.contains(currTask.getId())
+						&& (currTask.getId().length() > found.length())) {
+					found = currTask.getTaskName();
+				}
 			}
+			return found;
+		} else {
+
+			for (int i = 0; i < list.size(); i++) {
+				Task currTask = list.get(i);
+				if (trimmedCommand.contains(currTask.getTaskName())
+						&& (currTask.getTaskName().length() > found.length())) {
+					found = currTask.getTaskName();
+				}
+			}
+			return found;
 		}
-		return found;
 	}
 
 	/**
@@ -1117,7 +1401,7 @@ public class CdLogic {
 			historyVault.storeTask(taskVault.getTask(userCommand));
 //			history.add(taskVault.getTask(userCommand));
 			taskVault.completeTask(userCommand, completedTaskVault);
-			if(completedTask.taskIsRecurring()){
+			if(completedTask.isRecurring()){
 				setNextRecurrence((RecurringTask) completedTask);
 			}
 			updateDisplay();
@@ -1486,6 +1770,8 @@ public class CdLogic {
 
 		String[] addArguments = parseAdd(userCommand);
 
+		
+		
 		LocalDate startDate;
 		try {
 			startDate = toLocalDate(addArguments[2]);
@@ -1521,6 +1807,10 @@ public class CdLogic {
 
 		if((taskVault.getTask(addArguments[0])!=null)){
 			return "\"" + addArguments[0] + "\" already exists";
+		}
+		
+		if(addArguments[0].startsWith("@")){
+			return "Task Name cannot start with \"@\"";
 		}
 		
 		if((startDate!=null) && (startTime==null)){
