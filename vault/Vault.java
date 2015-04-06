@@ -18,6 +18,7 @@ import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.DayOfWeek;
+import java.time.MonthDay;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -27,18 +28,15 @@ import java.time.format.DateTimeFormatter;
  */
 public class Vault {
 
-	private static final String MONTH_SPACE = "MONTH ";
-	private static final String WEEK_DOUBLE_SPACE = "WEEK  ";
-	private static final String WEEK_SPACE = "WEEK ";
-	private static final String RECURRENCE_SPACE = "RECURRENCE ";
-	private static final int MIN_DAY_LENGTH = 3;
-	private static final int OFFSET_6 = 6;
-	private static final int OFFSET_5 = 5;
-	private static final int OFFSET_11 = 11;
-	private static final String RECURRENCE = "RECURRENCE";
+	private static final String YEARLY_SPACE = "YEARLY ";
+	private static final String DAILY = "DAILY";
+	private static final String MONTHLY_SPACE = "MONTHLY ";
+	private static final String WEEKLY_SPACE = "WEEKLY ";
+	private static final String RECURRING_SPACE = "RECURRING ";
 	protected static final int DATE_TIME_LENGTH = 3;
 	protected static final int OFFSET_10 = 10;
 	protected static final int OFFSET_8 = 8;
+	private static final int OFFSET_7 = 7;
 	protected static final int ZERO = 0;
 	protected static final int INVALID = -1;
 	protected static final String END_TIME_DOUBLE_SPACE = "endtime  ";
@@ -51,12 +49,7 @@ public class Vault {
 	protected static final String COMMENT_DOUBLE_SPACE = "comment  ";
 	protected static final String START_TIME_DOUBLE_SPACE = "starttime  ";
 	protected static final String START_DATE_DOUBLE_SPACE = "startdate  ";
-	protected static final String END_TIME = "endtime";
-	protected static final String END_DATE = "enddate";
-	protected static final String START_TIME = "starttime";
-	protected static final String START_DATE = "startdate";
-	protected static final String COMMENT = "comment";
-	protected static final String NULL = "null";
+	protected static final String END_OF_TASK = "end of task";
 	protected static final Charset CHAR_SET = Charset.forName("US-ASCII");
 	protected static DateTimeFormatter timeFormat = DateTimeFormatter.ISO_LOCAL_TIME;
 	protected static DateTimeFormatter dateFormat = DateTimeFormatter.ISO_LOCAL_DATE;
@@ -225,16 +218,20 @@ public class Vault {
 				}
 				if (task.isRecurring()) {
 					RecurringTask recurringTask = (RecurringTask) task;
-					writer.write(RECURRENCE_SPACE + recurringTask.getRecurrence());
+					writer.write(RECURRING_SPACE + recurringTask.getRecurrence());
 					writer.newLine();
-					if (recurringTask.getRecurrenceDay() != null) {
-						writer.write(WEEK_SPACE + recurringTask.getRecurrenceDay().toString());
+					if (recurringTask.isDaily()) {
+						writer.write(DAILY);
+					}
+					else if (recurringTask.getRecurrenceDay() != null) {
+						writer.write(WEEKLY_SPACE + recurringTask.getRecurrenceDay().toString());
+					}
+					else if (recurringTask.getDayOfMonth() > ZERO) {
+						writer.write(MONTHLY_SPACE + recurringTask.getDayOfMonth());
 					}
 					else {
-						writer.write(WEEK_DOUBLE_SPACE);
+						writer.write(YEARLY_SPACE + recurringTask.getMonthDay().toString());
 					}
-					writer.newLine();
-					writer.write(MONTH_SPACE + recurringTask.getDayOfMonth());
 					writer.newLine();
 				}
 				if (task.getId() != null) {
@@ -246,7 +243,7 @@ public class Vault {
 					writer.newLine();
 				}
 				i++;
-				writer.write(NULL);
+				writer.write(END_OF_TASK);
 				writer.newLine();
 			}
 		} catch (IOException error) {
@@ -372,35 +369,41 @@ public class Vault {
 		    	Task task = new Task(line);
 	    		line = reader.readLine();
 		    	while (line != null) {
-		    		if (line.startsWith(COMMENT)) {
+		    		if (line.startsWith(COMMENT_SPACE)) {
 		    			task.setComment(line.substring(OFFSET_8));
 		    		}
-		    		if (line.startsWith(START_DATE)) {
+		    		if (line.startsWith(START_DATE_SPACE)) {
 		    			task.setStartDate(changeStringToDate(line.substring(OFFSET_10)));
 		    		}
-		    		if (line.startsWith(START_TIME)) {
+		    		if (line.startsWith(START_TIME_SPACE)) {
 		    			task.setStartTime(changeStringToTime(line.substring(OFFSET_10)));
 		    		}
-		    		if (line.startsWith(END_DATE)) {
+		    		if (line.startsWith(END_DATE_SPACE)) {
 		    			task.setEndDate(changeStringToDate(line.substring(OFFSET_8)));
 		    		}
-		    		if (line.startsWith(END_TIME)) {
+		    		if (line.startsWith(END_TIME_SPACE)) {
 		    			task.setEndTime(changeStringToTime(line.substring(OFFSET_8)));
 		    		}
-		    		if (line.startsWith(RECURRENCE)) {
-		    			DayOfWeek dayOfWeek = null;
-		    			int recurrence = Integer.parseInt(line.substring(OFFSET_11));
+		    		if (line.startsWith(RECURRING_SPACE)) {
+		    			int recurrence = Integer.parseInt(line.substring(OFFSET_10));
 		    			line = reader.readLine();
-		    			if (line.substring(OFFSET_5).length() > MIN_DAY_LENGTH) {
-		    				dayOfWeek = DayOfWeek.valueOf(line.substring(OFFSET_5));
+		    			if (line.startsWith(DAILY)) {
+		    				task = new RecurringTask(task, recurrence);
 		    			}
-		    			line = reader.readLine();
-		    			int dayOfMonth = Integer.parseInt(line.substring(OFFSET_6));
-		    			if (dayOfMonth == ZERO) {
-			    			task = new RecurringTask(task, recurrence, dayOfWeek);
+		    			else if (line.startsWith(WEEKLY_SPACE)) {
+		    				DayOfWeek dayOfWeek = DayOfWeek.valueOf(line.substring(OFFSET_7));
+		    				task = new RecurringTask(task, recurrence, dayOfWeek);
+		    			}
+		    			else if (line.startsWith(MONTHLY_SPACE)) {
+		    				int dayOfMonth = Integer.parseInt(line.substring(OFFSET_8));
+		    				task = new RecurringTask(task, recurrence, dayOfMonth);
+		    			}
+		    			else if (line.startsWith(YEARLY_SPACE)){
+		    				MonthDay monthDay = MonthDay.parse(line.substring(OFFSET_7));
+		    				task = new RecurringTask(task, recurrence, monthDay);
 		    			}
 		    			else {
-		    				task = new RecurringTask(task, recurrence, dayOfMonth);
+		    				task = new RecurringTask(task, recurrence);
 		    			}
 		    		}
 		    		if (line.startsWith("ID")) {
@@ -412,7 +415,7 @@ public class Vault {
 			    		}
 		    		}
 		    		line = reader.readLine();
-		    		if (line.startsWith(NULL)) {
+		    		if (line.startsWith(END_OF_TASK)) {
 		    			break;
 		    		}
 		    	}
