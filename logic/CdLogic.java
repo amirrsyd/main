@@ -36,25 +36,64 @@ import model.Task;
  * 
  */
 public class CdLogic {
+	/**
+	 * Listed below are the String constants e.g. Message returns This is to
+	 * ensure easier code readability Start Date & End Date is in the format
+	 * (DD:MM:YYYY) Start Time & End Time is in the format (HH:MM)
+	 */
+    //date and time format
+	private static final String DATE_REGEX = "([0-9][0-9])[-/]\\s*([0-9][0-9])[-/]"
+			+ "\\s*([0-9][0-9][0-9][0-9])";
+	private static final String TIME_REGEX = "([01]?[0-9]|2[0-3]):[0-5][0-9]";
 
+
+	//constants generated for add method
 	private static final String MESSAGE_END_BEFORE_START = "Task cannot end before it starts";
 	private static final String MESSAGE_NO_ENDTIME = "End date must be accompanied with an end time";
 	private static final String MESSAGE_NO_STARTTIME = "Start date must be accompanied with start time";
 	private static final String MESSAGE_INVALID_TASKNAME = "Task Name cannot start with \"@\"";
+	
+	//constants generated for delete method
+	private static final String MESSAGE_DELETE_UNSUCCESS = "Delete not successful";
+	//constants generated for search method
 	private static final String MESSAGE_TASKS_FOUND = " tasks found";
+	
+	//constants generated for complete method
 	private static final String MESSAGE_COMPLETE_FAIL = "\"%s\" could not be completed";
 	private static final String MESSAGE_COMPLETE_SUCCESS = "\"%s\" completed successfully";
+	
+	//constants generated for edit method
+	private static final String MESSAGE_INVALID_DATE = "Date %s is not valid";
+    private static final String MESSAGE_INVALID_TIME = "Time %s is not valid";
+	private static final String MESSAGE_NOT_CHRON = "new date not chronologically correct";
+	private static final String MESSAGE_EDIT_SUCCESS = "edit complete";
+	private static final String MESSAGE_INVALID_EDIT = "invalid edit command";
+	private static final String MESSAGE_NO_UNDO = "no more undo left";
+	private static final String MESSAGE_FLOAT_ETIME = "Cannot edit end time of floating task";
+	private static final String MESSAGE_DEADLINE_ETIME = "Cannot edit end time of deadline";
+	private static final String MESSAGE_FLOAT_EDATE = "cannot edit end date of floating task";
+	private static final String MESSAGE_DEADLINE_EDATE = "cannot edit end date of deadline";
 	private static final String MESSAGE_ALREADY_EXISTS = "\"%s\" already exists";
 	private static final String MESSAGE_DATE_MISSING = "Enter a valid date";
 	private static final String MESSAGE_FLOAT_SDATE = "Cannot edit start date of floating task";
 	private static final String MESSAGE_FLOAT_STIME = "Cannot edit start time of floating task";
+	
+	//constants generated for adding comment
 	private static final String MESSAGE_COMMENT_ADDED = "comment added";
+	
+	//constants generated for undo methods
 	private static final String MESSAGE_UNDO_ADD = "Undo add: \"%s\" removed from tasks";
 	private static final String MESSAGE_UNDO_COMPLETE = "Undo complete: \"%s\" moved back from completed to tasks";
 	private static final String MESSAGE_UNDO_DELETE = "Undo delete: \"%s\" moved back from trash to tasks";
 	private static final String MESSAGE_UNDO_EDIT = "Undo edit: Change made to \"%s\" discarded";
+	
+	//contants generated for file directory methods
+	private static final String MESSAGE_NONEXIST = "Directory doesnt exist";
 	private static final String MESSAGE_FILES_MOVED = "Files moved to \"%s\"";
 	private static final String MESSAGE_WORKING_DIRECTORY = "Working directory: ";
+	private static final String USER_DIR = "user.dir";
+	
+	//constants generated for recurring methods
 	private static final String MESSAGE_WILL_RECUR_FOREVER = "%s will recur on %d %s";
 	private static final String MESSAGE_WILL_RECUR = "%s will recur on %s %s for %d times";
 	private static final String MESSAGE_INVALID_RECURRENCES = "insert valid number for number of recurrence";
@@ -63,34 +102,20 @@ public class CdLogic {
 	private static final String MESSAGE_NOT_FOUND = "task %s not found";
 	private static final String MESSAGE_RECUR_FLOATING = "cannot recur floating task";
 	private static final String MESSAGE_RECURSION_DETAILS = "insert recursion details";
-	/**
-	 * Listed below are the String constants e.g. Message returns This is to
-	 * ensure easier code readability Start Date & End Date is in the format
-	 * (DD:MM:YYYY) Start Time & End Time is in the format (HH:MM)
-	 */
-	private static final String USER_DIR = "user.dir";
-	private static final String DATE_REGEX = "([0-9][0-9])[-/]\\s*([0-9][0-9])[-/]"
-			+ "\\s*([0-9][0-9][0-9][0-9])";
-	private static final String TIME_REGEX = "([01]?[0-9]|2[0-3]):[0-5][0-9]";
-
+	
+	//constants generated for empty method
+	private static final String MESSAGE_TRASH_CLEARED = "trash emptied successfully";
+	private static final String MESSAGE_TRASH_UNCLEARED = "trash can't be emptied";
+	
+	//constants generated for execCommand method
 	private static final String MESSAGE_INVALID_FORMAT = "invalid command "
 			+ "format :%1$s";
 	private static final String MESSAGE_ERROR = "Unrecognized command type";
-	private static final String MESSAGE_NONEXIST = "Directory doesnt exist";
-	private static final String MESSAGE_INVALID_EDIT = "invalid edit command";
-	private static final String MESSAGE_INVALID_TIME = "Time %s is not valid";
-	private static final String MESSAGE_TRASH_CLEARED = "trash emptied successfully";
-	private static final String MESSAGE_TRASH_UNCLEARED = "trash can't be emptied";
-	private static final String MESSAGE_NOT_CHRON = "new date not chronologically correct";
-	private static final String MESSAGE_EDIT_SUCCESS = "edit complete";
-	private static final String MESSAGE_INVALID_DATE = "Date %s is not valid";
-	private static final String MESSAGE_DELETE_UNSUCCESS = "Delete not successful";
+	
+	//constants generated for detCommand method
 	private static final String MESSAGE_INVALID_COMMAND = "command type string cannot be null!";
-	private static final String MESSAGE_NO_UNDO = "no more undo left";
-	private static final String MESSAGE_FLOAT_ETIME = "Cannot edit end time of floating task";
-	private static final String MESSAGE_DEADLINE_ETIME = "Cannot edit end time of deadline";
-	private static final String MESSAGE_FLOAT_EDATE = "cannot edit end date of floating task";
-	private static final String MESSAGE_DEADLINE_EDATE = "cannot edit end date of deadline";
+	
+	//constants generated for help command
 	private static final String MESSAGE_HELP_COMMANDS = "A list of commands that you can use:\n"
 			+ "add, list, edit, delete, search, undo, help, addrecur, recur, complete, empty, getdir, changedir, exit\n"
 			+ "Enter help [command] for help with specific command syntax.";
@@ -120,6 +145,8 @@ public class CdLogic {
 	private static final String MESSAGE_HELP_RECUR = "Action: Recur a task\n"
 			+ "Syntax: recur [TaskName] {daily/weekly/monthly/yearly} [day of week/day of month/ day and month] [recurrence]";
 	private static final String MESSAGE_HELP_INVALID = "Invalid help command: Enter \"help\" for list of commands";
+	
+	
 	private static final String YEARLY = "yearly";
 	private static final String MONTHLY = "monthly";
 	private static final String WEEKLY = "weekly";
