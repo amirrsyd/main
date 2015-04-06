@@ -370,8 +370,6 @@ public class Vault {
 			String line = reader.readLine();
 		    while (line != null) {
 		    	Task task = new Task(line);
-		    	boolean isRecurring = false;
-		    	RecurringTask recurringTask = null;
 	    		line = reader.readLine();
 		    	while (line != null) {
 		    		if (line.startsWith(COMMENT)) {
@@ -390,7 +388,6 @@ public class Vault {
 		    			task.setEndTime(changeStringToTime(line.substring(OFFSET_8)));
 		    		}
 		    		if (line.startsWith(RECURRENCE)) {
-		    			isRecurring = true;
 		    			DayOfWeek dayOfWeek = null;
 		    			int recurrence = Integer.parseInt(line.substring(OFFSET_11));
 		    			line = reader.readLine();
@@ -400,33 +397,26 @@ public class Vault {
 		    			line = reader.readLine();
 		    			int dayOfMonth = Integer.parseInt(line.substring(OFFSET_6));
 		    			if (dayOfMonth == ZERO) {
-			    			recurringTask = new RecurringTask(task, recurrence, dayOfWeek);
+			    			task = new RecurringTask(task, recurrence, dayOfWeek);
 		    			}
 		    			else {
-		    				recurringTask = new RecurringTask(task, recurrence, dayOfMonth);
+		    				task = new RecurringTask(task, recurrence, dayOfMonth);
 		    			}
 		    		}
 		    		if (line.startsWith("ID")) {
-		    			if (line.length() > 2) {
-		    				task.setId(line.substring(3).trim());
-		    				recurringTask.setId(line.substring(3).trim());
-		    			}
-		    			else {
-		    				task.setId(null);
-		    				recurringTask.setId(null);
-		    			}
+			    		if (line.length() > 2) {
+			    			task.setId(line.substring(3).trim());
+			    		}
+			    		else {
+			    			task.setId(null);
+			    		}
 		    		}
 		    		line = reader.readLine();
 		    		if (line.startsWith(NULL)) {
 		    			break;
 		    		}
 		    	}
-		    	if (isRecurring) {
-		    		storeTask(recurringTask);
-		    	}
-		    	else {
-			    	storeTask(task);
-		    	}
+			    storeTask(task);
 		    	line = reader.readLine();
 		    }
 		    reader.close();
