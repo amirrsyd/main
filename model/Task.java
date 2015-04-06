@@ -327,7 +327,7 @@ public class Task implements Comparable<Object> {
 	 * @return isRecurring
 	 *            whether task is recurring
 	 */
-	public boolean taskIsRecurring(){
+	public boolean isRecurring(){
 		return this.isRecurring;
 	}
 	
