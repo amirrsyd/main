@@ -135,8 +135,6 @@ public class Vault {
 			return false;
 		}
 		trash.storeTask(task);
-		IdGenerator idGenerator = new IdGenerator();
-		idGenerator.removeId(task.getId());
 		return list.remove(task);
 	}
 	
@@ -281,6 +279,10 @@ public class Vault {
 	 * Clears the list and the data in the file.
 	 */
 	public boolean clear() {
+		IdGenerator idGenerator = new IdGenerator();
+		for (Task task : list) {
+			idGenerator.removeId(task.getId());
+		}
 		list.clear();
 		save();
 		return true;

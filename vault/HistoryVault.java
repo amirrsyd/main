@@ -7,6 +7,9 @@ import java.nio.file.Paths;
 
 import javafx.collections.FXCollections;
 import model.Task;
+import model.IdGenerator;
+
+import java.util.Iterator;
 
 /**
  * HistoryVault class.
@@ -91,5 +94,20 @@ public class HistoryVault extends Vault {
 	 * as designed-by-contract.
 	 */
 	public void save() {
+	}
+	
+	/**
+	 * This method flushes away all tasks that have already been permanently
+	 * cleared in completedTaskVault or trashVault.
+	 */
+	public void flush() {
+		 IdGenerator idGenerator = new IdGenerator();
+		 Iterator<Task> iterator = list.iterator();
+		 while (iterator.hasNext()) {
+			 Task task = iterator.next();
+			 if (!idGenerator.isExistingId(task.getId())) {
+				 iterator.remove();
+			 }
+		 }
 	}
 }

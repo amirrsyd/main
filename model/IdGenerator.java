@@ -17,7 +17,7 @@ public class IdGenerator {
 	private static final Charset CHAR_SET = Charset.forName("US-ASCII");
 	
 	private int base36Id;
-	private TreeMap<Integer, String> idMap;
+	private TreeMap<Integer, String> idBank;
 	private Path filePath;
 	
 	public IdGenerator() {
@@ -28,13 +28,13 @@ public class IdGenerator {
 			try {
 				BufferedReader reader = Files.newBufferedReader(filePath);
 				String line = reader.readLine();
-				base36Id = Integer.parseInt(line.substring(1), 36);
-				idMap = new TreeMap<Integer, String>();
+				base36Id = idStringToIntId(line);
+				idBank = new TreeMap<Integer, String>();
 				line = reader.readLine();
 				while (line != null) {
 					String[] splitLine = line.split(" ");
-					int key = Integer.parseInt(splitLine[0].substring(1), 36);
-					idMap.put(key, line.substring(splitLine[0].length() + 1));
+					int key = idStringToIntId(splitLine[0]);
+					idBank.put(key, line.substring(splitLine[0].length() + 1));
 					line = reader.readLine();
 				}
 				reader.close();
@@ -44,18 +44,18 @@ public class IdGenerator {
 		}
 		else {
 			base36Id = 0;
-			idMap = new TreeMap<Integer, String>();
+			idBank = new TreeMap<Integer, String>();
 			save();
 		}
 	}
 
 	public void addId(int id, String name) {
-		idMap.put(id, name);
+		idBank.put(id, name);
 		save();
 	}
 	
 	public void removeId(String idString) {
-		idMap.remove(Integer.parseInt(idString.substring(1), 36));
+		idBank.remove(idStringToIntId(idString));
 		save();
 	}
 	
@@ -80,7 +80,11 @@ public class IdGenerator {
 	}
 	
 	public boolean isExistingId(int id) {
-		return idMap.containsKey(id);
+		return idBank.containsKey(id);
+	}
+	
+	public boolean isExistingId(String idString) {
+		return idBank.containsKey(idStringToIntId(idString));
 	}
 	
 	public void save() {
@@ -89,14 +93,26 @@ public class IdGenerator {
                 StandardOpenOption.WRITE, 
                 StandardOpenOption.SYNC,
                 StandardOpenOption.TRUNCATE_EXISTING)) {
-			writer.write("@" + Integer.toString(base36Id, 36));
+			writer.write(base36IdToString());
 			writer.newLine();
-			for (Entry<Integer, String> entry : idMap.entrySet()) {
-			    writer.write("@" + Integer.toString(entry.getKey(), 36) + " " + entry.getValue());
+			for (Entry<Integer, String> entry : idBank.entrySet()) {
+			    writer.write(keyIdToString(entry.getKey()) + " " + entry.getValue());
 			    writer.newLine();
 			}
 		} catch (IOException error) {
 			System.err.println(error);
 		}
+	}
+	
+	private String keyIdToString(int key) {
+		return "@" + Integer.toString(key, 36);
+	}
+	
+	private String base36IdToString() {
+		return "@" + Integer.toString(base36Id, 36);
+	}
+	
+	private int idStringToIntId(String idString) {
+		return Integer.parseInt(idString.substring(1), 36);
 	}
 }
