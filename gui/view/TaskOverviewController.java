@@ -36,29 +36,6 @@ import java.time.temporal.ChronoUnit;
 
 public class TaskOverviewController{
 	
-	public static class TaskOverviewControllerLogger {
-		static FileHandler fileHandler;
-		
-		//Use the classname for the logger
-		private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-		
-		@SuppressWarnings("unused")
-		private final static void initializeLogger() {
-		    try {  
-		        // This block configure the logger with handler and formatter 
-		    	System.out.println("Creating logger at: " + System.getProperty("user.dir") + "\\logFile.txt");
-		        fileHandler = new FileHandler(System.getProperty("user.dir") + "logFile.txt");
-		        logger.addHandler(fileHandler);
-		        SimpleFormatter formatter = new SimpleFormatter();  
-		        fileHandler.setFormatter(formatter);
-		    } catch (SecurityException securityException) {  
-		    	securityException.printStackTrace();  
-		    } catch (IOException iOException) {  
-		        iOException.printStackTrace();  
-		    }
-		}
-	}
-	
 	private static final int NUMBER_OF_COLUMNS_IN_CELL = 2;
 	private static final int NUMBER_OF_ROWS_IN_CELL = 5;
 	private static final int NUMBER_OF_ROWS_IN_CALENDAR = 7;
@@ -96,6 +73,8 @@ public class TaskOverviewController{
 	
 	@FXML
 	private TableView<Task> taskTable;
+	@FXML
+	private TableColumn<Task, String> taskIdColumn;
 	@FXML
 	private TableColumn<Task, String> taskNameColumn;
 	@FXML
@@ -160,7 +139,7 @@ public class TaskOverviewController{
 	private void initialize() {
 		//Initialize the task table with the five columns.
 		taskNameColumn.setCellValueFactory(cellData -> cellData.getValue().taskNameProperty());
-		taskCommentColumn.setCellValueFactory(cellData -> cellData.getValue().commentProperty());
+		taskIdColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty());
 		startDateColumn.setCellValueFactory(cellData -> cellData.getValue().startDateProperty());
 		startTimeColumn.setCellValueFactory(cellData -> cellData.getValue().startTimeProperty());
 		endDateColumn.setCellValueFactory(cellData -> cellData.getValue().endDateProperty());
