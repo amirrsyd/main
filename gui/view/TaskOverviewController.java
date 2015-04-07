@@ -26,9 +26,6 @@ import java.time.format.TextStyle;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.LinkedList;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import javafx.geometry.HPos;
 

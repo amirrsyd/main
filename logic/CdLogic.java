@@ -131,33 +131,33 @@ public class CdLogic {
 	//constants generated for help command
 	private static final String MESSAGE_HELP_COMMANDS = "A list of commands that you can use:\n"
 			+ "add, list, edit, delete, search, undo, help, addrecur, recur, complete, empty, getdir, changedir, exit\n"
-			+ "Enter help [command] for help with specific command syntax.";
+			+ "Enter help [command] for help with specific command syntax.\n";
 	private static final String MESSAGE_HELP_ADD = "Action: Creates a task\n"
-			+ "Syntax: add [TaskName] {StartDate StartTime} {EndDate EndTime}";
-	private static final String MESSAGE_HELP_DELETE = "Action: Deletes a task\nSyntax: delete [TaskName]";
+			+ "Syntax: add [TaskName] {StartDate StartTime} {EndDate EndTime}\n";
+	private static final String MESSAGE_HELP_DELETE = "Action: Deletes a task\nSyntax: delete [TaskName]\n";
 	private static final String MESSAGE_HELP_LIST = "Action: List out tasks\n"
-			+ "Syntax: list {today/week/date/completed/trash}";
+			+ "Syntax: list {today/week/date/completed/trash}\n";
 	private static final String MESSAGE_HELP_EMPTY = "Action: Empty a list\n"
-			+ "Syntax: empty {completed/trash}";
+			+ "Syntax: empty {completed/trash}\n";
 	private static final String MESSAGE_HELP_SEARCH = "Action: Search for tasks through keywords\n"
-			+ "Syntax: search [keywords]";
+			+ "Syntax: search [keywords]\n";
 	private static final String MESSAGE_HELP_COMPLETE = "Action: Sets a task as complete\n"
-			+ "Syntax: complete [TaskName]";
+			+ "Syntax: complete [TaskName]\n";
 	private static final String MESSAGE_HELP_EDIT = "Action: Edit a field in a task\n"
-			+ "Syntax: edit [TaskName] [Field To Edit] [New Value]";
+			+ "Syntax: edit [TaskName] [Field To Edit] [New Value]\n";
 	private static final String MESSAGE_HELP_EXIT = "Action: Exits Comman.Do\n"
-			+ "Syntax: exit";
+			+ "Syntax: exit\n";
 	private static final String MESSAGE_HELP_CHANGEDIR = "Action: Change the directory that stores your data\n"
-			+ "Syntax: changedir [PATH]";
+			+ "Syntax: changedir [PATH]\n";
 	private static final String MESSAGE_HELP_UNDO = "Action: Undo the last command\n"
-			+ "Syntax: undo";
+			+ "Syntax: undo\n";
 	private static final String MESSAGE_HELP_GETDIR = "Action: Get the current directory that stores your data\n"
-			+ "Syntax: getdir";
+			+ "Syntax: getdir\n";
 	private static final String MESSAGE_HELP_ADDRECUR = "Action: Creates a recurring task\n"
-			+ "Syntax: addrecur [same as adding tasks] {daily/weekly/monthly/yearly} [day of week/day of month/day and month] [recurrence] ";
+			+ "Syntax: addrecur [same as adding tasks] {daily/weekly/monthly/yearly} [day of week/day of month/day and month] [recurrence]\n";
 	private static final String MESSAGE_HELP_RECUR = "Action: Recur a task\n"
-			+ "Syntax: recur [TaskName] {daily/weekly/monthly/yearly} [day of week/day of month/ day and month] [recurrence]";
-	private static final String MESSAGE_HELP_INVALID = "Invalid help command: Enter \"help\" for list of commands";
+			+ "Syntax: recur [TaskName] {daily/weekly/monthly/yearly} [day of week/day of month/ day and month] [recurrence]\n";
+	private static final String MESSAGE_HELP_INVALID = "Invalid help command: Enter \"help\" for list of commands\n";
 	
 	//constants generated for list command
 	private static final String MESSAGE_INVALID_LIST = "Invalid list command";

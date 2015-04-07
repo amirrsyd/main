@@ -19,6 +19,7 @@ import javafx.beans.property.StringProperty;
 public class Task implements Comparable<Object> {
 	protected StringProperty taskName;
 	protected StringProperty comment;
+	protected StringProperty idString;
 
 	protected ObjectProperty<LocalDate> startDate;
 	protected ObjectProperty<LocalTime> startTime;
@@ -27,8 +28,6 @@ public class Task implements Comparable<Object> {
 	protected ObjectProperty<LocalTime> endTime;
 	
 	protected boolean isRecurring = false;
-	
-	protected StringProperty idString;
 
 	private final int EARLIER = -1;
 	private final int SAME = 0;
@@ -55,6 +54,7 @@ public class Task implements Comparable<Object> {
 		this.taskName = new SimpleStringProperty(taskName);
 
 		// Some dummy data
+		this.idString = new SimpleStringProperty("");
 		this.comment = new SimpleStringProperty("-");
 		this.startDate = new SimpleObjectProperty<LocalDate>(LocalDate.of(1992,
 				9, 12));
@@ -84,6 +84,7 @@ public class Task implements Comparable<Object> {
 	public Task(String taskName, String taskDescription, LocalDate startDate,
 			LocalTime startTime, LocalDate endDate, LocalTime endTime) {
 		this.taskName = new SimpleStringProperty(taskName);
+		this.idString = new SimpleStringProperty();
 		this.comment = new SimpleStringProperty(taskDescription);
 		this.startDate = new SimpleObjectProperty<LocalDate>(startDate);
 		this.startTime = new SimpleObjectProperty<LocalTime>(startTime);
@@ -331,15 +332,37 @@ public class Task implements Comparable<Object> {
 		return this.isRecurring;
 	}
 	
+	/**
+	 * Returns the name of the task.
+	 * 
+	 * @return name of the task.
+	 */
 	public String getId() {
 		return idString.get();
 	}
-	
+
+	/**
+	 * Sets the name of the task.
+	 * 
+	 * @param taskName
+	 *            new name of the task.
+	 */
 	public void setId(String idString) {
 		this.idString.set(idString);
 	}
-	
-	public StringProperty idProperty(){
-		return this.idString;
+
+	/**
+	 * Returns the idString in a StringProperty instance.
+	 * 
+	 * @return StringProperty of taskName.
+	 */
+	public StringProperty idProperty() {
+		return idString;
 	}
+	
+	
+	
+	
+	
+	
 }
