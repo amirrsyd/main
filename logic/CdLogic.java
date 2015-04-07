@@ -35,6 +35,7 @@ import model.Task;
 public class CdLogic {
 	
 
+	private static final String MESSAGE_EMPTY_TASKNAME = "Task name cannot be empty";
 	/**
 	 * Listed below are the String constants e.g. Message returns This is to
 	 * ensure easier code readability Start Date & End Date is in the format
@@ -1287,7 +1288,7 @@ public class CdLogic {
 		Task oldTask = historyVault.pop(getLastHistoryName());
 		
 		IdGenerator idGenerator = new IdGenerator();
-		if(!idGenerator.isExistingId(newTask.getId())){
+		if(!idGenerator.isExistingId(newTask.getId()) || newTask.getTaskName().equals(idGenerator.getTaskName(newTask.getId()))){
 			return undo();
 		}
 		
@@ -1305,7 +1306,7 @@ public class CdLogic {
 	private String undoDelete() {
 		Task historyTask = historyVault.pop(getLastHistoryName());
 		IdGenerator idGenerator = new IdGenerator();
-		if(!idGenerator.isExistingId(historyTask.getId())){
+		if(!idGenerator.isExistingId(historyTask.getId()) || historyTask.getTaskName().equals(idGenerator.getTaskName(historyTask.getId()))){
 			return undo();
 		}
 		taskVault.storeTask(historyTask);
@@ -1404,6 +1405,7 @@ public class CdLogic {
 		String taskName = editArguments[0].trim();
 		String newComment = editArguments[1].trim();
 
+		
 		if (taskExists(taskName)) {
 			Task oldTask = taskVault.getTask(taskName);
 
@@ -1411,7 +1413,7 @@ public class CdLogic {
 			taskVault.createTask(oldTask.getTaskName(), newComment,
 					oldTask.getStartDate(), oldTask.getStartTime(),
 					oldTask.getEndDate(), oldTask.getEndTime());
-
+			
 			historyVault.storeTask(oldTask);
 			historyVault.storeTask(taskVault.getTask(taskName));
 			commandStack.push(UNDOABLE.EDIT);
@@ -2195,6 +2197,10 @@ public class CdLogic {
 
 		if (addArguments[INDEX_TASKNAME].startsWith("@")) {
 			return MESSAGE_INVALID_TASKNAME;
+		}
+		
+		if (addArguments[INDEX_TASKNAME].equals("")){
+			return MESSAGE_EMPTY_TASKNAME;
 		}
 
 		if ((startDate != null) && (startTime == null)) {
