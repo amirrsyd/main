@@ -115,4 +115,8 @@ public class IdGenerator {
 	private int idStringToIntId(String idString) {
 		return Integer.parseInt(idString.substring(1), 36);
 	}
+	
+	public String getTaskName(String idString){
+		return idBank.get(Integer.parseInt(idString.substring(1), 36));
+	}
 }

@@ -28,7 +28,7 @@ public class Task implements Comparable<Object> {
 	
 	protected boolean isRecurring = false;
 	
-	protected String idString;
+	protected StringProperty idString;
 
 	private final int EARLIER = -1;
 	private final int SAME = 0;
@@ -332,10 +332,14 @@ public class Task implements Comparable<Object> {
 	}
 	
 	public String getId() {
-		return idString;
+		return idString.get();
 	}
 	
 	public void setId(String idString) {
-		this.idString = idString;
+		this.idString.set(idString);
+	}
+	
+	public StringProperty idProperty(){
+		return this.idString;
 	}
 }
