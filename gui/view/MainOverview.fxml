@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane id="base" onKeyPressed="#executeKeyEvents" prefHeight="640.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.view.TaskOverviewController">
+<AnchorPane id="base" onKeyPressed="#executeKeyEvents" prefHeight="640.0" prefWidth="800.0" style="-fx-background-color: #2C3E50;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.view.TaskOverviewController">
    <children>
       <GridPane layoutX="216.0" layoutY="247.0" prefHeight="640.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <columnConstraints>
@@ -46,6 +46,7 @@
                                 <rowConstraints>
                                   <RowConstraints minHeight="10.0" percentHeight="15.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                   <RowConstraints minHeight="10.0" percentHeight="85.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="1.0" minHeight="1.0" percentHeight="1.0" prefHeight="1.0" vgrow="SOMETIMES" />
                                 </rowConstraints>
                                  <children>
                                     <GridPane id="monthView" fx:id="calendar" prefHeight="497.0" prefWidth="507.0" GridPane.rowIndex="1">
@@ -70,12 +71,12 @@
                                     </GridPane>
                                     <TilePane alignment="CENTER" prefHeight="78.0" prefWidth="558.0">
                                        <children>
-                                          <Button mnemonicParsing="false" onAction="#changePreviousMonth" text="Prev" textAlignment="CENTER">
+                                          <Button fx:id="prevBtn" mnemonicParsing="false" onAction="#changePreviousMonth" style="-fx-background-color: #95A5A6;" text="Prev" textAlignment="CENTER">
                                              <padding>
                                                 <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
                                              </padding></Button>
-                                          <Label id="monthHeader" fx:id="monthHeader" text="Label" textAlignment="CENTER" />
-                                          <Button mnemonicParsing="false" onAction="#changeNextMonth" text="Next" textAlignment="CENTER">
+                                          <Label id="monthHeader" fx:id="monthHeader" style="-fx-text-fill: #FFFFFF;" text="Label" textAlignment="CENTER" />
+                                          <Button fx:id="nextBtn" mnemonicParsing="false" onAction="#changeNextMonth" style="-fx-background-color: #95A5A6;" text="Next" textAlignment="CENTER">
                                              <padding>
                                                 <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
                                              </padding></Button>
@@ -89,12 +90,12 @@
                            <children>
                               <TableView fx:id="taskTable" focusTraversable="false" prefHeight="506.0" prefWidth="393.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                 <columns>
-                                  <TableColumn fx:id="taskNameColumn" editable="false" maxWidth="80000.0" minWidth="-1.0" prefWidth="-1.0" text="Task" />
+                                  <TableColumn fx:id="taskNameColumn" editable="false" maxWidth="80000.0" minWidth="-1.0" prefWidth="-1.0" text="Name" />
                                     <TableColumn fx:id="startDateColumn" editable="false" maxWidth="20000.0" minWidth="-1.0" prefWidth="-1.0" text="Start Date" />
                                   <TableColumn fx:id="startTimeColumn" editable="false" maxWidth="20000.0" minWidth="-1.0" prefWidth="-1.0" text="Start Time" />
                                     <TableColumn fx:id="endDateColumn" editable="false" maxWidth="20000.0" minWidth="-1.0" prefWidth="-1.0" text="End Date" />
                                     <TableColumn fx:id="endTimeColumn" editable="false" maxWidth="20000.0" minWidth="-1.0" prefWidth="-1.0" text="End Time" />
-                                    <TableColumn fx:id="taskIdColumn" editable="false" maxWidth="10000.0" minWidth="-1.0" prefWidth="-1.0" text="Id" />
+                                    <TableColumn fx:id="taskIdColumn" editable="false" maxWidth="20000.0" minWidth="-1.0" prefWidth="-1.0" text="Id" />
                                 </columns>
                                  <columnResizePolicy>
                                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

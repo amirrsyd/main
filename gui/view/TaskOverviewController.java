@@ -6,14 +6,18 @@ import java.time.LocalTime;
 import java.time.Month;
 
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -50,21 +54,50 @@ public class TaskOverviewController{
 	private static final int ROW_2 = 1;
 	private static final int ROW_3 = 2;
 	
+	private static final boolean IS_BUTTON = true;
+	private static final boolean NOT_BUTTON = false;
+	
 	private static final String MESSAGE_LOG_ERROR = "An error has occured, please try again.";
 	private static final String MESSAGE_EMPTY_USER_INPUT_ERROR = "Please key in a command first.";
 	private static final String MESSAGE_WELCOME = "Hello! Welcome to Comman.Do, your to-do manager.\n"
 												+ "Please note that the directories to save your tasks are by default in the same directory as the application.\n" 
 												+ "Start by entering a command into the box below.\n";
-	private static final String ODD_ROW_CLASS = "oddRow";
-	private static final String EVEN_ROW_CLASS = "evenRow";
-	private static final String ROW_1_CLASS = "row1";
-	private static final String ROW_2_CLASS = "row2";
-	private static final String ROW_3_CLASS = "row3";
+	private static final String ODD_ROW_ID = "oddRow";
+	private static final String EVEN_ROW_ID = "evenRow";
+	private static final String ROW_1_ID = "row1";
+	private static final String ROW_2_ID = "row2";
+	private static final String ROW_3_ID = "row3";
 	private static final String NOT_IN_MONTH_FADE_DATE_CLASS = "fadeDate";
 	private static final String NOT_IN_MONTH_FADE_CELL_CLASS = "fadeCell";
 	private static final String TODAY_CLASS = "todayClass";
 	private static final String EVENT = "event";
 	private static final String DATELINE = "dateline";
+	
+	//CSS Styles, constants, colors
+	private static final String CHANGE_BACKGROUND_COLOR = "-fx-background-color: %s";
+	private static final String CHANGE_BACKGROUND_RADIUS = "-fx-background-radius: %s";
+	private static final String CHANGE_PADDING = "-fx-padding: %s";
+	private static final String CHANGE_FONT_WEIGHT = "-fx-font-weight: %s";
+	private static final String CHANGE_TEXT_COLOR = "-fx-text-fill: %s";
+	private static final String BUTTON_COLOR = "#95A5A6;"; 
+	private static final String BUTTON_HOVER_COLOR = "#798D8F;"; 
+	private static final String ROW_RADIUS = "25px;";
+	private static final String ROW_PADDING = "0px 10px 0px 10px;";
+	private static final String ROW_1_COLOR = "#FFD372;"; 
+	private static final String ROW_2_COLOR = "#7ECEFD;"; 
+	private static final String ROW_3_COLOR = "#BDF271;"; 
+	private static final String ROW_1_HOVER_COLOR = "#EBC269;"; 
+	private static final String ROW_2_HOVER_COLOR = "#75BFEB;"; 
+	private static final String ROW_3_HOVER_COLOR = "#ABDB66;";
+	private static final String ROW_EVEN_COLOR = "#F9F9F9;";
+	private static final String ROW_ODD_COLOR = "#FFFFFF;";
+	private static final String HEADER_COLOR = "#7ECEFD;";
+	private static final String TODAY_COLOR = "#E74C3C;";
+	private static final String TASK_COLUMN_COLOR = "#7ECEFD;";
+	private static final String BOLD = "bold;";
+	
+	//private static final String
+	
 	
 	private static CdLogic logic;
 	
@@ -74,8 +107,6 @@ public class TaskOverviewController{
 	private TableColumn<Task, String> taskIdColumn;
 	@FXML
 	private TableColumn<Task, String> taskNameColumn;
-	@FXML
-	private TableColumn<Task, String> taskCommentColumn;
 	@FXML
 	private TableColumn<Task, LocalDate> startDateColumn;
 	@FXML
@@ -92,6 +123,10 @@ public class TaskOverviewController{
 	private TextArea output;
 	@FXML
 	private TextField input;
+	@FXML
+	private Button prevBtn;
+	@FXML
+	private Button nextBtn;
 	
 	private String userInput;
 	
@@ -142,7 +177,6 @@ public class TaskOverviewController{
 		endDateColumn.setCellValueFactory(cellData -> cellData.getValue().endDateProperty());
 		endTimeColumn.setCellValueFactory(cellData -> cellData.getValue().endTimeProperty());
 		
-		//TaskOverviewControllerLogger.initializeLogger();
 		output.setEditable(false);
 		initializeLogic();
 		outputToTextArea(MESSAGE_WELCOME);
@@ -187,6 +221,9 @@ public class TaskOverviewController{
 			headerDaysContainers[i] = new StackPane();
 			headerDaysContainers[i].getChildren().add(headerDays[i]);
 			headerDaysContainers[i].getStyleClass().add("headerDays");
+			
+			headerDaysContainers[i].setStyle(String.format(CHANGE_BACKGROUND_COLOR, HEADER_COLOR) + String.format(CHANGE_FONT_WEIGHT, BOLD));
+			
 		}
 	}
 
@@ -207,6 +244,7 @@ public class TaskOverviewController{
 				
 				if(monthToShow.getYear() == LocalDate.now().getYear() && monthToShow.getDayOfYear() == LocalDate.now().getDayOfYear()) {
 					getDateNumbers()[i][j].getStyleClass().add(TODAY_CLASS);
+					getDateNumbers()[i][j].setStyle(String.format(CHANGE_FONT_WEIGHT, BOLD) + String.format(CHANGE_TEXT_COLOR, TODAY_COLOR));
 				}
 				
 				monthToShow = monthToShow.plusDays(1);
@@ -348,20 +386,22 @@ public class TaskOverviewController{
 	}
 
 	private void addClassToLabel(int row, int col, int taskNumber) {
+		
 		switch(taskNumber) {
 		case ROW_1 :
-			calendarTasks[row][col][taskNumber].getStyleClass().add(ROW_1_CLASS);
-			//System.out.println("Adding Class 1");
+			calendarTasks[row][col][taskNumber].setId(ROW_1_ID);
+			setColorAndShapeOfRow(calendarTasks[row][col][taskNumber], ROW_1_COLOR);
 			break;
 		case ROW_2 :
-			calendarTasks[row][col][taskNumber].getStyleClass().add(ROW_2_CLASS);
-			//System.out.println("Adding Class 2");
+			calendarTasks[row][col][taskNumber].setId(ROW_2_ID);
+			setColorAndShapeOfRow(calendarTasks[row][col][taskNumber], ROW_2_COLOR);
 			break;
 		case ROW_3 :
-			calendarTasks[row][col][taskNumber].getStyleClass().add(ROW_3_CLASS);
-			//System.out.println("Adding Class 3");
+			calendarTasks[row][col][taskNumber].setId(ROW_3_ID);
+			setColorAndShapeOfRow(calendarTasks[row][col][taskNumber], ROW_3_COLOR);
 			break;
 		}
+		determineHandlerToAddWhenHover(calendarTasks[row][col][taskNumber]);
 	}
 	
 	/**
@@ -413,10 +453,14 @@ public class TaskOverviewController{
 				cellFormat[i][j].getRowConstraints().addAll(basicCellRowConstraints[MARGIN_ROW],basicCellRowConstraints[CONTENT_ROW],basicCellRowConstraints[CONTENT_ROW],basicCellRowConstraints[CONTENT_ROW],basicCellRowConstraints[CONTENT_ROW]);
 				//Even week add class
 				if(i % 2 == 0) {
-					cellFormat[i][j].getStyleClass().add(EVEN_ROW_CLASS);
+					cellFormat[i][j].setId(EVEN_ROW_ID);
+					//CSS
+					cellFormat[i][j].setStyle(String.format(CHANGE_BACKGROUND_COLOR, ROW_EVEN_COLOR));
 				}
 				else {
-					cellFormat[i][j].getStyleClass().add(ODD_ROW_CLASS);
+					cellFormat[i][j].setId(ODD_ROW_ID);
+					//CSS
+					cellFormat[i][j].setStyle(String.format(CHANGE_BACKGROUND_COLOR, ROW_ODD_COLOR));
 				}
 			}
 		}
@@ -457,6 +501,12 @@ public class TaskOverviewController{
 				cellFormat[i][j].add(getDateNumbers()[i][j], 1, 1);
 				if(getDateNumbers()[i][j].getStyleClass().contains(NOT_IN_MONTH_FADE_DATE_CLASS)) {
 					cellFormat[i][j].getStyleClass().add(NOT_IN_MONTH_FADE_CELL_CLASS);
+					if(cellFormat[i][j].getId().equals(EVEN_ROW_ID)) {
+						cellFormat[i][j].setStyle(String.format(CHANGE_BACKGROUND_COLOR, ROW_EVEN_COLOR) + "-fx-opacity: 0.8;");
+					}
+					else {
+						cellFormat[i][j].setStyle(String.format(CHANGE_BACKGROUND_COLOR, ROW_ODD_COLOR) + "-fx-opacity: 0.8;");
+					}
 				}
 				if(getDateNumbers()[i][j].getStyleClass().contains(TODAY_CLASS)) {
 					cellFormat[i][j].getStyleClass().add(TODAY_CLASS);
@@ -542,6 +592,74 @@ public class TaskOverviewController{
 		getMonthHeader().setText(getCurrentMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + " " + String.valueOf(getCurrentYear()));
 		//outputToTextArea("MONTH DROP BY 1");
 	}
+	
+	/**
+	 * Determine the color for the handler to add when hovering over certain elements (button, row1, row2, row3)
+	 */
+	private void determineHandlerToAddWhenHover(Node nodeToApply) {
+		String type = nodeToApply.getId();
+		switch(type) {
+			case "prevBtn" : case "nextBtn" :
+				addHandlerWhenHover(nodeToApply, BUTTON_COLOR, BUTTON_HOVER_COLOR, IS_BUTTON);
+				break;
+			case "row1" :
+				addHandlerWhenHover(nodeToApply, ROW_1_COLOR, ROW_1_HOVER_COLOR, NOT_BUTTON);
+				break;
+			case "row2" :
+				addHandlerWhenHover(nodeToApply, ROW_2_COLOR, ROW_2_HOVER_COLOR, NOT_BUTTON);
+				break;
+			case "row3" :
+				addHandlerWhenHover(nodeToApply, ROW_3_COLOR, ROW_3_HOVER_COLOR, NOT_BUTTON);
+				break;
+		}
+	}
+	
+	/**
+	 * Change the background color when hovering over certain elements (button, row1, row2, row3)
+	 */
+	private void addHandlerWhenHover(Node nodeToApply, String colorWhenNormal, String colorWhenHover, boolean isButton) {
+		String styleWhenHover, styleWhenNormal;
+		if(isButton) {
+			styleWhenHover = String.format(CHANGE_BACKGROUND_COLOR, colorWhenHover);
+			styleWhenNormal = String.format(CHANGE_BACKGROUND_COLOR, colorWhenNormal);
+		}
+		else {
+			styleWhenHover = String.format(CHANGE_BACKGROUND_RADIUS, ROW_RADIUS) 
+									+ String.format(CHANGE_PADDING, ROW_PADDING) 
+											+ String.format(CHANGE_BACKGROUND_COLOR, colorWhenHover);
+			styleWhenNormal = String.format(CHANGE_BACKGROUND_RADIUS, ROW_RADIUS) 
+									+ String.format(CHANGE_PADDING, ROW_PADDING) 
+											+ String.format(CHANGE_BACKGROUND_COLOR, colorWhenNormal);
+		}
+		
+		nodeToApply.setOnMouseEntered(new EventHandler<MouseEvent>() {
+		    public void handle(MouseEvent me) {
+		        nodeToApply.setStyle(styleWhenHover); 
+		    }
+		});
+	
+		nodeToApply.setOnMouseExited(new EventHandler<MouseEvent>() {
+		    public void handle(MouseEvent me) {
+		    	nodeToApply.setStyle(styleWhenNormal); 
+		    }
+		});
+	
+		nodeToApply.setOnMousePressed(new EventHandler<MouseEvent>() {
+		    public void handle(MouseEvent me) {
+		    	nodeToApply.setStyle(colorWhenHover);
+		    }
+		});
+	}
+	
+	/**
+	 * Set the styling(padding and background-radius for the rows (row1, row2, row3)
+	 */
+	private void setColorAndShapeOfRow(Node rowToApply, String color) {
+		rowToApply.setStyle(String.format(CHANGE_BACKGROUND_RADIUS, ROW_RADIUS) 
+								+ String.format(CHANGE_PADDING, ROW_PADDING) 
+										+ String.format(CHANGE_BACKGROUND_COLOR, color));
+	}
+		
 	
 	/**
 	 * Clear the current labels in monthView
@@ -853,6 +971,7 @@ public class TaskOverviewController{
 	 * The setup() method initializes the data only after the reference to mainApp is obtained
 	 */
 	public void setup() {
+		initialColoring();
 		updateTaskTable();
 		prepareLabelsForHeader(headerDays);
 		prepareLabelsForCalendar(getCurrentMonth(), getCurrentYear());
@@ -867,19 +986,43 @@ public class TaskOverviewController{
 		input.requestFocus();
 	}
 
+	/**
+	 * Get input from the textField
+	 * @return
+	 */
 	public TextField getInput() {
 		return input;
 	}
 
+	/**
+	 * Set input to the textField
+	 * @param input
+	 */
 	public void setInput(TextField input) {
 		this.input = input;
 	}
 
+	/**
+	 * Getter for logic
+	 * @return 
+	 */
 	public CdLogic getLogic() {
 		return logic;
 	}
 
+	/**
+	 * Setter for logic
+	 * @param logic
+	 */
 	public static void setLogic(CdLogic logic) {
 		TaskOverviewController.logic = logic;
+	}
+	
+	/**
+	 * Adds color to elements that are static : buttons, header for taskTable
+	 */
+	private void initialColoring() {
+		determineHandlerToAddWhenHover(nextBtn);
+		determineHandlerToAddWhenHover(prevBtn);
 	}
 }
