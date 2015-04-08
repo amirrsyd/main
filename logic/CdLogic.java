@@ -2250,9 +2250,9 @@ public class CdLogic {
 			return String.format(MESSAGE_INVALID_TIME, addArguments[INDEX_ENDTIME]);
 		}
 
-		if ((taskVault.getTask(addArguments[INDEX_TASKNAME]) != null)) {
-			return String.format(MESSAGE_ALREADY_EXISTS, addArguments[INDEX_TASKNAME]);
-		}
+//		if ((taskVault.getTask(addArguments[INDEX_TASKNAME]) != null)) {
+//			return String.format(MESSAGE_ALREADY_EXISTS, addArguments[INDEX_TASKNAME]);
+//		}
 
 		if (addArguments[INDEX_TASKNAME].startsWith("@")) {
 			return MESSAGE_INVALID_TASKNAME;
