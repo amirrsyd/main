@@ -699,13 +699,13 @@ public class TaskOverviewController{
 
 	/**
 	 * Takes in the KeyEvent and execute the appropriate actions
-	 * CTRL -> Shifts focus to textField
+	 * ALT -> Shifts focus to textField
 	 * @throws IOException 
 	 */
 	@FXML
 	private void executeKeyEvents(KeyEvent event) throws IOException, EmptyUserInputException {
 		
-		if (event.getCode() == KeyCode.CONTROL) {
+		if (event.getCode() == KeyCode.ALT) {
 			if(!input.isFocused()) {
 				input.requestFocus();
 				input.end();
