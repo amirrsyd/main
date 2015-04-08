@@ -159,6 +159,7 @@ public class CdLogic {
 	private static final String MESSAGE_HELP_RECUR = "Action: Recur a task\n"
 			+ "Syntax: recur [TaskName] {daily/weekly/monthly/yearly} [day of week/day of month/ day and month] [recurrence]\n";
 	private static final String MESSAGE_HELP_INVALID = "Invalid help command: Enter \"help\" for list of commands\n";
+	private static final String MESSAGE_HELP_SHOW = "Action: Shows details of task\n" + "Syntax: show [TaskName]\n" ;
 	
 	//constants generated for list command
 	private static final String MESSAGE_INVALID_LIST = "Invalid list command";
@@ -428,6 +429,9 @@ public class CdLogic {
 		}
 		if(userCommand.equalsIgnoreCase("recur")){
 			return MESSAGE_HELP_RECUR;
+		}
+		if(userCommand.equalsIgnoreCase("show")){
+			return MESSAGE_HELP_SHOW ;
 		}
 		if(userCommand.equalsIgnoreCase("addrecur")){
 			return MESSAGE_HELP_ADDRECUR;
@@ -1277,7 +1281,6 @@ public class CdLogic {
 	}
 
 	private String undoRecur() {
-		// TODO Auto-generated method stub
 		Task historyTask = historyVault.pop(getLastHistoryName());
 		IdGenerator idGenerator = new IdGenerator();
 		if(!idGenerator.isExistingId(historyTask.getId()) || !historyTask.getTaskName().equals(idGenerator.getTaskName(historyTask.getId()))){
