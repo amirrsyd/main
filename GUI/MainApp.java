@@ -1,4 +1,4 @@
-package GUI;
+package gui;
 
 import java.io.IOException;
 import javafx.application.Application;
@@ -8,11 +8,10 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.collections.ObservableList;
-import javafx.collections.ListChangeListener;
 import javafx.collections.FXCollections;
 
-import MODEL.Task;
-import GUI.view.TaskOverviewController;
+import model.Task;
+import gui.view.TaskOverviewController;
 
 public class MainApp extends Application {
 
@@ -75,6 +74,7 @@ public class MainApp extends Application {
 			
 			// Show the scene containing the root layout.
 			Scene scene = new Scene(rootLayout);
+			scene.getStylesheets().add("gui/commandoskin.css");
 			primaryStage.setScene(scene);
 			primaryStage.show();
 		} catch (IOException e) {
@@ -98,6 +98,7 @@ public class MainApp extends Application {
 			// Give the controller access to the main app.
 			TaskOverviewController controller = loader.getController();
 			controller.setMainApp(this);
+			controller.setup();
 			
 		} catch (IOException e) {
 			e.printStackTrace();
